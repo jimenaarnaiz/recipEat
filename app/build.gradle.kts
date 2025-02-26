@@ -56,4 +56,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    //new
+    //para imaágenes
+    implementation(libs.coil.compose)
+    //para poder usar viewModel()
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    //solicitudes HTTP con Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
 }
