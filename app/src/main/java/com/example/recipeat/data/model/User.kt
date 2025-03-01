@@ -5,10 +5,10 @@ data class User(
     val username: String,
     val image: String,
     val email: String,
-    val rol: String,
+    //val rol: String,
     val favRecipes: List<String> // Lista de IDs de recetas favoritas
 )
 
-enum class Rol {
-    Anonymous, Registered
-}
+//enum class Rol {
+//    Anonymous, Registered
+//}

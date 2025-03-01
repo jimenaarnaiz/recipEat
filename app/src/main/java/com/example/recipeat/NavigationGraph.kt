@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -17,14 +18,9 @@ import com.example.recipeat.ui.screens.RegisterScreen
 
 // Función para definir el grafo de navegación
 @Composable
-fun NavigationGraph(onBottomBarVisibilityChanged: (Boolean) -> Unit) {
-    val navController = rememberNavController()  // Crea el NavController para manejar la navegación
+fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChanged: (Boolean) -> Unit) {
 
-    // Crea la instancia de QuizViewModel
-
-    Scaffold(
-        bottomBar = { BottomNavBar(navController = navController, visible = false) } // PASAR EL NAVCONTROLLER AL BOTTOM BAR
-    ) { padding ->
+    Scaffold { padding ->
         NavHost(
             navController = navController,
             startDestination = "home", // Pantalla de inicio es el login
