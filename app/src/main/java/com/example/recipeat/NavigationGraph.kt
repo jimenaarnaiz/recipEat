@@ -23,7 +23,7 @@ fun NavigationGraph(onBottomBarVisibilityChanged: (Boolean) -> Unit) {
     // Crea la instancia de QuizViewModel
 
     Scaffold(
-        bottomBar = { BottomNavBar(navController = navController, visible = true) } // PASAR EL NAVCONTROLLER AL BOTTOM BAR
+        bottomBar = { BottomNavBar(navController = navController, visible = false) } // PASAR EL NAVCONTROLLER AL BOTTOM BAR
     ) { padding ->
         NavHost(
             navController = navController,
