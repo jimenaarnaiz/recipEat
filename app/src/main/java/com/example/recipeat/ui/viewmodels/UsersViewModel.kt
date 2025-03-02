@@ -1,0 +1,73 @@
+package com.example.recipeat.ui.viewmodels
+
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import com.example.recipeat.data.model.User
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+
+class UsersViewModel: ViewModel() {
+
+    private val auth = FirebaseAuth.getInstance()
+
+    fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener() { task ->
+                if (task.isSuccessful) {
+                    // Sign in success
+                    Log.d("Register", "signInWithEmail:success")
+                    onResult(true)  // Retorna true si el login es exitoso
+                } else {
+                    // Sign in fails
+                    Log.w("Login", "signInWithEmail:failure", task.exception)
+                    //Toast.makeText(context, "Authentication failed.", Toast.LENGTH_SHORT).show()
+                    onResult(false)  // Retorna false si el login falla
+                }
+            }
+    }
+
+//    fun register(username: String, email: String, password: String, onResult: (Boolean) -> Unit) {
+//        auth.createUserWithEmailAndPassword(email, password)
+//            .addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    val user = auth.currentUser
+//
+//                    // Crear un objeto Usuario con datos del usuario
+//                    val userData = User(
+//                        //id = user?.uid ?: "", // El UID de Firebase, es único
+//                        username = username,
+//                        image = "", // URL de la imagen (si la tienes)
+//                        email = email,
+//                        myRecipes = listOf(),
+//                        favRecipes = listOf() // Lista de recetas favoritas vacía inicialmente
+//                    )
+//
+//                    // Almacenar la información del usuario en Firestore
+//                    val db = FirebaseFirestore.getInstance()
+//                    user?.let {
+//                        db.collection("users")
+//                            .document(it.uid)
+//                            .set(userData)
+//                            .addOnSuccessListener {
+//                                // Mostrar mensaje de éxito en el registro
+//                                //Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
+//                                onResult(true) // Registro exitoso
+//                            }
+//                            .addOnFailureListener { e ->
+//                                // Si falla la escritura en Firestore, manejar el error
+//                                //Toast.makeText(context, "Error al guardar los datos en Firestore", Toast.LENGTH_SHORT).show()
+//                                Log.w("Register", "Error writing document", e)
+//                                onResult(false) // Error al almacenar en la base de datos
+//                            }
+//                    }
+//                } else {
+//                    // Si el registro en Firebase Authentication falla
+//                    //Toast.makeText(context, "Error en el registro. Intenta nuevamente.", Toast.LENGTH_SHORT).show()
+//                    Log.w("Register", "Error en el registro", task.exception)
+//                    onResult(false)  // Retorna false si el registro falla
+//                }
+//            }
+    //}
+
+
+}

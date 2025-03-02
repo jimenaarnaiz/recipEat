@@ -13,6 +13,7 @@ import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.HomeScreen
 import com.example.recipeat.ui.screens.LoginScreen
 import com.example.recipeat.ui.screens.MyRecipesScreen
+import com.example.recipeat.ui.screens.ProfileScreen
 import com.example.recipeat.ui.screens.RegisterScreen
 
 
@@ -40,6 +41,10 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
             }
             composable(BottomNavItem.MyRecipes.route) {
                 MyRecipesScreen(navController)   //
+                onBottomBarVisibilityChanged(true)
+            }
+            composable(BottomNavItem.Profile.route) {
+                ProfileScreen(navController) // Perfil
                 onBottomBarVisibilityChanged(true)
             }
 //            composable("add_recipe") {
