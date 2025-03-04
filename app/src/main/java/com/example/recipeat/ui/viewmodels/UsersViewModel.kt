@@ -9,6 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 class UsersViewModel: ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
 
     fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
@@ -37,12 +38,10 @@ class UsersViewModel: ViewModel() {
                         //id = user?.uid ?: "", // El UID de Firebase
                         username = username,
                         image = "", // URL de la imagen (si la tienes)
-                        email = email,
-                        favRecipes = listOf() // Lista de recetas favoritas vacía inicialmente
+                        email = email
                     )
 
                     // Almacenar la información del usuario en Firestore
-                    val db = FirebaseFirestore.getInstance()
                     user?.let {
                         db.collection("users")
                             .document(it.uid)
@@ -67,6 +66,26 @@ class UsersViewModel: ViewModel() {
                 }
             }
     }
+
+
+    // Función para obtener el username de un usuario
+    fun obtenerUsername(uid: String, onResult: (String?) -> Unit) {
+        val userRef = db.collection("users").document(uid)
+
+        userRef.get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val username = document.getString("username")
+                    onResult(username) // Devuelve el username si existe
+                } else {
+                    onResult(null) // Usuario no encontrado
+                }
+            }
+            .addOnFailureListener {
+                onResult(null) // Error al obtener el usuario
+            }
+    }
+
 
 
 }
