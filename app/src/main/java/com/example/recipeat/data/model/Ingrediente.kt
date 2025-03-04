@@ -1,6 +1,6 @@
 package com.example.recipeat.data.model
 
-data class Ingredient(
+data class Ingrediente(
     val name: String,
     val image: String,
     val amount: Double,
