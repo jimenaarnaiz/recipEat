@@ -1,5 +1,6 @@
 package com.example.recipeat.ui.screens
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,13 +38,17 @@ import androidx.navigation.NavHostController
 import com.example.recipeat.R
 
 import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(navController: NavHostController) {
     val usersViewModel = UsersViewModel()
+    val recetasViewModel = RecetasViewModel()
+
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -144,6 +149,12 @@ fun RegisterScreen(navController: NavHostController) {
                     usersViewModel.register(username, email, password,
                         onResult = { success ->
                             if (success) {
+                                //guardar 100 recetas para el user para uso sin conexión
+                                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                                if (uid != null) {
+                                    recetasViewModel.guardarRecetasHome(uid)
+                                    Log.d("Register", "Recetas guardadas con éxito")
+                                }
                                 errorMessage = ""
                                 Toast.makeText(context, "Register successful", Toast.LENGTH_SHORT).show()
                                 navController.navigate("login")
