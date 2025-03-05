@@ -57,8 +57,16 @@ interface SpoonacularApi {
     // Obtener recetas random
     @GET("recipes/random")
     suspend fun obtenerRecetasRandom(
-        @Query("number") number: Int = 100,
+        @Query("number") number: Int = 10, //TODO poner 100 cuando acabe las pruebas
         @Query("apiKey") apiKey: String = "ec231e7612fa4dd399b9e2f2c0f9bcc8"
     ): RandomRecipesResponse
+
+    // Obtener instrucciones en diferentes strings de una receta por ID
+    @GET("recipes/{id}/analyzedInstructions")
+    suspend fun obtenerInstruccionesReceta(
+        @Path("id") recetaId: Int,
+        @Query("stepBreakdown") stepBreakdown: Boolean = true,
+        @Query("apiKey") apiKey: String = "ec231e7612fa4dd399b9e2f2c0f9bcc8"
+    ) : List<Map<String, Any>>
 
 }

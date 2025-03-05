@@ -21,19 +21,3 @@ data class ApiReceta(
 data class RandomRecipesResponse(
     val recipes: List<ApiReceta>
 )
-
-// Función para mapear ApiReceta a Receta
-fun mapApiRecetaToReceta(apiReceta: ApiReceta, uid: String): Receta {
-    return Receta(
-        id = apiReceta.id,
-        title = apiReceta.title,
-        image = apiReceta.image,
-        ingredients = apiReceta.extendedIngredients,
-        steps = apiReceta.instructions,
-        time = apiReceta.readyInMinutes,
-        dishTypes = apiReceta.dishTypes,
-        user = uid,  // ID del usuario
-
-    )
-
-}

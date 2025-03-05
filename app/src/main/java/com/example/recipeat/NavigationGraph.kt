@@ -24,7 +24,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
     Scaffold { padding ->
         NavHost(
             navController = navController,
-            startDestination = "home", // Pantalla de inicio es el login
+            startDestination = "login", // Pantalla de inicio es el login
             modifier = Modifier.padding(padding)
         ) {
             composable("login") {
