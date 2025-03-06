@@ -2,22 +2,30 @@ package com.example.recipeat.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTimeFilled
+import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -25,7 +33,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -44,6 +55,9 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
 
     var username by remember { mutableStateOf<String?>(null) }
     val uid = FirebaseAuth.getInstance().currentUser?.uid
+    // Detectar si el usuario ha llegado cerca del final de la lista
+    val listState = rememberLazyListState()
+
 
     LaunchedEffect(username) {
         uid?.let {
@@ -51,16 +65,28 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
                 username = nombre
             }
             recetasViewModel.obtenerRecetasHome(it)
+            Log.d("HomeScreen", "Recetas: $recetasState")
         }
     }
 
-    Log.d("HomeScreen", "Recetas: $recetasState")
+    // Cuando llegamos al final de la lista, cargar más recetas
+    //LaunchedEffect(listState.firstVisibleItemIndex) {
+    LaunchedEffect(remember { derivedStateOf { listState.firstVisibleItemIndex } }) {
+        val lastVisibleItemIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        if (lastVisibleItemIndex >= recetasState.size - 4) { // 4 items antes de llegar al final
+            // Cargar más recetas
+            uid?.let {
+                recetasViewModel.obtenerRecetasHome(it, limpiarLista = false)
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .padding(bottom = 16.dp)
     ) {
-
         Text(
             text = "Welcome, $username!",
             modifier = Modifier
@@ -72,12 +98,20 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         } else {
             // Carrusel de recetas
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
+            LazyColumn(
+                state = listState, // Vincular el estado de la lista
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(bottom = 16.dp) // Agregar espacio al final de la lista
             ) {
                 items(recetasState) { receta ->
                     RecetaCard(receta = receta)
+                }
+
+                // Cargar más recetas si el usuario está cerca del final
+                item {
+                    if (recetasState.isNotEmpty()) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    }
                 }
             }
         }
@@ -88,32 +122,81 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
 fun RecetaCard(receta: Receta) {
     Card(
         modifier = Modifier
-            .width(200.dp)
-            .height(300.dp),
-        shape = RoundedCornerShape(16.dp)
+            .fillMaxWidth() // Hace que la Card ocupe tdo el ancho disponible
+            .padding(vertical = 8.dp) // Separación vertical entre las Cards
+            .shadow(4.dp, shape = RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        //elevation = 4.dp // Sombra para un toque profesional
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally // Alinear el contenido en el centro
         ) {
-            // Cargar la imagen de la receta
+            // Cargar la imagen de la receta con esquinas redondeadas y sin padding
             Image(
                 painter = rememberAsyncImagePainter(receta.image),
                 contentDescription = receta.title,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp),
-                contentScale = ContentScale.Crop
+                    .fillMaxWidth() // La imagen ocupa tdo el ancho de la Card
+                    .height(220.dp) // Mantener la altura fija
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = 16.dp,
+                            topEnd = 16.dp
+                        )
+                    ),
+                contentScale = ContentScale.Crop // Asegurarse de que la imagen se recorte y llene el espacio
             )
 
             // Título de la receta
-            Text(text = receta.title, modifier = Modifier.padding(top = 8.dp))
+            Text(
+                text = receta.title,
+                modifier = Modifier
+                    .padding(top = 8.dp) // Padding entre la imagen y el texto
+                    .padding(start = 16.dp, end = 16.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1, // Limitar el texto a una sola línea
+                overflow = TextOverflow.Ellipsis // Truncar el texto si es muy largo
 
-            // Botón de ver detalles
-            Button(onClick = { /* TODO: Acción para ver detalles de la receta */ }) {
-                Text(text = "Ver Más")
+            )
+
+            Column(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically, // Alineación vertical de los íconos y el texto
+                    horizontalArrangement = Arrangement.spacedBy(12.dp), // Espaciado entre los íconos y los textos
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Ícono y texto para el tiempo
+                    Icon(
+                        imageVector = Icons.Default.AccessTimeFilled,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 4.dp) // Espaciado entre el ícono y el texto
+                    )
+
+                    Text(
+                        text = receta.time.toString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    // Ícono y texto para el número de ingredientes usados
+                    Icon(
+                        imageVector = Icons.Default.ShoppingBasket,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 4.dp) // Espaciado entre el ícono y el texto
+                    )
+
+                    Text(
+                        text = receta.usedIngredientCount.toString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }

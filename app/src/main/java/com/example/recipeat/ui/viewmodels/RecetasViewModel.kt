@@ -9,6 +9,7 @@ import com.example.recipeat.data.api.RetrofitClient
 import com.example.recipeat.data.model.ApiReceta
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.Receta
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -104,7 +105,7 @@ class RecetasViewModel : ViewModel() {
         }
     }
 
-    // Obtener recetas home
+    // Obtener todas las recetas home
     fun obtenerRecetasHome(uid: String) {
         Log.d("RecetasViewModel", "Obteniendo recetas home para el usuario $uid")
 
@@ -153,4 +154,81 @@ class RecetasViewModel : ViewModel() {
             }
         }
     }
+
+    //obtener parcialmente las recetas home
+    private var lastDocument: DocumentSnapshot? = null
+
+    // Obtener recetas (inicial o paginada)
+    fun obtenerRecetasHome(uid: String, limpiarLista: Boolean = true) {
+        Log.d("RecetasViewModel", "Obteniendo recetas para el usuario $uid")
+
+        // Iniciar la query de Firestore
+        var query = db.collection("recetas").document(uid)
+            .collection("recetas_aleatorias")
+            .orderBy("title") // Ordenar por un campo
+            .limit(15) // Limitar a 15 recetas
+
+        // Si no es la primera carga, empezar después del último documento cargado
+        if (lastDocument != null && !limpiarLista) {
+            query = query.startAfter(lastDocument)
+        }
+
+        // Ejecutar la consulta en el hilo de background
+        viewModelScope.launch {
+            try {
+                val documents = query.get().await()
+
+                // Si hay documentos, actualizamos lastDocument
+                if (!documents.isEmpty) {
+                    lastDocument = documents.documents.last() // Guardar el último documento
+
+                    val nuevasRecetas = documents.mapNotNull { document ->
+                        try {
+                            Receta(
+                                id = document.getString("id") ?: "",
+                                title = document.getString("title") ?: "",
+                                image = document.getString("image") ?: "",
+                                ingredients = (document.get("ingredients") as? List<Map<String, Any>>)?.map { ing ->
+                                    Ingrediente(
+                                        name = ing["name"] as? String ?: "",
+                                        amount = (ing["amount"] as? Number)?.toDouble() ?: 0.0,
+                                        unit = ing["unit"] as? String ?: "",
+                                        image = ing["image"] as? String ?: ""
+                                    )
+                                } ?: emptyList(),
+                                steps = document.get("steps") as? List<String> ?: emptyList(),
+                                time = (document.get("time") as? Number)?.toInt() ?: 0,
+                                dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
+                                user = document.getString("user") ?: "",
+                                usedIngredientCount = (document.get("usedIngredientCount") as? Number)?.toInt() ?: 0
+                            )
+                        } catch (e: Exception) {
+                            Log.e("RecetasViewModel", "Error al mapear receta: ${e.message}")
+                            null
+                        }
+                    }
+
+                    // Actualizar la lista de recetas
+                    _recetas.value = if (limpiarLista) nuevasRecetas else _recetas.value?.plus(
+                        nuevasRecetas
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Error al obtener recetas: ${e.message}")
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
