@@ -18,8 +18,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,35 +33,26 @@ import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.delay
 
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewModel) {
     val usersViewModel = UsersViewModel()
-    val recetasViewModel = RecetasViewModel()
 
     // Observamos las recetas desde el ViewModel
-    val recetasState by recetasViewModel.recetas.collectAsState()
+    val recetasState by recetasViewModel.recetas.observeAsState(emptyList())
 
     var username by remember { mutableStateOf<String?>(null) }
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-    LaunchedEffect(Unit) {
-
+    LaunchedEffect(username) {
         uid?.let {
             usersViewModel.obtenerUsername(it) { nombre ->
                 username = nombre
-                recetasViewModel.obtenerRecetasHome(it)
             }
-            //recetasViewModel.obtenerRecetasHome(it) //TODO: NO SÉ POR QUE NO ME VA
+            recetasViewModel.obtenerRecetasHome(it)
         }
     }
-
-    // mal, se ejecuta constantemente y las recetas se petan
-//    if (uid != null) {
-//        recetasViewModel.obtenerRecetasHome(uid)
-//    }
 
     Log.d("HomeScreen", "Recetas: $recetasState")
     Column(
@@ -76,10 +67,10 @@ fun HomeScreen(navController: NavHostController) {
                 .padding(bottom = 16.dp)
         )
 
-//        // Mostrar un indicador de carga si no se han cargado las recetas
-//        if (recetasState.isEmpty()) {
-//            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-//        } else {
+        // Mostrar un indicador de carga si no se han cargado las recetas
+        if (recetasState.isEmpty()) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        } else {
             // Carrusel de recetas
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -91,7 +82,7 @@ fun HomeScreen(navController: NavHostController) {
             }
         }
     }
-//}
+}
 
 @Composable
 fun RecetaCard(receta: Receta) {

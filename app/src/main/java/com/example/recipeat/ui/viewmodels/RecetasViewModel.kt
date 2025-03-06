@@ -1,6 +1,8 @@
 package com.example.recipeat.ui.viewmodels
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.recipeat.data.api.RetrofitClient
@@ -20,9 +22,8 @@ class RecetasViewModel : ViewModel() {
     private val _apiRecetas = MutableStateFlow<List<ApiReceta>>(emptyList())
     val apiRecetas: StateFlow<List<ApiReceta>> = _apiRecetas
 
-    private val _recetas = MutableStateFlow<List<Receta>>(emptyList())
-    var recetas: StateFlow<List<Receta>> = _recetas
-
+    private val _recetas = MutableLiveData<List<Receta>>(emptyList())
+    val recetas: LiveData<List<Receta>> = _recetas
 
 
     // Función para mapear ApiReceta a Receta

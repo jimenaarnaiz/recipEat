@@ -39,8 +39,8 @@ import com.example.recipeat.ui.viewmodels.UsersViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavHostController) {
-    val usersViewModel = UsersViewModel()
+fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel) {
+    //val usersViewModel = UsersViewModel()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -156,7 +156,7 @@ fun LoginScreen(navController: NavHostController) {
 @Preview(showBackground = true)
 @Composable
 fun LoginScreen() {
-    LoginScreen(navController = NavHostController(LocalContext.current))
+    LoginScreen(navController = NavHostController(LocalContext.current), usersViewModel = UsersViewModel())
 }
 
 

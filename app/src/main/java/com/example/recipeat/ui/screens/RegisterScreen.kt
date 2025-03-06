@@ -45,9 +45,12 @@ import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(navController: NavHostController) {
-    val usersViewModel = UsersViewModel()
-    val recetasViewModel = RecetasViewModel()
+fun RegisterScreen(navController: NavHostController,
+                   usersViewModel: UsersViewModel,
+                   recetasViewModel: RecetasViewModel
+) {
+    //val usersViewModel = UsersViewModel()
+    //val recetasViewModel = RecetasViewModel()
 
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -186,5 +189,5 @@ fun RegisterScreen(navController: NavHostController) {
 @Preview(showBackground = true)
 @Composable
 fun RegisterScreen() {
-    RegisterScreen(navController = NavHostController(LocalContext.current))
+    RegisterScreen(navController = NavHostController(LocalContext.current), usersViewModel = UsersViewModel(), recetasViewModel = RecetasViewModel())
 }
