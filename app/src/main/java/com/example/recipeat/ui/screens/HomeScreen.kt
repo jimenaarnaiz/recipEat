@@ -7,21 +7,26 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTimeFilled
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +51,7 @@ import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewModel) {
     val usersViewModel = UsersViewModel()
@@ -57,6 +63,9 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
     val uid = FirebaseAuth.getInstance().currentUser?.uid
     // Detectar si el usuario ha llegado cerca del final de la lista
     val listState = rememberLazyListState()
+
+    var searchQuery by remember { mutableStateOf("") }
+    var isActive by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(username) {
@@ -81,17 +90,35 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
         }
     }
 
+    Text(
+        text = "Welcome, $username!",
+        modifier = Modifier
+            .padding(16.dp)
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
             .padding(bottom = 16.dp)
     ) {
-        Text(
-            text = "Welcome, $username!",
+        SearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            onSearch = {
+                isActive = false
+                navController.navigate("nameSearch")
+            },
+            active = isActive,
+            onActiveChange = { isActive = it; if (it) navController.navigate("search") },
+            placeholder = { Text("Search for recipes...") },
+            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(bottom = 16.dp)
-        )
+        ) {
+            // Aquí podrías mostrar sugerencias o recetas populares si lo deseas
+        }
 
         // Mostrar un indicador de carga si no se han cargado las recetas
         if (recetasState.isEmpty()) {
@@ -173,7 +200,7 @@ fun RecetaCard(receta: Receta) {
                     Icon(
                         imageVector = Icons.Default.AccessTimeFilled,
                         contentDescription = null,
-                        modifier = Modifier.padding(end = 4.dp) // Espaciado entre el ícono y el texto
+                        modifier = Modifier.padding(end = 1.dp) // Espaciado entre el ícono y el texto
                     )
 
                     Text(
@@ -187,7 +214,7 @@ fun RecetaCard(receta: Receta) {
                     Icon(
                         imageVector = Icons.Default.ShoppingBasket,
                         contentDescription = null,
-                        modifier = Modifier.padding(end = 4.dp) // Espaciado entre el ícono y el texto
+                        modifier = Modifier.padding(end = 1.dp) // Espaciado entre el ícono y el texto
                     )
 
                     Text(

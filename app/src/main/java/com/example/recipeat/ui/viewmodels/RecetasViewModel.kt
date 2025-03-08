@@ -23,8 +23,14 @@ class RecetasViewModel : ViewModel() {
     private val _apiRecetas = MutableStateFlow<List<ApiReceta>>(emptyList())
     val apiRecetas: StateFlow<List<ApiReceta>> = _apiRecetas
 
+    private val _apiRecetasSugeridas = MutableStateFlow<List<ApiReceta>>(emptyList())
+    val apiRecetasSugeridas: StateFlow<List<ApiReceta>> = _apiRecetasSugeridas
+
     private val _recetas = MutableLiveData<List<Receta>>(emptyList())
     val recetas: LiveData<List<Receta>> = _recetas
+
+    private val _apiReceta = MutableLiveData<ApiReceta>()
+    val apiReceta: LiveData<ApiReceta> = _apiReceta
 
 
     // Función para mapear ApiReceta a Receta
@@ -218,6 +224,53 @@ class RecetasViewModel : ViewModel() {
             }
         }
     }
+
+    // Buscar recetas con ingredientes
+    fun buscarRecetasPorIngredientes(ingredientes: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.buscarRecetasPorIngredientes(ingredientes)
+                _apiRecetas.value = response
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun buscarRecetasPorNombreAutocompletado(nombreReceta: String){
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.buscarRecetasPorNombreAutocompletado(nombreReceta)
+                _apiRecetasSugeridas.value = response
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+
+    fun buscarRecetasPorNombre(nombreReceta: String){
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.buscarRecetasPorNombre(nombreReceta)
+                _apiRecetas.value = response
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun obtenerDetallesReceta(idReceta: Int){
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.obtenerDetallesReceta(idReceta)
+                _apiReceta.value = response
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
 
 
 

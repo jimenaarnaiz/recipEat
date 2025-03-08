@@ -12,8 +12,12 @@ import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.HomeScreen
 import com.example.recipeat.ui.screens.LoginScreen
 import com.example.recipeat.ui.screens.MyRecipesScreen
+import com.example.recipeat.ui.screens.NameSearchScreen
 import com.example.recipeat.ui.screens.ProfileScreen
 import com.example.recipeat.ui.screens.RegisterScreen
+import com.example.recipeat.ui.screens.ResultadosScreen
+import com.example.recipeat.ui.screens.SearchScreen
+import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 
@@ -23,11 +27,12 @@ import com.example.recipeat.ui.viewmodels.UsersViewModel
 fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChanged: (Boolean) -> Unit) {
     val recetasViewModel: RecetasViewModel = viewModel()
     val usersViewModel: UsersViewModel = viewModel()
+    val ingredientesViewModel: IngredientesViewModel = viewModel()
 
     Scaffold { padding ->
         NavHost(
             navController = navController,
-            startDestination = "login", // Pantalla de inicio es el login
+            startDestination = "nameSearch", // Pantalla de inicio es el login
             modifier = Modifier.padding(padding)
         ) {
             composable("login") {
@@ -49,6 +54,19 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
             composable(BottomNavItem.Profile.route) {
                 ProfileScreen(navController, usersViewModel, recetasViewModel) // Perfil
                 onBottomBarVisibilityChanged(true)
+            }
+            composable("search") {
+                SearchScreen(navController, recetasViewModel, ingredientesViewModel) // Perfil
+                onBottomBarVisibilityChanged(false)
+            }
+            composable("nameSearch") {
+                NameSearchScreen(navController, recetasViewModel) // Perfil
+                onBottomBarVisibilityChanged(false)
+            }
+
+            composable("resultadosScreen/{query}") { backStackEntry ->
+                val query = backStackEntry.arguments?.getString("query") ?: ""
+                ResultadosScreen(query = query, navController = navController, recetasViewModel)
             }
 //            composable("add_recipe") {
 //                AddRecipe(navController, recetasViewModel)   //
