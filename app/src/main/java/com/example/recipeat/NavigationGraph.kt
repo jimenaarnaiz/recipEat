@@ -32,7 +32,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
     Scaffold { padding ->
         NavHost(
             navController = navController,
-            startDestination = "nameSearch", // Pantalla de inicio es el login
+            startDestination = "nameSearch", // TODO Pantalla de inicio es el login
             modifier = Modifier.padding(padding)
         ) {
             composable("login") {
@@ -56,24 +56,19 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 onBottomBarVisibilityChanged(true)
             }
             composable("search") {
-                SearchScreen(navController, recetasViewModel, ingredientesViewModel) // Perfil
+                SearchScreen(navController, recetasViewModel, ingredientesViewModel) // Búsqueda por ingredientes
                 onBottomBarVisibilityChanged(false)
             }
             composable("nameSearch") {
-                NameSearchScreen(navController, recetasViewModel) // Perfil
+                NameSearchScreen(navController, recetasViewModel) // Búsqueda por nombre
                 onBottomBarVisibilityChanged(false)
             }
-
             composable("resultadosScreen/{query}") { backStackEntry ->
                 val query = backStackEntry.arguments?.getString("query") ?: ""
-                ResultadosScreen(query = query, navController = navController, recetasViewModel)
+                ResultadosScreen(nombreReceta = query, navController = navController, recetasViewModel)
             }
 //            composable("add_recipe") {
 //                AddRecipe(navController, recetasViewModel)   //
-//                onBottomBarVisibilityChanged(false)
-//            }
-//            composable("resultados") {
-//                RecetasScreen(navController, recetasViewModel)   //
 //                onBottomBarVisibilityChanged(false)
 //            }
         }

@@ -15,17 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
-import com.example.recipeat.ui.components.AppBar
-import coil.compose.AsyncImage
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
 import com.example.recipeat.ui.theme.LightYellow
 
 @Composable
@@ -39,7 +34,7 @@ fun NameSearchScreen(
     // Función que busca recetas mientras se escribe en el input
     LaunchedEffect(recetaInput.text) {
         if (recetaInput.text.isNotEmpty()) {
-            recetasViewModel.buscarRecetasPorNombreAutocompletado(recetaInput.toString())
+            recetasViewModel.buscarRecetasPorNombreAutocompletado(recetaInput.text)
         }
     }
 
@@ -64,8 +59,7 @@ fun NameSearchScreen(
         // Botón de búsqueda
         Button(
             onClick = {
-                // Llamar a la función de búsqueda con el texto ingresado
-                recetasViewModel.buscarRecetasPorNombre(recetaInput.text)
+                navController.navigate("resultadosScreen/${recetaInput.text}")
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = LightYellow,
