@@ -46,7 +46,6 @@ fun ResultadosScreen(
     // Función que busca recetas mientras se escribe en el input
     LaunchedEffect(nombreReceta) {
             recetasViewModel.buscarRecetasPorNombre(nombreReceta)
-        Log.d("ResultadosBusqueda", "BIEN")
     }
     Log.d("ResultadosBusqueda", "recetas res: ${recetas}")
 

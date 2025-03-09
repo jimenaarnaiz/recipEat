@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
@@ -29,12 +30,12 @@ fun NameSearchScreen(
     recetasViewModel: RecetasViewModel
 ) {
     val recetasSugeridas by recetasViewModel.apiRecetasSugeridas.collectAsState()
-    var recetaInput by remember { mutableStateOf(TextFieldValue("")) }
+    var recetaInput by rememberSaveable { mutableStateOf("") }
 
     // Función que busca recetas mientras se escribe en el input
-    LaunchedEffect(recetaInput.text) {
-        if (recetaInput.text.isNotEmpty()) {
-            recetasViewModel.buscarRecetasPorNombreAutocompletado(recetaInput.text)
+    LaunchedEffect(recetaInput) {
+        if (recetaInput.isNotEmpty()) {
+            recetasViewModel.buscarRecetasPorNombreAutocompletado(recetaInput)
         }
     }
 
@@ -59,7 +60,7 @@ fun NameSearchScreen(
         // Botón de búsqueda
         Button(
             onClick = {
-                navController.navigate("resultadosScreen/${recetaInput.text}")
+                navController.navigate("resultadosScreen/${recetaInput}")
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = LightYellow,
@@ -90,7 +91,7 @@ fun NameSearchScreen(
                             recetaInput = TextFieldValue(
                                 recetaSug.title,
                                 selection = TextRange(recetaSug.title.length) // Coloca el cursor al final del texto
-                            )  // Al hacer clic, actualiza el input con el título de la receta seleccionada
+                            ).toString()  // Al hacer clic, actualiza el input con el título de la receta seleccionada
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
