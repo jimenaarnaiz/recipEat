@@ -253,9 +253,12 @@ class RecetasViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.buscarRecetasPorNombre(nombreReceta)
-                _apiRecetas.value = response
+                _apiRecetas.value = response.results
+                Log.d("RecetasViewModel", "${_apiRecetas.value}")
             } catch (e: Exception) {
+                Log.d("RecetasViewModel", "no pasa")
                 e.printStackTrace()
+                Log.d("RecetasViewModel", "no pasa")
             }
         }
     }
