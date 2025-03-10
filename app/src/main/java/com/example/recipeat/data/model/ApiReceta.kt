@@ -22,8 +22,8 @@ data class RandomRecipesResponse(
     val recipes: List<ApiReceta>
 )
 
-// Respuesta de la llamada random recipes de la api
-data class RecipesResponse(
+// Respuesta de la llamada buscar recetas por nombre de la api
+data class RecipesNameResponse(
     val results: List<ApiReceta>
 )
 

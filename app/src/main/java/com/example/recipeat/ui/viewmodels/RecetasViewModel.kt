@@ -32,6 +32,13 @@ class RecetasViewModel : ViewModel() {
     private val _apiReceta = MutableLiveData<ApiReceta>()
     val apiReceta: LiveData<ApiReceta> = _apiReceta
 
+    private val _analyzedInstructions = MutableLiveData<String>()
+    val analyzedInstructions: LiveData<String> = _analyzedInstructions
+
+    private val _steps = MutableLiveData<List<String>>()
+    val steps: LiveData<List<String>> = _steps
+
+
 
     // Función para mapear ApiReceta a Receta
     fun mapApiRecetaToReceta(
@@ -172,7 +179,7 @@ class RecetasViewModel : ViewModel() {
         var query = db.collection("recetas").document(uid)
             .collection("recetas_aleatorias")
             .orderBy("title") // Ordenar por un campo
-            .limit(15) // Limitar a 15 recetas
+            .limit(15) // Limitar a 15 recetas TODO cambiar a 50 cuando acabe pruebas
 
         // Si no es la primera carga, empezar después del último documento cargado
         if (lastDocument != null && !limpiarLista) {
@@ -268,6 +275,29 @@ class RecetasViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.api.obtenerDetallesReceta(idReceta)
                 _apiReceta.value = response
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun obtenerAnalyzedInstructions(idReceta: Int){
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.obtenerInstruccionesReceta(idReceta)
+                //_analyzedInstructions.value = response.toString()
+                Log.d("RecetasViewModel", "analyzed instructions: ${response}")
+
+                // Verificamos si la respuesta es válida
+                if (response.isNotEmpty()) {
+                    // Extraemos los pasos de la respuesta, asegurándonos de que están en el formato correcto
+                    _steps.value = response.flatMap { it["steps"] as? List<Map<String, Any>> ?: emptyList() }
+                        .mapNotNull { it["step"] as? String }
+                    Log.d("RecetasViewModel", "Instrucciones: $steps")
+                } else {
+                    // Si la respuesta está vacía, mostramos un mensaje de error
+                    Log.e("RecetasViewModel", "No se encontraron instrucciones para esta receta.")
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }

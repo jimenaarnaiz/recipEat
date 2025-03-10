@@ -2,6 +2,7 @@ package com.example.recipeat.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.data.model.ApiReceta
+import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 
 @Composable
@@ -47,31 +50,42 @@ fun ResultadosScreen(
     LaunchedEffect(nombreReceta) {
             recetasViewModel.buscarRecetasPorNombre(nombreReceta)
     }
-    Log.d("ResultadosBusqueda", "recetas res: ${recetas}")
+    Log.d("ResultadosBusqueda", "nombre receta: $nombreReceta, recetas res: ${recetas}")
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .padding(bottom = 16.dp)
-    ) {
-        // Mostrar un indicador de carga si no se han cargado las recetas
-        if (recetas.isEmpty()) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-        } else {
-            // Carrusel de recetas
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(bottom = 16.dp) // Agregar espacio al final de la lista
-            ) {
-                items(recetas) { receta ->
-                    RecetaCard2(receta)
-                }
+    Scaffold(
+        topBar = {
+            AppBar(
+                title = "",
+                navController = navController
+            )
+        }
+    ) { paddingValues ->
 
-                // Cargar más recetas si el usuario está cerca del final
-                item {
-                    if (recetas.isNotEmpty()) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+                .padding(bottom = 16.dp)
+        ) {
+            // Mostrar un indicador de carga si no se han cargado las recetas
+            if (recetas.isEmpty()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            } else {
+                // Carrusel de recetas
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(bottom = 16.dp) // Agregar espacio al final de la lista
+                ) {
+                    items(recetas) { receta ->
+                        RecetaCardRes(receta, navController)
+                    }
+
+                    // Cargar más recetas si el usuario está cerca del final
+                    item {
+                        if (recetas.isNotEmpty()) {
+                            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                        }
                     }
                 }
             }
@@ -80,14 +94,14 @@ fun ResultadosScreen(
 }
 
 @Composable
-fun RecetaCard2(receta: ApiReceta) {
+fun RecetaCardRes(receta: ApiReceta, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth() // Hace que la Card ocupe tdo el ancho disponible
             .padding(vertical = 8.dp) // Separación vertical entre las Cards
-            .shadow(4.dp, shape = RoundedCornerShape(16.dp)),
+            .shadow(4.dp, shape = RoundedCornerShape(16.dp))
+            .clickable { navController.navigate("detalles/${receta.id}") },
         shape = RoundedCornerShape(16.dp),
-        //elevation = 4.dp // Sombra para un toque profesional
     ) {
         Column(
             modifier = Modifier
@@ -107,7 +121,7 @@ fun RecetaCard2(receta: ApiReceta) {
                             topEnd = 16.dp
                         )
                     ),
-                contentScale = ContentScale.Crop // Asegurarse de que la imagen se recorte y llene el espacio
+                contentScale = ContentScale.FillWidth // Asegurarse de que la imagen se recorte y llene el espacio
             )
 
             // Título de la receta
@@ -121,44 +135,6 @@ fun RecetaCard2(receta: ApiReceta) {
                 overflow = TextOverflow.Ellipsis // Truncar el texto si es muy largo
 
             )
-
-            Column(
-                modifier = Modifier.padding(8.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically, // Alineación vertical de los íconos y el texto
-                    horizontalArrangement = Arrangement.spacedBy(12.dp), // Espaciado entre los íconos y los textos
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-//                    // Ícono y texto para el tiempo
-//                    Icon(
-//                        imageVector = Icons.Default.AccessTimeFilled,
-//                        contentDescription = null,
-//                        modifier = Modifier.padding(end = 1.dp) // Espaciado entre el ícono y el texto
-//                    )
-//
-//                    Text(
-//                        text = receta.readyInMinutes.toString(),
-//                        style = MaterialTheme.typography.bodyMedium,
-//                        maxLines = 1,
-//                        overflow = TextOverflow.Ellipsis
-//                    )
-//
-//                    // Ícono y texto para el número de ingredientes usados
-//                    Icon(
-//                        imageVector = Icons.Default.ShoppingBasket,
-//                        contentDescription = null,
-//                        modifier = Modifier.padding(end = 1.dp) // Espaciado entre el ícono y el texto
-//                    )
-//
-//                    Text(
-//                        text = receta.usedIngredientCount.toString(),
-//                        style = MaterialTheme.typography.bodyMedium,
-//                        maxLines = 1,
-//                        overflow = TextOverflow.Ellipsis
-//                    )
-                }
-            }
         }
     }
 }

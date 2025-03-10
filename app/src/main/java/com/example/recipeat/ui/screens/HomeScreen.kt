@@ -90,18 +90,18 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
         }
     }
 
-    Text(
-        text = "Welcome, $username!",
-        modifier = Modifier
-            .padding(16.dp)
-    )
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
             .padding(bottom = 16.dp)
     ) {
+        Text(
+            text = "Welcome, $username!",
+            modifier = Modifier
+                .padding(16.dp)
+        )
+
         SearchBar(
             query = searchQuery,
             onQueryChange = { searchQuery = it },
@@ -110,7 +110,7 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
                 navController.navigate("nameSearch")
             },
             active = isActive,
-            onActiveChange = { isActive = it; if (it) navController.navigate("search") },
+            onActiveChange = { isActive = it; if (it) navController.navigate("nameSearch") },
             placeholder = { Text("Search for recipes...") },
             leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
             modifier = Modifier

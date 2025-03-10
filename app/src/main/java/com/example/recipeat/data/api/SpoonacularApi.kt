@@ -3,7 +3,7 @@ package com.example.recipeat.data.api
 import com.example.recipeat.data.model.ApiReceta
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.RandomRecipesResponse
-import com.example.recipeat.data.model.RecipesResponse
+import com.example.recipeat.data.model.RecipesNameResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -40,7 +40,7 @@ interface SpoonacularApi {
         @Query("query") name: String,
         @Query("number") number: Int = 10, // TODO poner 50 num de resultados cuando acabe pruebas
         @Query("apiKey") apiKey: String = "ec231e7612fa4dd399b9e2f2c0f9bcc8"
-    ): RecipesResponse
+    ): RecipesNameResponse
 
     @GET("recipes/autocomplete")
     suspend fun buscarRecetasPorNombreAutocompletado(

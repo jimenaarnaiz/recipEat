@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import com.example.recipeat.ui.theme.LightYellow
 
@@ -27,13 +28,14 @@ fun AppBar(title: String, navController: NavController) {
     TopAppBar(
         title = {
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth(),
                 contentAlignment = androidx.compose.ui.Alignment.Center
             ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontSize = 25.sp,
+                    fontSize = 22.sp,
                     color = Color.Black,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(end = 48.dp) // Espaciado para evitar que lo empuje el botón de retroceso
@@ -53,6 +55,7 @@ fun AppBar(title: String, navController: NavController) {
                     contentDescription = "Back"
                 )
             }
+
         }
     )
 }

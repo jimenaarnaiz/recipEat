@@ -1,14 +1,13 @@
 package com.example.recipeat
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.recipeat.ui.components.BottomNavItem
+import com.example.recipeat.ui.screens.DetailsScreen
 import com.example.recipeat.ui.screens.HomeScreen
 import com.example.recipeat.ui.screens.LoginScreen
 import com.example.recipeat.ui.screens.MyRecipesScreen
@@ -32,8 +31,8 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
     Scaffold { padding ->
         NavHost(
             navController = navController,
-            startDestination = "nameSearch", // TODO Pantalla de inicio es el login
-            modifier = Modifier.padding(padding)
+            startDestination = "login", // TODO Pantalla de inicio es el login
+            //modifier = Modifier.padding(padding) AÑADE PADDING INNECESARIO ARRIBA
         ) {
             composable("login") {
                 LoginScreen(navController, usersViewModel) // Login
@@ -63,9 +62,13 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 NameSearchScreen(navController, recetasViewModel) // Búsqueda por nombre
                 onBottomBarVisibilityChanged(false)
             }
-            composable("resultadosScreen/{query}") { backStackEntry ->
+            composable("resultados/{query}") { backStackEntry ->
                 val query = backStackEntry.arguments?.getString("query") ?: ""
                 ResultadosScreen(nombreReceta = query, navController = navController, recetasViewModel)
+            }
+            composable("detalles/{query}") { backStackEntry ->
+                val query = backStackEntry.arguments?.getString("query")?.toIntOrNull() ?: 0
+                DetailsScreen(idReceta = query, navController = navController, recetasViewModel)
             }
 //            composable("add_recipe") {
 //                AddRecipe(navController, recetasViewModel)   //
