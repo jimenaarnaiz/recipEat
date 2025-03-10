@@ -48,7 +48,7 @@ fun DetailsScreen(
     }
 
     Scaffold(
-        topBar = { AppBar(title = receta?.title ?: "Recipe Details", navController = navController) }
+        topBar = { AppBar(title = "", navController = navController) }
     ) { paddingValues ->
         receta?.let { recetaDetalle ->
             Column(
@@ -57,6 +57,7 @@ fun DetailsScreen(
                     .padding(paddingValues)
                     //.padding(top = paddingValues.calculateTopPadding())
                     .verticalScroll(rememberScrollState())
+                    .padding(bottom = 16.dp)
             ) {
                 Image(
                     painter = rememberAsyncImagePainter(model = recetaDetalle.image),

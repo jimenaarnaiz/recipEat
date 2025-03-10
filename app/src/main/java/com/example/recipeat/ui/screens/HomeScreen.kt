@@ -131,7 +131,7 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
                 contentPadding = PaddingValues(bottom = 16.dp) // Agregar espacio al final de la lista
             ) {
                 items(recetasState) { receta ->
-                    RecetaCard(receta = receta)
+                    RecetaCard(receta = receta, navController)
                 }
 
                 // Cargar más recetas si el usuario está cerca del final
@@ -146,12 +146,13 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
 }
 
 @Composable
-fun RecetaCard(receta: Receta) {
+fun RecetaCard(receta: Receta, navController: NavHostController) {
     Card(
         modifier = Modifier
             .fillMaxWidth() // Hace que la Card ocupe tdo el ancho disponible
             .padding(vertical = 8.dp) // Separación vertical entre las Cards
-            .shadow(4.dp, shape = RoundedCornerShape(16.dp)),
+            .shadow(4.dp, shape = RoundedCornerShape(16.dp))
+            .clickable { navController.navigate("detalles/${receta.id}") },
         shape = RoundedCornerShape(16.dp),
         //elevation = 4.dp // Sombra para un toque profesional
     ) {

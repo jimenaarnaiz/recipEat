@@ -118,7 +118,7 @@ class RecetasViewModel : ViewModel() {
         }
     }
 
-    // Obtener todas las recetas home
+    // Obtener todas las recetas home de 15 en 15
     fun obtenerRecetasHome(uid: String) {
         Log.d("RecetasViewModel", "Obteniendo recetas home para el usuario $uid")
 
@@ -168,6 +168,7 @@ class RecetasViewModel : ViewModel() {
         }
     }
 
+
     //obtener parcialmente las recetas home
     private var lastDocument: DocumentSnapshot? = null
 
@@ -179,7 +180,7 @@ class RecetasViewModel : ViewModel() {
         var query = db.collection("recetas").document(uid)
             .collection("recetas_aleatorias")
             .orderBy("title") // Ordenar por un campo
-            .limit(15) // Limitar a 15 recetas TODO cambiar a 50 cuando acabe pruebas
+            .limit(15) // Limitar a 15 recetas
 
         // Si no es la primera carga, empezar después del último documento cargado
         if (lastDocument != null && !limpiarLista) {
