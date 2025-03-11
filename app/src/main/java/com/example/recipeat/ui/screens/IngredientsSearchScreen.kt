@@ -142,7 +142,7 @@ fun IngredientsSearchScreen(
 
         Button(
             onClick = {
-                recetasViewModel.buscarRecetasPorIngredientes(ingrediente)
+                navController.navigate("resultadosIngredientes")
             },
             modifier = Modifier
                 .fillMaxWidth()

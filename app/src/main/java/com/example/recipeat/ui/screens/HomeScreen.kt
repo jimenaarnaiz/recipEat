@@ -107,7 +107,6 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
             onQueryChange = { searchQuery = it },
             onSearch = {
                 isActive = false
-                //navController.navigate("unificado") //TODO poner la de ingredientes
             },
             active = isActive,
             onActiveChange = { isActive = it; if (it) navController.navigate("unificado") },
@@ -117,7 +116,7 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         ) {
-            // Aquí podrías mostrar sugerencias o recetas populares si lo deseas
+            //
         }
 
         // Mostrar un indicador de carga si no se han cargado las recetas

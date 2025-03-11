@@ -9,12 +9,13 @@ data class ApiReceta(
     val instructions: String,
     val readyInMinutes: Int,
     val dishTypes: List<String>,
-    val missedIngredientCount: Int?, //solo para busqueda por ingredientes
-    val usedIngredientCount: Int, //solo para busqueda por ingredientes
-    val missedIngredients: List<Ingrediente>?, //solo para busqueda por ingredientes
-    val glutenFree: Boolean?,
-    val vegan: Boolean?,
-    val vegetarian: Boolean?
+    val missedIngredientCount: Int, //solo para busqueda por ingredientes
+    val usedIngredientCount: Int,
+    val missedIngredients: List<Ingrediente>, //solo para busqueda por ingredientes
+    val unusedIngredients: List<Ingrediente>,
+    val glutenFree: Boolean,
+    val vegan: Boolean,
+    val vegetarian: Boolean
 )
 
 // Respuesta de la llamada random recipes de la api

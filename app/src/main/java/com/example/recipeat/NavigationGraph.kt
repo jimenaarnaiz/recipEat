@@ -14,8 +14,9 @@ import com.example.recipeat.ui.screens.MyRecipesScreen
 import com.example.recipeat.ui.screens.NameSearchScreen
 import com.example.recipeat.ui.screens.ProfileScreen
 import com.example.recipeat.ui.screens.RegisterScreen
-import com.example.recipeat.ui.screens.ResultadosScreen
+import com.example.recipeat.ui.screens.ResNameScreen
 import com.example.recipeat.ui.screens.IngredientsSearchScreen
+import com.example.recipeat.ui.screens.ResIngredientsScreen
 import com.example.recipeat.ui.screens.UnifiedSearchScreen
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
@@ -65,7 +66,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
             }
             composable("resultados/{query}") { backStackEntry ->
                 val query = backStackEntry.arguments?.getString("query") ?: ""
-                ResultadosScreen(nombreReceta = query, navController = navController, recetasViewModel)
+                ResNameScreen(nombreReceta = query, navController = navController, recetasViewModel)
                 onBottomBarVisibilityChanged(false)
             }
             composable("detalles/{query}") { backStackEntry ->
@@ -75,6 +76,10 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
             }
             composable("search") {
                 UnifiedSearchScreen(navController, recetasViewModel, ingredientesViewModel) // Búsqueda por nombre
+                onBottomBarVisibilityChanged(false)
+            }
+            composable("resultadosIngredientes") {
+                ResIngredientsScreen(navController, recetasViewModel, ingredientesViewModel)
                 onBottomBarVisibilityChanged(false)
             }
 //            composable("add_recipe") {
