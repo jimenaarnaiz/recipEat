@@ -107,10 +107,10 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
             onQueryChange = { searchQuery = it },
             onSearch = {
                 isActive = false
-                navController.navigate("nameSearch")
+                //navController.navigate("unificado") //TODO poner la de ingredientes
             },
             active = isActive,
-            onActiveChange = { isActive = it; if (it) navController.navigate("nameSearch") },
+            onActiveChange = { isActive = it; if (it) navController.navigate("unificado") },
             placeholder = { Text("Search for recipes...") },
             leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
             modifier = Modifier

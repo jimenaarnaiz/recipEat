@@ -31,7 +31,7 @@ import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 
 
 @Composable
-fun SearchScreen(
+fun IngredientsSearchScreen(
     navController: NavController,
     recetasViewModel: RecetasViewModel,
     ingredientesViewModel: IngredientesViewModel
@@ -52,9 +52,9 @@ fun SearchScreen(
         }
     }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)) {
+   Column(modifier = Modifier
+       .fillMaxSize()
+       .padding(16.dp)) {
         TextField(
             value = ingrediente,
             onValueChange = { ingrediente = it },
@@ -141,7 +141,9 @@ fun SearchScreen(
         }
 
         Button(
-            onClick = { recetasViewModel.buscarRecetasPorIngredientes(ingrediente) },
+            onClick = {
+                recetasViewModel.buscarRecetasPorIngredientes(ingrediente)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp),
@@ -158,45 +160,45 @@ fun SearchScreen(
         }
 
 
-        LazyColumn(modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 16.dp)) {
-            items(recetas) { receta ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Image(
-                            painter = rememberAsyncImagePainter(receta.image),
-                            contentDescription = receta.title,
-                            modifier = Modifier
-                                .height(150.dp)
-                                .fillMaxWidth()
-                        )
-                        Text(receta.title, style = MaterialTheme.typography.titleLarge)
-
-                        // Mostrar cuántos ingredientes faltan
-                        Text(
-                            text = "Faltan ${receta.missedIngredientCount} ingredientes",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-
-                        // Mostrar los nombres de los ingredientes faltantes
-                        if (receta.missedIngredients?.isNotEmpty() == true) {
-                            Text(
-                                text = "Ingredientes faltantes: ${
-                                    receta.missedIngredients.joinToString(
-                                        ", "
-                                    ) { it.name }
-                                }",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                }
-            }
-        }
+//        LazyColumn(modifier = Modifier
+//            .fillMaxSize()
+//            .padding(top = 16.dp)) {
+//            items(recetas) { receta ->
+//                Card(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(8.dp),
+//                ) {
+//                    Column(modifier = Modifier.padding(8.dp)) {
+//                        Image(
+//                            painter = rememberAsyncImagePainter(receta.image),
+//                            contentDescription = receta.title,
+//                            modifier = Modifier
+//                                .height(150.dp)
+//                                .fillMaxWidth()
+//                        )
+//                        Text(receta.title, style = MaterialTheme.typography.titleLarge)
+//
+//                        // Mostrar cuántos ingredientes faltan
+//                        Text(
+//                            text = "Faltan ${receta.missedIngredientCount} ingredientes",
+//                            style = MaterialTheme.typography.bodyMedium
+//                        )
+//
+//                        // Mostrar los nombres de los ingredientes faltantes
+//                        if (receta.missedIngredients?.isNotEmpty() == true) {
+//                            Text(
+//                                text = "Ingredientes faltantes: ${
+//                                    receta.missedIngredients.joinToString(
+//                                        ", "
+//                                    ) { it.name }
+//                                }",
+//                                style = MaterialTheme.typography.bodySmall
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 }

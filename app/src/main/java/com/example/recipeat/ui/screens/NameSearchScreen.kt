@@ -45,19 +45,10 @@ fun NameSearchScreen(
             recetasViewModel.buscarRecetasPorNombreAutocompletado(recetaInput.text)
         }
     }
-    Scaffold(
-        topBar = {
-            AppBar(
-                title = "",
-                navController = navController
-            )
-        }
-    ) { paddingValues ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                //.padding(paddingValues)
                 .padding(16.dp)
         ) {
             // TextField para la búsqueda de recetas
@@ -71,10 +62,13 @@ fun NameSearchScreen(
                 textStyle = MaterialTheme.typography.bodyMedium
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Botón de búsqueda
             Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
                 onClick = {
                     navController.navigate("resultados/${recetaInput.text}")
                 },
@@ -82,8 +76,7 @@ fun NameSearchScreen(
                     containerColor = LightYellow,
                     contentColor = Color.Black
                 ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium
+                //enabled = false
             ) {
 //            // icono
 //            Icon(
@@ -130,4 +123,4 @@ fun NameSearchScreen(
             }
         }
     }
-}
+//}
