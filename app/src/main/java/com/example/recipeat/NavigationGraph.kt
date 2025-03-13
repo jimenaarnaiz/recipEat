@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.recipeat.ui.components.BottomNavItem
+import com.example.recipeat.ui.screens.AddRecipe
 import com.example.recipeat.ui.screens.DetailsScreen
 import com.example.recipeat.ui.screens.HomeScreen
 import com.example.recipeat.ui.screens.LoginScreen
@@ -33,7 +34,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
     Scaffold { padding ->
         NavHost(
             navController = navController,
-            startDestination = "search", // TODO Pantalla de inicio es el login
+            startDestination = "login", // TODO Pantalla de inicio es el login
             //modifier = Modifier.padding(padding) AÑADE PADDING INNECESARIO ARRIBA
         ) {
             composable("login") {
@@ -41,7 +42,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 onBottomBarVisibilityChanged(false)
             }
             composable("register") {
-                RegisterScreen(navController, usersViewModel, recetasViewModel) // Registro
+                RegisterScreen(navController, usersViewModel, recetasViewModel, ingredientesViewModel) // Registro
                 onBottomBarVisibilityChanged(false)
             }
             composable(BottomNavItem.Home.route) {
@@ -53,7 +54,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 onBottomBarVisibilityChanged(true)
             }
             composable(BottomNavItem.Profile.route) {
-                ProfileScreen(navController, usersViewModel, recetasViewModel) // Perfil
+                ProfileScreen(navController, usersViewModel) // Perfil
                 onBottomBarVisibilityChanged(true)
             }
             composable("ingredientsSearch") {
@@ -82,10 +83,10 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 ResIngredientsScreen(navController, recetasViewModel, ingredientesViewModel)
                 onBottomBarVisibilityChanged(false)
             }
-//            composable("add_recipe") {
-//                AddRecipe(navController, recetasViewModel)   //
-//                onBottomBarVisibilityChanged(false)
-//            }
+            composable("add_recipe") {
+                AddRecipe(navController, recetasViewModel)   //
+                onBottomBarVisibilityChanged(false)
+            }
         }
     }
 }

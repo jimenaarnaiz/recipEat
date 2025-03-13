@@ -86,6 +86,27 @@ class UsersViewModel: ViewModel() {
             }
     }
 
+    fun obtenerUsuario(uid: String, onResult: (String?, String?) -> Unit) {
+        val userRef = db.collection("users").document(uid)
+
+        userRef.get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    // Obtener los valores de Firestore
+                    val username = document.getString("username")
+                    val profileImageUrl = document.getString("image")
+
+                    onResult(username, profileImageUrl) // Devuelve username y profileImageUrl
+                } else {
+                    onResult(null, null) // Usuario no encontrado
+                }
+            }
+            .addOnFailureListener {
+                onResult(null, null) // Error al obtener datos
+            }
+    }
+
+
 
 
 }
