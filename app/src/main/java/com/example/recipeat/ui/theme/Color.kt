@@ -13,5 +13,8 @@ val Pink40 = Color(0xFF7D5260)
 //Colores app
 val LightGray = Color(0xFFe2e2e2)
 val LightYellow = Color(0xFFf8ff72)
-
+val Cherry = Color(0xFF9e324e)
+val AzulLavanda = Color(0xFF7972ff)
+val VerdeFuerte = Color(0xFF72ff79)
+val VerdeSuave = Color(0xFFb1ff72)
 val Background = Color(0xFFFAF8FF)
