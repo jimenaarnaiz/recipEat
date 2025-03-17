@@ -16,7 +16,6 @@ import com.example.recipeat.ui.screens.NameSearchScreen
 import com.example.recipeat.ui.screens.ProfileScreen
 import com.example.recipeat.ui.screens.RegisterScreen
 import com.example.recipeat.ui.screens.ResNameScreen
-import com.example.recipeat.ui.screens.IngredientsSearchScreen
 import com.example.recipeat.ui.screens.ResIngredientsScreen
 import com.example.recipeat.ui.screens.UnifiedSearchScreen
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
@@ -59,17 +58,13 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 ProfileScreen(navController, usersViewModel) // Perfil
                 onBottomBarVisibilityChanged(true)
             }
-//            composable("ingredientsSearch") {
-//                IngredientsSearchScreen(navController, recetasViewModel, ingredientesViewModel, filtrosViewModel) // Búsqueda por ingredientes
+//            composable("nameSearch") { //TODO quitar la ruta, pq ya esta search
+//                NameSearchScreen(navController, recetasViewModel) // Búsqueda por nombre
 //                onBottomBarVisibilityChanged(false)
 //            }
-            composable("nameSearch") { //TODO quitar la ruta, pq ya esta search
-                NameSearchScreen(navController, recetasViewModel) // Búsqueda por nombre
-                onBottomBarVisibilityChanged(false)
-            }
             composable("resultados/{query}") { backStackEntry ->
                 val query = backStackEntry.arguments?.getString("query") ?: ""
-                ResNameScreen(nombreReceta = query, navController = navController, recetasViewModel)
+                ResNameScreen(nombreReceta = query, navController = navController, recetasViewModel, filtrosViewModel)
                 onBottomBarVisibilityChanged(false)
             }
             composable("detalles/{query}") { backStackEntry ->
@@ -78,7 +73,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 onBottomBarVisibilityChanged(false)
             }
             composable("search") {
-                UnifiedSearchScreen(navController, recetasViewModel, ingredientesViewModel, filtrosViewModel) // Búsqueda por nombre
+                UnifiedSearchScreen(navController, recetasViewModel, ingredientesViewModel) // Búsqueda por nombre
                 onBottomBarVisibilityChanged(false)
             }
             composable("resultadosIngredientes") {

@@ -13,7 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.theme.Cherry
-import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 
@@ -30,10 +29,9 @@ import com.example.recipeat.ui.viewmodels.RecetasViewModel
 fun UnifiedSearchScreen(
     navController: NavController,
     recetasViewModel: RecetasViewModel,
-    ingredientesViewModel: IngredientesViewModel,
-    filtrosViewModel: FiltrosViewModel
+    ingredientesViewModel: IngredientesViewModel
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) } // 0: Ingredientes, 1: Nombre
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) } // 0: Ingredientes, 1: Nombre
 
     Scaffold(
         topBar = {
@@ -41,6 +39,8 @@ fun UnifiedSearchScreen(
                 title = "",
                 navController = navController,
                 onBackPressed = {
+                    recetasViewModel.restablecerRecetasSugeridas()
+                    ingredientesViewModel.clearIngredientes()
                     navController.popBackStack()
                 }
             )
@@ -77,7 +77,7 @@ fun UnifiedSearchScreen(
 
             // Mostrar la vista correspondiente
             when (selectedTab) {
-                0 -> IngredientsSearchScreen(navController, recetasViewModel, ingredientesViewModel)
+                0 -> IngredientsSearchScreen(navController, ingredientesViewModel)
                 1 -> NameSearchScreen(navController, recetasViewModel)
             }
         }

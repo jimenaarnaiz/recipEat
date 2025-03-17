@@ -10,6 +10,7 @@ import com.example.recipeat.data.model.ApiReceta
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
+import com.example.recipeat.data.model.SugerenciaReceta
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -24,11 +25,11 @@ class RecetasViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
 
-    private val _apiRecetas = MutableStateFlow<List<ApiReceta>>(emptyList())
-    val apiRecetas: StateFlow<List<ApiReceta>> = _apiRecetas
+   // private val _apiRecetas = MutableStateFlow<List<ApiReceta>>(emptyList())
+    //val apiRecetas: StateFlow<List<ApiReceta>> = _apiRecetas
 
-    private val _recetasSugeridas = MutableStateFlow<List<String>>(emptyList())
-    val recetasSugeridas: StateFlow<List<String>> = _recetasSugeridas
+    private val _recetasSugeridas = MutableStateFlow<List<SugerenciaReceta>>(emptyList())
+    val recetasSugeridas: StateFlow<List<SugerenciaReceta>> = _recetasSugeridas
 
     private val _recetas = MutableLiveData<List<Receta>>(emptyList())
     val recetas: LiveData<List<Receta>> = _recetas
@@ -81,7 +82,7 @@ class RecetasViewModel : ViewModel() {
 
     /**
      * Guarda recetas en Firebase de la llamada random recipes de la API.
-     * Se ha de ejecutar 5 veces para tener 500 recetas.
+     * Se ha de ejecutar hasta obtener 500 recetas.
     */
     fun guardarRecetas(uid: String, configRef: DocumentReference) {
         viewModelScope.launch {
@@ -655,45 +656,47 @@ class RecetasViewModel : ViewModel() {
             }
     }
 
+    // Búsqueda estricta en tiempo real (requiere que el título contenga TODAS las palabras)
+    fun obtenerSugerenciasPorNombre(name: String) {
+        val palabrasClave = name.lowercase().split(" ")
+            .filter { it.isNotBlank() && it !in listOf("and", "with", "all") }
 
-    // Función para obtener sugerencias basadas en si el nombre contiene el prefijo
-    fun obtenerSugerenciasPorNombre(prefix: String) {
-        // Convertir el prefijo a minúsculas para que la búsqueda sea insensible a mayúsculas/minúsculas
-        val prefijoNormalizado = prefix.lowercase()
-        var contador = 0  // Variable de control para contar las sugerencias
+        if (palabrasClave.isEmpty()) return
 
         db.collection("recetas")
             .get()
             .addOnSuccessListener { result ->
-                val sugerencias = mutableListOf<String>()
+                val sugerencias = mutableListOf<SugerenciaReceta>()
 
                 for (document in result) {
-                    val recetaNombre = document.getString("title")
+                    val recetaId = document.id
+                    val recetaNombre = document.getString("title")?.lowercase()
 
-                    recetaNombre?.let {
-                        // Verificar si el nombre contiene el prefijo (sin importar mayúsculas/minúsculas)
-                        if (contador < 7) {
-                            if (it.lowercase().contains(prefijoNormalizado)) {
-                            sugerencias.add(it)  // Solo agregamos el nombre de la receta
-                            Log.d("RecetasViewModel", "$it añadido a sugerencias")
-                            contador++  // Incrementamos el contador
+                    recetaNombre?.let { nombre ->
+                        // Buscar solo recetas que contengan TODAS las palabras ingresadas
+                        if (palabrasClave.all { palabra -> nombre.contains(palabra) }) {
+                            val coincidencias = palabrasClave.size
+                            sugerencias.add(SugerenciaReceta(recetaId, document.getString("title") ?: "", coincidencias))
                         }
-                            }
                     }
                 }
 
-                // Actualizar el flujo con las sugerencias de nombres de recetas
+                // Limitar a 7 sugerencias
                 _recetasSugeridas.value = sugerencias
+                    .sortedByDescending { it.coincidencias }
+                    .take(7)
             }
             .addOnFailureListener { exception ->
-                Log.e("Firebase", "Error al obtener sugerencias de recetas: ", exception)
+                Log.e("Firebase", "Error al obtener sugerencias en tiempo real: ", exception)
             }
     }
 
-
+    // Recetas que contengan al menos una palabra
     fun obtenerRecetasPorNombre(prefix: String) {
-        val prefijoNormalizado = prefix.lowercase()
-        var contador = 0  // Variable de control para contar las sugerencias
+        val palabrasClave = prefix.lowercase().split(" ")
+            .filter { it.isNotBlank() && it !in listOf("and", "with", "all") }
+
+        if (palabrasClave.isEmpty()) return
 
         db.collection("recetas")
             .get()
@@ -701,14 +704,16 @@ class RecetasViewModel : ViewModel() {
                 val resultados = mutableListOf<Receta>()
 
                 for (document in result) {
-                    val recetaNombre = document.getString("title")
+                    val recetaId = document.id
+                    val recetaNombre = document.getString("title")?.lowercase()
 
-                    recetaNombre?.let {
-                        // Verificar si el nombre contiene el prefijo (sin importar mayúsculas/minúsculas)
-                        if (contador < 7 && it.lowercase().contains(prefijoNormalizado)) {
+                    recetaNombre?.let { nombre ->
+                        val coincidencias = palabrasClave.count { palabra -> nombre.contains(palabra) }
+
+                        if (coincidencias > 0) {
                             val receta = Receta(
-                                id = document.id,
-                                title = recetaNombre,
+                                id = recetaId,
+                                title = document.getString("title") ?: "",
                                 image = document.getString("image"),
                                 servings = document.getLong("servings")?.toInt() ?: 0,
                                 ingredients = (document.get("ingredients") as? List<Map<String, Any>>)?.map { ingrediente ->
@@ -733,23 +738,25 @@ class RecetasViewModel : ViewModel() {
                             )
 
                             resultados.add(receta)
-                            Log.d("RecetasViewModel", "Receta añadida a sugerencias: $recetaNombre")
-                            contador++  // Incrementamos el contador
+                            Log.d("RecetasViewModel", "Receta añadida a sugerencias: ${receta.title}")
                         }
                     }
                 }
 
-                // Actualizar el flujo con las sugerencias de recetas completas
-                _recetas.value = resultados
+                // Prioriza recetas con más palabras coincidentes
+                _recetas.value = resultados.sortedByDescending { receta ->
+                    palabrasClave.count { palabra -> receta.title.lowercase().contains(palabra) }
+                }
+                _recetasOriginales.value = _recetas.value
             }
             .addOnFailureListener { exception ->
                 Log.e("Firebase", "Error al obtener sugerencias de recetas: ", exception)
             }
     }
 
+
     // Definir la función de filtro
     fun filtrarRecetas(
-        //recetas: List<Receta>,
         tiempoFiltro: Int?,
         maxIngredientesFiltro: Int?,
         maxFaltantesFiltro: Int?,
@@ -757,7 +764,7 @@ class RecetasViewModel : ViewModel() {
         //tipoDietaFiltro: String?,
         tipoPlatoFiltro: String?
     ) {
-        val recetasFiltro = recetas.value!!.filter { receta ->
+        val recetasFiltro = _recetasOriginales.value!!.filter { receta ->
             // Validación por tiempo, solo se aplica si tiempoFiltro no es null
             val tiempoValido = tiempoFiltro?.let { receta.time <= it } ?: true
 
@@ -786,8 +793,10 @@ class RecetasViewModel : ViewModel() {
     fun restablecerRecetas(){
         _recetas.value = _recetasOriginales.value
         Log.d("RecetasViewModel", "Restableciendo recetas a las originales...\n ${_recetas.value} ")
+    }
 
-
+    fun restablecerRecetasSugeridas(){
+        _recetasSugeridas.value = emptyList()
     }
 
 

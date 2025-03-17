@@ -102,16 +102,13 @@ fun NameSearchScreen(
                         modifier = Modifier
                             .padding(8.dp)
                             .clickable {
-                                recetaInput = TextFieldValue(
-                                    recetaSug,
-                                    selection = TextRange(recetaSug.length) // Coloca el cursor al final del texto
-                                )  // Al hacer clic, actualiza el input con el título de la receta seleccionada
+                               navController.navigate("detalles/${recetaSug.id}")
                             },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = recetaSug,
+                            text = recetaSug.titulo,
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Start
                         )

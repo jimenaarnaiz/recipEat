@@ -22,7 +22,7 @@ data class Receta(
     val unusedIngredientCount: Int, // Número de ingredientes no usados
 )
 
-
+data class SugerenciaReceta(val id: String, val titulo: String, val coincidencias: Int)
 
 
 
