@@ -59,7 +59,9 @@ fun MyRecipesScreen(navController: NavHostController, recetasViewModel: RecetasV
     Scaffold(
         topBar = { AppBar(
             "My Recipes", navController,
-            onBackPressed = TODO()
+            onBackPressed = {
+                navController.popBackStack()
+            }
         ) },
         floatingActionButton = {
             FloatingActionButton(
