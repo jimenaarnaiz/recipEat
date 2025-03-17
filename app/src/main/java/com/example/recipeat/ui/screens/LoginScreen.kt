@@ -26,24 +26,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.R
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel) {
-    //val usersViewModel = UsersViewModel()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val context = LocalContext.current
     var errorMessage by remember { mutableStateOf("") }
 
     Column(
@@ -148,15 +144,4 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
 
 
     }
-
-
-
 }
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreen() {
-    LoginScreen(navController = NavHostController(LocalContext.current), usersViewModel = UsersViewModel())
-}
-
-

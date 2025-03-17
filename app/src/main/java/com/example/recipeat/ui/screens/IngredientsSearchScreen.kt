@@ -1,7 +1,6 @@
 package com.example.recipeat.ui.screens
 
 import androidx.compose.foundation.Image
-import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -35,7 +34,6 @@ import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 @Composable
 fun IngredientsSearchScreen(
     navController: NavController,
-    recetasViewModel: RecetasViewModel,
     ingredientesViewModel: IngredientesViewModel
 ) {
 
@@ -51,7 +49,6 @@ fun IngredientsSearchScreen(
         if (ingrediente.isNotEmpty()) { // Agregar una verificación para no hacer la búsqueda cuando la cadena esté vacía
             ingredientesViewModel.buscarIngredientes(ingrediente)
         }
-
     }
 
 

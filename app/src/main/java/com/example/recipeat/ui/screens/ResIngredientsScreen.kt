@@ -88,7 +88,6 @@ fun ResIngredientsScreen(
         }
     }
 
-
     Scaffold(
         topBar = {
             AppBar(

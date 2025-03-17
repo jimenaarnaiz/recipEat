@@ -49,17 +49,17 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
         }
     }
 
-    Scaffold(
-        topBar = { AppBar(
-            title = "Profile", navController = navController,
-            onBackPressed = {navController.popBackStack()}
-        ) }
-    ) { paddingValues ->
+//    Scaffold(
+//        topBar = { AppBar(
+//            title = "Profile", navController = navController,
+//            onBackPressed = {navController.popBackStack()}
+//        ) }
+//    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-                //.padding(8.dp), // Más espaciado general
+                //.padding(paddingValues),
+                .padding(8.dp), // Más espaciado general
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Imagen de perfil con borde sutil y efecto de sombra
@@ -147,7 +147,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
             }
         }
     }
-}
+//}
 
 @Composable
 fun OptionCard(

@@ -39,7 +39,6 @@ fun DetailsScreen(
 ) {
 
     val receta by recetasViewModel.recetaSeleccionada.observeAsState()
-    //val steps by recetasViewModel.steps.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
     LaunchedEffect(uid) {
