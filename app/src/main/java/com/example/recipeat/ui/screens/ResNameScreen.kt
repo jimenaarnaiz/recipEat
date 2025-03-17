@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.data.model.ApiReceta
+import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 
@@ -41,11 +43,11 @@ fun ResNameScreen(
     recetasViewModel: RecetasViewModel
 ) {
 
-    val recetas by recetasViewModel.apiRecetas.collectAsState(emptyList())
+    val recetas by recetasViewModel.recetas.observeAsState(emptyList())
 
     // Función que busca recetas mientras se escribe en el input
     LaunchedEffect(nombreReceta) {
-            recetasViewModel.buscarRecetasPorNombre(nombreReceta)
+            recetasViewModel.obtenerRecetasPorNombre(nombreReceta)
     }
     Log.d("ResultadosBusqueda", "nombre receta: $nombreReceta, recetas res: ${recetas}")
 
@@ -91,7 +93,7 @@ fun ResNameScreen(
 }
 
 @Composable
-fun RecetaCardRes(receta: ApiReceta, navController: NavController) {
+fun RecetaCardRes(receta: Receta, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth() // Hace que la Card ocupe tdo el ancho disponible

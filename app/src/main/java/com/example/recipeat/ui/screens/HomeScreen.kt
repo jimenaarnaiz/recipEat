@@ -36,6 +36,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +49,9 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,28 +70,49 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
     var searchQuery by remember { mutableStateOf("") }
     var isActive by remember { mutableStateOf(false) }
 
+    val isLoadingMore by recetasViewModel.isLoadingMore.observeAsState(false) // Estado de carga adicional
 
     LaunchedEffect(username) {
         uid?.let {
+            recetasViewModel.obtenerRecetasHome(it, limpiarLista = true) // Primera carga
+
             usersViewModel.obtenerUsername(it) { nombre ->
                 username = nombre
             }
-            recetasViewModel.obtenerRecetasHome(it)
-            Log.d("HomeScreen", "Recetas: $recetasState")
+
+            Log.d("HomeScreen", "Recetas inicial: ${recetasState.size}")
         }
+
+        //121 recetas de momento
+        val db = Firebase.firestore
+
+        db.collection("recetas")
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val count = querySnapshot.size() // Número de documentos
+                Log.d("Firebase", "Número de recetas: $count")
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firebase", "Error obteniendo recetas", e)
+            }
     }
 
-    // Cuando llegamos al final de la lista, cargar más recetas
-    //LaunchedEffect(listState.firstVisibleItemIndex) {
-    LaunchedEffect(remember { derivedStateOf { listState.firstVisibleItemIndex } }) {
-        val lastVisibleItemIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-        if (lastVisibleItemIndex >= recetasState.size - 4) { // 4 items antes de llegar al final
-            // Cargar más recetas
-            uid?.let {
-                recetasViewModel.obtenerRecetasHome(it, limpiarLista = false)
+    // Detecta si el usuario está cerca del final de la lista
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { index ->
+                Log.d("HomeScreen", "Índice visible actual: $index")
+                if (index == recetasState.size - 1 && !isLoadingMore) {
+                    Log.d("HomeScreen", "Cargando más recetas")
+                    uid?.let {
+                        recetasViewModel.obtenerRecetasHome(it, limpiarLista = false)
+                        Log.d("HomeScreen", "Num de recetas act: ${recetasState.size}")
+                    }
+                }
             }
-        }
     }
+
+
 
     Column(
         modifier = Modifier
@@ -102,6 +126,7 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
                 .padding(16.dp)
         )
 
+
         SearchBar(
             query = searchQuery,
             onQueryChange = { searchQuery = it },
@@ -109,7 +134,7 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
                 isActive = false
             },
             active = isActive,
-            onActiveChange = { isActive = it; if (it) navController.navigate("unificado") },
+            onActiveChange = { isActive = it; if (it) navController.navigate("search") },
             placeholder = { Text("Search for recipes...") },
             leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
             modifier = Modifier
@@ -134,11 +159,19 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
                 }
 
                 // Cargar más recetas si el usuario está cerca del final
+
+
+            // Indicador de carga al final de la lista
+            if (isLoadingMore) {
                 item {
-                    if (recetasState.isNotEmpty()) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                    }
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp)
+                            .align(Alignment.CenterHorizontally)
+                    )
                 }
+            }
             }
         }
     }
@@ -203,6 +236,7 @@ fun RecetaCard(receta: Receta, navController: NavHostController) {
                         modifier = Modifier.padding(end = 1.dp) // Espaciado entre el ícono y el texto
                     )
 
+
                     Text(
                         text = receta.time.toString(),
                         style = MaterialTheme.typography.bodyMedium,
@@ -223,6 +257,7 @@ fun RecetaCard(receta: Receta, navController: NavHostController) {
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    Log.d("HOME", "steps: ${receta.steps.size}")
                 }
             }
         }

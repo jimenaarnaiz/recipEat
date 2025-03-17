@@ -28,6 +28,7 @@ import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun DetailsScreen(
@@ -36,14 +37,25 @@ fun DetailsScreen(
     recetasViewModel: RecetasViewModel
 ) {
 
-    val receta by recetasViewModel.apiReceta.observeAsState()
-    val steps by recetasViewModel.steps.observeAsState()
+    val receta by recetasViewModel.recetaSeleccionada.observeAsState()
+    //val steps by recetasViewModel.steps.observeAsState()
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-    LaunchedEffect(idReceta) {
-        recetasViewModel.obtenerDetallesReceta(idReceta)
-        Log.d("DetailsScreen", "receta: $idReceta ${receta?.title}")
-        recetasViewModel.obtenerAnalyzedInstructions(idReceta)
-        Log.d("DetailsScreen", "Analyzed instructions: $steps")
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            recetasViewModel.obtenerRecetaPorId(
+                uid = uid,
+                recetaId = idReceta.toString()
+            )
+            Log.d("DetailsScreen", "Analyzed instructions: ${receta?.steps}")
+        }
+
+
+
+//        recetasViewModel.obtenerDetallesReceta(idReceta)
+//        Log.d("DetailsScreen", "receta: $idReceta ${receta?.title}")
+//        recetasViewModel.obtenerAnalyzedInstructions(idReceta)
+//        Log.d("DetailsScreen", "Analyzed instructions: $steps")
 
     }
 
@@ -80,7 +92,7 @@ fun DetailsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Ready in ${recetaDetalle.readyInMinutes} minutes",
+                    text = "Ready in ${recetaDetalle.time} minutes",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
@@ -95,7 +107,7 @@ fun DetailsScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                recetaDetalle.extendedIngredients.forEach { ingredient ->
+                recetaDetalle.ingredients.forEach { ingredient ->
                     Text(
                         text = "- ${ingredient.name}",
                         style = MaterialTheme.typography.bodyMedium,
@@ -113,7 +125,7 @@ fun DetailsScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                steps?.forEachIndexed { index, step ->
+                recetaDetalle.steps.forEachIndexed { index, step ->
                     Text(
                         text = "${index + 1}. $step",
                         style = MaterialTheme.typography.bodyMedium,

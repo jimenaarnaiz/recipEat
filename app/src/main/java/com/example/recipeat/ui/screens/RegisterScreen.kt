@@ -38,6 +38,7 @@ import androidx.navigation.NavHostController
 import com.example.recipeat.R
 
 import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -47,11 +48,9 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun RegisterScreen(navController: NavHostController,
                    usersViewModel: UsersViewModel,
-                   recetasViewModel: RecetasViewModel
+                   recetasViewModel: RecetasViewModel,
+                   ingredientesViewModel: IngredientesViewModel
 ) {
-    //val usersViewModel = UsersViewModel()
-    //val recetasViewModel = RecetasViewModel()
-
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -152,11 +151,11 @@ fun RegisterScreen(navController: NavHostController,
                     usersViewModel.register(username, email, password,
                         onResult = { success ->
                             if (success) {
-                                //guardar 100 recetas para el user para uso sin conexión
+                                //guardar 100 recetas para el user
                                 val uid = FirebaseAuth.getInstance().currentUser?.uid
                                 if (uid != null) {
-                                    recetasViewModel.guardarRecetasHome(uid)
-                                    Log.d("Register", "Recetas guardadas con éxito")
+                                    recetasViewModel.verificarRecetasGuardadas(uid) //TODO cada dia puedo 100
+                                    ingredientesViewModel.extraerIngredientesYGuardar()
                                 }
                                 errorMessage = ""
                                 Toast.makeText(context, "Register successful", Toast.LENGTH_SHORT).show()
@@ -184,10 +183,4 @@ fun RegisterScreen(navController: NavHostController,
 
 
 
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RegisterScreen() {
-    RegisterScreen(navController = NavHostController(LocalContext.current), usersViewModel = UsersViewModel(), recetasViewModel = RecetasViewModel())
 }

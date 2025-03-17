@@ -87,6 +87,10 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 AddRecipe(navController, recetasViewModel)   //
                 onBottomBarVisibilityChanged(false)
             }
+            //TODO crear screen de editar perfil (imagen y username)
+            //TODO screen de editar mi receta
+
+
         }
     }
 }

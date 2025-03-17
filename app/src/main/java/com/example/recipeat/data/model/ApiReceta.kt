@@ -5,6 +5,7 @@ data class ApiReceta(
     val id: Int,
     val title: String,
     val image: String,
+    val servings: Int,
     val extendedIngredients: List<Ingrediente>,
     val instructions: String,
     val readyInMinutes: Int,

@@ -5,8 +5,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
@@ -27,8 +30,7 @@ fun NameSearchScreen(
     navController: NavController,
     recetasViewModel: RecetasViewModel
 ) {
-    val recetasSugeridas by recetasViewModel.apiRecetasSugeridas.collectAsState()
-    //var recetaInput by rememberSaveable { mutableStateOf("") }
+    val recetasSugeridas by recetasViewModel.recetasSugeridas.collectAsState()
     var recetaInput by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(""))
     }
@@ -36,7 +38,7 @@ fun NameSearchScreen(
     // Función que busca recetas mientras se escribe en el input
     LaunchedEffect(recetaInput) {
         if (recetaInput.text.isNotEmpty()) {
-            recetasViewModel.buscarRecetasPorNombreAutocompletado(recetaInput.text)
+            recetasViewModel.obtenerSugerenciasPorNombre(recetaInput.text)
         }
     }
         Column(
@@ -51,9 +53,16 @@ fun NameSearchScreen(
                 onValueChange = { updatedValue ->
                     recetaInput = updatedValue
                 },  // Actualiza el valor del input
-                label = { Text("Pe: Burger...", style = MaterialTheme.typography.bodyMedium) },
+                label = { Text("E.g.: Burger...", style = MaterialTheme.typography.bodyMedium) },
                 modifier = Modifier.fillMaxWidth(),
-                textStyle = MaterialTheme.typography.bodyMedium
+                textStyle = MaterialTheme.typography.bodyMedium,
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search, // Aquí se usa el ícono de lupa
+                        contentDescription = "Search Icon",
+                        tint = Color.Gray // Puedes cambiar el color si lo deseas
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -72,12 +81,6 @@ fun NameSearchScreen(
                 ),
                 //enabled = false
             ) {
-//            // icono
-//            Icon(
-//                imageVector = Icons.Default.LocalDining,
-//                contentDescription = null,
-//                modifier = Modifier.padding(end = 2.dp) // Espaciado entre el ícono y el texto
-//            )
 
                 Text(
                     text = "Cook!",
@@ -100,15 +103,15 @@ fun NameSearchScreen(
                             .padding(8.dp)
                             .clickable {
                                 recetaInput = TextFieldValue(
-                                    recetaSug.title,
-                                    selection = TextRange(recetaSug.title.length) // Coloca el cursor al final del texto
+                                    recetaSug,
+                                    selection = TextRange(recetaSug.length) // Coloca el cursor al final del texto
                                 )  // Al hacer clic, actualiza el input con el título de la receta seleccionada
                             },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = recetaSug.title,
+                            text = recetaSug,
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Start
                         )
