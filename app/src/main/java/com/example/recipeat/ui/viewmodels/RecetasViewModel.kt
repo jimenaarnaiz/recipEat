@@ -24,8 +24,6 @@ class RecetasViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
 
-    private val maxEjecuciones = 2 // TODO 5 veces (500 recipes)
-
     private val _apiRecetas = MutableStateFlow<List<ApiReceta>>(emptyList())
     val apiRecetas: StateFlow<List<ApiReceta>> = _apiRecetas
 
@@ -45,6 +43,8 @@ class RecetasViewModel : ViewModel() {
 
     private val _isLoadingMore = MutableLiveData(false)
     val isLoadingMore: LiveData<Boolean> get() = _isLoadingMore
+
+    private val _recetasOriginales = MutableLiveData<List<Receta>>(emptyList())
 
 
     fun verificarRecetasGuardadas(uid: String) {
@@ -647,6 +647,7 @@ class RecetasViewModel : ViewModel() {
 
                 // Actualizar el LiveData con las recetas
                 _recetas.value = recetasFinales
+                _recetasOriginales.value = recetasFinales
                 Log.d("buscarRecetasPorIngredientes()", "$recetasFinales")
             }
             .addOnFailureListener { exception ->
@@ -749,37 +750,45 @@ class RecetasViewModel : ViewModel() {
     // Definir la función de filtro
     fun filtrarRecetas(
         //recetas: List<Receta>,
-        tiempoFiltro: Int,
-        maxIngredientesFiltro: Int,
-        maxFaltantesFiltro: Int,
-        maxPasosFiltro: Int,
-        //tipoDietaFiltro: String,
-        tipoPlatoFiltro: String
+        tiempoFiltro: Int?,
+        maxIngredientesFiltro: Int?,
+        maxFaltantesFiltro: Int?,
+        maxPasosFiltro: Int?,
+        //tipoDietaFiltro: String?,
+        tipoPlatoFiltro: String?
     ) {
-        recetas.value?.filter { receta ->
-            // Filtrar por tiempo
-            val tiempoValido = receta.time <= tiempoFiltro
+        val recetasFiltro = recetas.value!!.filter { receta ->
+            // Validación por tiempo, solo se aplica si tiempoFiltro no es null
+            val tiempoValido = tiempoFiltro?.let { receta.time <= it } ?: true
 
-            // Filtrar por cantidad de ingredientes
-            val ingredientesValidos = receta.ingredients.size <= maxIngredientesFiltro
+            // Validación por cantidad de ingredientes, solo se aplica si maxIngredientesFiltro no es null
+            val ingredientesValidos = maxIngredientesFiltro?.let { receta.ingredients.size <= it } ?: true
 
-            // Filtrar por ingredientes faltantes (suponiendo que tengas esta propiedad)
-            val faltantesValidos = receta.missingIngredientCount <= maxFaltantesFiltro
+            // Validación por ingredientes faltantes, solo se aplica si maxFaltantesFiltro no es null
+            val faltantesValidos = maxFaltantesFiltro?.let { receta.missingIngredientCount <= it } ?: true
 
-            // Filtrar por número de pasos
-            val pasosValidos = receta.steps.size <= maxPasosFiltro
 
-            // Filtrar por tipo de dieta
-    //            val dietaValida = receta.dietType.contains(tipoDietaFiltro, ignoreCase = true)
+            // Validación por número de pasos, solo se aplica si maxPasosFiltro no es null
+            val pasosValidos = maxPasosFiltro?.let { receta.steps.size <= it } ?: true
 
-            // Filtrar por tipo de plato
-            val platoValido = receta.dishTypes.contains(tipoPlatoFiltro)
+            // Validación por tipo de plato, solo se aplica si tipoPlatoFiltro no es null
+            val platoValido = tipoPlatoFiltro?.let { receta.dishTypes.contains(it) } ?: true
+
+            /* val tipoDieta =  */
 
             // Aplicar todos los filtros
             tiempoValido && ingredientesValidos && faltantesValidos && pasosValidos /* && dietaValida*/ && platoValido
         }
+
+        _recetas.value = recetasFiltro
     }
 
+    fun restablecerRecetas(){
+        _recetas.value = _recetasOriginales.value
+        Log.d("RecetasViewModel", "Restableciendo recetas a las originales...\n ${_recetas.value} ")
+
+
+    }
 
 
 

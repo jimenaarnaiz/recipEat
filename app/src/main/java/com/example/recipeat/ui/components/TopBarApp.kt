@@ -23,7 +23,7 @@ import com.example.recipeat.ui.theme.LightYellow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppBar(title: String, navController: NavController) {
+fun AppBar(title: String, navController: NavController, onBackPressed: () -> Unit ) {
     TopAppBar(
         title = {
             Box(
@@ -48,13 +48,16 @@ fun AppBar(title: String, navController: NavController) {
         ),
 
         navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = {
+                onBackPressed() //
+                //navController.popBackStack()
+            }
+            ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back"
                 )
             }
-
         }
     )
 }

@@ -28,5 +28,5 @@ data class Receta(
 
 // Para las recetas que crea localmente el user
 enum class DishTypes {
-    Breakfast, Lunch, Snack, Dinner
+    breakfast, lunch, dessert, snack, dinner
 }

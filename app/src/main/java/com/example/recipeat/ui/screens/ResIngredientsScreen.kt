@@ -25,13 +25,11 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.AccessTimeFilled
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.ShoppingBasket
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -42,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,7 +59,7 @@ import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.theme.Cherry
-import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 
@@ -68,29 +67,37 @@ import com.example.recipeat.ui.viewmodels.RecetasViewModel
 fun ResIngredientsScreen(
     navController: NavController,
     recetasViewModel: RecetasViewModel,
-    ingredientesViewModel: IngredientesViewModel
+    ingredientesViewModel: IngredientesViewModel,
+    filtrosViewModel: FiltrosViewModel
 ) {
 
     val ingredientes by ingredientesViewModel.ingredientes.collectAsState(emptyList())
     val recetas by recetasViewModel.recetas.observeAsState(emptyList())
 
-    var mostrarDialog by remember { mutableStateOf(false) }
+    var showBottomSheet by remember { mutableStateOf(false) }
 
+    // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
+    var lastIngredientes by rememberSaveable { mutableStateOf<List<IngredienteSimple>>(emptyList()) }
 
-
-    // Función que busca recetas mientras se escribe en el input
     LaunchedEffect(ingredientes) {
-        Log.d("ResultadosIngredientsSearch", "ingredientes a buscar: $ingredientes")
-        // Obtener la lista de nombres de los ingredientes
-        //val ingredientesNombres = ingredientes.map { it.name }
-        recetasViewModel.buscarRecetasPorIngredientes(ingredientes)
+        // Solo ejecutar si los ingredientes han cambiado
+        if (ingredientes != lastIngredientes) {
+            Log.d("ResultadosIngredientsSearch", "ingredientes a buscar: $ingredientes")
+            recetasViewModel.buscarRecetasPorIngredientes(ingredientes)
+            lastIngredientes = ingredientes // Actualiza el estado con los nuevos ingredientes
+        }
     }
+
 
     Scaffold(
         topBar = {
             AppBar(
                 title = "",
-                navController = navController
+                navController = navController,
+                onBackPressed = {
+                    filtrosViewModel.restablecerFiltros()
+                    navController.popBackStack()
+                }
             )
         }
     ) { paddingValues ->
@@ -102,9 +109,13 @@ fun ResIngredientsScreen(
                 .padding(16.dp)
                 .padding(bottom = 16.dp)
         ) {
-            // Mostrar un indicador de carga si no se han cargado las recetas
+
             if (recetas.isEmpty()) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                Text(
+                    text = "No results available"
+                )
+                // Mostrar un indicador de carga si no se han cargado las recetas
+                //CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
                 // Carrusel de recetas
                 LazyColumn(
@@ -116,11 +127,11 @@ fun ResIngredientsScreen(
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(16.dp), // Espaciado entre los botones
                             verticalAlignment = Alignment.CenterVertically, // Alineación vertical
-                            modifier = Modifier.fillMaxWidth() // Ocupa todo el ancho disponible
+                            modifier = Modifier.fillMaxWidth() // Ocupa tdo el ancho disponible
                         ) {
                             // Botón de Filtros
                             Button(
-                                onClick = { mostrarDialog = true },
+                                onClick = { showBottomSheet = true },
                                 modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
                                 shape = RoundedCornerShape(12.dp), // Bordes redondeados
                                 colors = ButtonDefaults.buttonColors(containerColor = Cherry)
@@ -143,20 +154,32 @@ fun ResIngredientsScreen(
 
 
                         // Mostrar el dialog de filtros si es necesario
-                        if (mostrarDialog) {
-                            FiltroDialog(
-                                onDismiss = { mostrarDialog = false },
-                                onApplyFilters = { maxIngredientes, maxFaltantes, maxPasos, tipoPlato ->
+                        if (showBottomSheet) {
+                            FiltroBottomSheet(
+                                onDismiss = { showBottomSheet = false },
+                                onApplyFilters = { maxTiempo, maxIngredientes, maxFaltantes, maxPasos, tipoPlato ->
+                                    // Aplicar los filtros seleccionados
+                                    filtrosViewModel.aplicarFiltros(
+                                        tiempo = maxTiempo,
+                                        ingredientes = maxIngredientes,
+                                        faltantes = maxFaltantes,
+                                        pasos = maxPasos,
+                                        plato = tipoPlato
+                                    )
                                     // Aplica los filtros a las recetas
                                     recetasViewModel.filtrarRecetas(
-                                        tiempoFiltro = 30, // ejemplo de valor para el filtro de tiempo
+                                        tiempoFiltro = maxTiempo,
                                         maxIngredientesFiltro = maxIngredientes,
                                         maxFaltantesFiltro = maxFaltantes,
                                         maxPasosFiltro = maxPasos,
                                         tipoPlatoFiltro = tipoPlato
                                     )
-                                    mostrarDialog = false
-                                }
+
+                                    showBottomSheet = false
+
+                                },
+                                filtrosViewModel = filtrosViewModel,
+                                recetasViewModel = recetasViewModel
                             )
                         }
                     }
@@ -164,13 +187,7 @@ fun ResIngredientsScreen(
                     items(recetas) { receta ->
                         RecetaCardRes2(receta, navController, ingredientes)
                     }
-
-                    // Cargar más recetas si el usuario está cerca del final
-                    item {
-                        if (recetas.isNotEmpty()) {
-                            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                        }
-                    }
+                    
                 }
             }
         }

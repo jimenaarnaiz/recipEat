@@ -50,7 +50,10 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
     }
 
     Scaffold(
-        topBar = { AppBar(title = "Profile", navController = navController) }
+        topBar = { AppBar(
+            title = "Profile", navController = navController,
+            onBackPressed = {navController.popBackStack()}
+        ) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -97,9 +100,10 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                 )
             }
 
+
+
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Lista de opciones (Historial y Favoritos) con tarjetas elegantes
             // Lista de opciones (Historial y Favoritos) con tarjetas elegantes
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -133,7 +137,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                         onClick = {
                             FirebaseAuth.getInstance().signOut()
                             navController.navigate("login") {
-                                popUpTo("profile") { inclusive = true }
+                                popUpTo("profile") { inclusive = true } // para eliminar de la pila las anteriores screens
                             }
                         },
                         backgroundColor = Color.Red,

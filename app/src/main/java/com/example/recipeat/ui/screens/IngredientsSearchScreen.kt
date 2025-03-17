@@ -1,6 +1,5 @@
 package com.example.recipeat.ui.screens
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import androidx.compose.foundation.background
@@ -23,10 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -42,8 +39,7 @@ fun IngredientsSearchScreen(
     ingredientesViewModel: IngredientesViewModel
 ) {
 
-    // Obtener las recetas e ingredientes desde el ViewModel
-    val recetas by recetasViewModel.apiRecetas.collectAsState()
+    // Obtener los ingredientes desde el ViewModel
     val ingredientesSugeridos by ingredientesViewModel.ingredientesSugeridos.collectAsState()
     val ingredientesReceta by ingredientesViewModel.ingredientes.collectAsState()
 
@@ -55,9 +51,8 @@ fun IngredientsSearchScreen(
         if (ingrediente.isNotEmpty()) { // Agregar una verificación para no hacer la búsqueda cuando la cadena esté vacía
             ingredientesViewModel.buscarIngredientes(ingrediente)
         }
-    }
 
-    //TODO si se da hacia atras, eliminar los ingredientes seleccionados
+    }
 
 
    Column(modifier = Modifier

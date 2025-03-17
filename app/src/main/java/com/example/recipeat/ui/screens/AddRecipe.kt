@@ -60,7 +60,10 @@ fun AddRecipe(navController: NavController, recetasViewModel: RecetasViewModel) 
     var isPressed by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { AppBar("Create your recipe", navController) }
+        topBar = { AppBar(
+            "Create your recipe", navController,
+            onBackPressed = { navController.popBackStack() },
+        ) }
     ) { paddingValues ->
         // Contenedor principal con LazyColumn para el scroll
         LazyColumn(

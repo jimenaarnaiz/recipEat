@@ -55,7 +55,8 @@ fun ResNameScreen(
         topBar = {
             AppBar(
                 title = "",
-                navController = navController
+                navController = navController,
+                onBackPressed = { navController.popBackStack() }
             )
         }
     ) { paddingValues ->

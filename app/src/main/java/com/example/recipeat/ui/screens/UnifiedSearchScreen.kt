@@ -1,6 +1,5 @@
 package com.example.recipeat.ui.screens
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -23,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.theme.Cherry
+import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 
@@ -30,7 +30,8 @@ import com.example.recipeat.ui.viewmodels.RecetasViewModel
 fun UnifiedSearchScreen(
     navController: NavController,
     recetasViewModel: RecetasViewModel,
-    ingredientesViewModel: IngredientesViewModel
+    ingredientesViewModel: IngredientesViewModel,
+    filtrosViewModel: FiltrosViewModel
 ) {
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Ingredientes, 1: Nombre
 
@@ -38,7 +39,10 @@ fun UnifiedSearchScreen(
         topBar = {
             AppBar(
                 title = "",
-                navController = navController
+                navController = navController,
+                onBackPressed = {
+                    navController.popBackStack()
+                }
             )
         }
     ) { paddingValues ->

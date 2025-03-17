@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
@@ -34,7 +35,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun DetailsScreen(
     idReceta: Int,
     navController: NavHostController,
-    recetasViewModel: RecetasViewModel
+    recetasViewModel: RecetasViewModel,
 ) {
 
     val receta by recetasViewModel.recetaSeleccionada.observeAsState()
@@ -42,6 +43,7 @@ fun DetailsScreen(
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
     LaunchedEffect(uid) {
+
         if (uid != null) {
             recetasViewModel.obtenerRecetaPorId(
                 uid = uid,
@@ -49,18 +51,13 @@ fun DetailsScreen(
             )
             Log.d("DetailsScreen", "Analyzed instructions: ${receta?.steps}")
         }
-
-
-
-//        recetasViewModel.obtenerDetallesReceta(idReceta)
-//        Log.d("DetailsScreen", "receta: $idReceta ${receta?.title}")
-//        recetasViewModel.obtenerAnalyzedInstructions(idReceta)
-//        Log.d("DetailsScreen", "Analyzed instructions: $steps")
-
     }
 
     Scaffold(
-        topBar = { AppBar(title = "", navController = navController) }
+        topBar = { AppBar(
+            title = "", navController = navController,
+            onBackPressed = {navController.popBackStack()}
+        ) }
     ) { paddingValues ->
         receta?.let { recetaDetalle ->
             Column(
