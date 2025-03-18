@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.recipeat.data.api.RetrofitClient
 import com.example.recipeat.data.model.ApiReceta
+import com.example.recipeat.data.model.CookHistory
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
@@ -46,6 +47,9 @@ class RecetasViewModel : ViewModel() {
     val isLoadingMore: LiveData<Boolean> get() = _isLoadingMore
 
     private val _recetasOriginales = MutableLiveData<List<Receta>>(emptyList())
+
+    private val _esFavorito = MutableLiveData<Boolean>()
+    val esFavorito: LiveData<Boolean> get() = _esFavorito
 
 
     fun verificarRecetasGuardadas(uid: String) {
@@ -798,6 +802,68 @@ class RecetasViewModel : ViewModel() {
     fun restablecerRecetasSugeridas(){
         _recetasSugeridas.value = emptyList()
     }
+
+
+    //
+    fun toggleFavorito(uid: String?, recetaId: String) {
+        if (uid == null) return
+
+        val favoritosRef = db.collection("favoritos").document(uid).collection("recetas")
+
+        favoritosRef.document(recetaId).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    // Si ya está en favoritos, lo eliminamos
+                    favoritosRef.document(recetaId).delete()
+                        .addOnSuccessListener {
+                            _esFavorito.value = false
+                        }
+                } else {
+                    // Si no está en favoritos, lo añadimos
+                    val favoritoData = hashMapOf("idReceta" to recetaId)
+
+                    favoritosRef.document(recetaId).set(favoritoData)
+                        .addOnSuccessListener {
+                            _esFavorito.value = true
+                        }
+                }
+            }
+    }
+
+    //
+    fun verificarSiEsFavorito(uid: String?, recetaId: String) {
+        if (uid == null) return
+
+        val favoritosRef = db.collection("favoritos").document(uid).collection("recetas")
+
+        favoritosRef.document(recetaId).get()
+            .addOnSuccessListener { document ->
+                _esFavorito.value = document.exists()
+            }
+    }
+
+    fun añadirHistorial(uid: String?, recipeId: String) {
+        if (uid == null) return
+
+        val historialRef = db.collection("historial").document(uid).collection("cocinadas")
+        val timestamp = System.currentTimeMillis()
+
+        val historialEntry = CookHistory(
+            recipeId = recipeId,
+            timestamp = timestamp
+        )
+
+        historialRef.add(historialEntry)
+            .addOnSuccessListener {
+                Log.d("Historial", "Receta $recipeId añadida al historial correctamente")
+            }
+            .addOnFailureListener { e ->
+                Log.e("Historial", "Error al añadir receta $recipeId al historial", e)
+            }
+    }
+
+
+
 
 
 
