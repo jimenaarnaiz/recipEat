@@ -1,4 +1,4 @@
-package com.example.recipeat.ui.screens
+package com.example.recipeat.ui.screens.search
 
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import androidx.compose.foundation.clickable
@@ -19,14 +19,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import androidx.compose.ui.text.input.TextFieldValue
 import com.example.recipeat.ui.theme.LightYellow
 
 @Composable
-fun NameSearchScreen(
+fun NameSearch(
     navController: NavController,
     recetasViewModel: RecetasViewModel
 ) {

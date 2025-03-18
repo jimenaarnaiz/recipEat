@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.R
+import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 
@@ -135,11 +136,15 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
             onClick = { navController.navigate("register") },
             modifier = Modifier.fillMaxWidth(0.8f),
             colors = ButtonDefaults.buttonColors(
-                containerColor = LightYellow,
+                containerColor = Cherry,
                 contentColor = Color.Black
             )
         ) {
-            Text("Register", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                "Register",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White
+            )
         }
 
 

@@ -13,8 +13,6 @@ class FiltrosViewModel : ViewModel() {
     var maxPasos = mutableStateOf<Int?>(null)
     var tipoPlato = mutableStateOf<String?>(null)
 
-    val recetasViewModel = RecetasViewModel()
-
     // Función para aplicar los filtros
     fun aplicarFiltros(
         tiempo: Int?,
@@ -39,6 +37,6 @@ class FiltrosViewModel : ViewModel() {
         tipoPlato.value = null
 
         Log.d("FiltrosViewModel", "Restableciendo filtros...")
-
     }
+    
 }

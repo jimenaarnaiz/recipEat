@@ -1,4 +1,4 @@
-package com.example.recipeat.ui.screens
+package com.example.recipeat.ui.screens.search
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -77,8 +77,8 @@ fun UnifiedSearchScreen(
 
             // Mostrar la vista correspondiente
             when (selectedTab) {
-                0 -> IngredientsSearchScreen(navController, ingredientesViewModel)
-                1 -> NameSearchScreen(navController, recetasViewModel)
+                0 -> IngredientsSearch(navController, ingredientesViewModel)
+                1 -> NameSearch(navController, recetasViewModel)
             }
         }
     }

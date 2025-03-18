@@ -1,4 +1,4 @@
-package com.example.recipeat.ui.screens
+package com.example.recipeat.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -28,8 +28,8 @@ fun FiltroBottomSheet(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
 
-    val opcionesTiempo = listOf(5, 10, 20, 30, 60)  // Opciones de tiempo en minutos
-    val opcionesIngredientes = listOf(5, 10, 15, 20)
+    val opcionesTiempo = listOf(5, 10, 20, 30, 45, 60)  // Opciones de tiempo en minutos
+    val opcionesIngredientes = listOf(5, 7, 10, 15 )
     val opcionesFaltantes = listOf(0, 2, 5, 10)
     val opcionesPasos = listOf(3, 5, 10, 15)
 

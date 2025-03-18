@@ -12,12 +12,11 @@ import com.example.recipeat.ui.screens.DetailsScreen
 import com.example.recipeat.ui.screens.HomeScreen
 import com.example.recipeat.ui.screens.LoginScreen
 import com.example.recipeat.ui.screens.MyRecipesScreen
-import com.example.recipeat.ui.screens.NameSearchScreen
 import com.example.recipeat.ui.screens.ProfileScreen
 import com.example.recipeat.ui.screens.RegisterScreen
 import com.example.recipeat.ui.screens.ResNameScreen
 import com.example.recipeat.ui.screens.ResIngredientsScreen
-import com.example.recipeat.ui.screens.UnifiedSearchScreen
+import com.example.recipeat.ui.screens.search.UnifiedSearchScreen
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel

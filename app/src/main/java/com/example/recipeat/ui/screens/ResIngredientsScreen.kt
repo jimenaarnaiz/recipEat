@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -58,6 +57,7 @@ import com.example.recipeat.R
 import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.components.AppBar
+import com.example.recipeat.ui.components.FiltroBottomSheet
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel

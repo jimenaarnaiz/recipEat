@@ -1,4 +1,4 @@
-package com.example.recipeat.ui.screens
+package com.example.recipeat.ui.screens.search
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,7 +32,7 @@ import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 
 
 @Composable
-fun IngredientsSearchScreen(
+fun IngredientsSearch(
     navController: NavController,
     ingredientesViewModel: IngredientesViewModel
 ) {
