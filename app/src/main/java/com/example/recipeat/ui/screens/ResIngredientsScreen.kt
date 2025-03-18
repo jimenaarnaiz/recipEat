@@ -178,7 +178,8 @@ fun ResIngredientsScreen(
 
                                 },
                                 filtrosViewModel = filtrosViewModel,
-                                recetasViewModel = recetasViewModel
+                                recetasViewModel = recetasViewModel,
+                                busquedaPorNombre = false,
                             )
                         }
                     }

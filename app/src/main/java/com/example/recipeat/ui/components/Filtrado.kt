@@ -16,7 +16,8 @@ fun FiltroBottomSheet(
     onDismiss: () -> Unit,
     onApplyFilters: (Int?, Int?, Int?, Int?, String?) -> Unit,
     recetasViewModel: RecetasViewModel,
-    filtrosViewModel: FiltrosViewModel // Pasamos el ViewModel
+    filtrosViewModel: FiltrosViewModel, // Pasamos el ViewModel
+    busquedaPorNombre: Boolean //Para controlar la visibilidad del filtro
 ) {
     // Inicializamos los filtros con los valores actuales del ViewModel
     var maxTiempo by remember { mutableStateOf(filtrosViewModel.maxTiempo.value) }
@@ -55,8 +56,10 @@ fun FiltroBottomSheet(
             SegmentedButtonRow(opcionesIngredientes, maxIngredientesFiltro) { maxIngredientesFiltro = it }
 
             // Filtro de ingredientes faltantes
-            Text("🚫 Máximo de ingredientes faltantes")
-            SegmentedButtonRow(opcionesFaltantes, maxFaltantesFiltro) { maxFaltantesFiltro = it }
+            if (!busquedaPorNombre) {
+                Text("🚫 Máximo de ingredientes faltantes")
+                SegmentedButtonRow(opcionesFaltantes, maxFaltantesFiltro) { maxFaltantesFiltro = it }
+            }
 
             // Filtro de pasos
             Text("📋 Máximo de pasos")

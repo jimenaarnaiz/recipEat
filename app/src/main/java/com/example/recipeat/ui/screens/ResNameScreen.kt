@@ -150,7 +150,8 @@ fun ResNameScreen(
 
                                 },
                                 filtrosViewModel = filtrosViewModel,
-                                recetasViewModel = recetasViewModel
+                                recetasViewModel = recetasViewModel,
+                                busquedaPorNombre = true
                             )
                         }
                     }
