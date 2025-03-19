@@ -211,8 +211,15 @@ fun RecetaCardRes2(receta: Receta, navController: NavController, ingredientes: L
             horizontalAlignment = Alignment.CenterHorizontally // Alinear el contenido en el centro
         ) {
             // Cargar la imagen de la receta con esquinas redondeadas y sin padding
+            var imagen by remember { mutableStateOf("") }
+            imagen = if (receta.image?.isNotBlank() == true) {
+                receta.image
+            } else {
+                "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
+            }
+
             Image(
-                painter = rememberAsyncImagePainter(receta.image),
+                painter = rememberAsyncImagePainter(imagen),
                 contentDescription = receta.title,
                 modifier = Modifier
                     .fillMaxWidth() // La imagen ocupa tdo el ancho de la Card

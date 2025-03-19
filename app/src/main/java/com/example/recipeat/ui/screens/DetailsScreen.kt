@@ -92,7 +92,15 @@ fun DetailsScreen(
                         modifier = Modifier.weight(1f)
                     )
 
-                    IconButton(onClick = { recetasViewModel.toggleFavorito(uid, idReceta.toString()) }) {
+                    IconButton(onClick = {
+                        receta!!.image?.let {
+                            recetasViewModel.toggleFavorito(
+                                uid, idReceta.toString(),
+                                title = receta!!.title,
+                                image = it,
+                                )
+                        }
+                    }) {
                         Icon(
                             modifier = Modifier.size(35.dp),
                             imageVector = if (esFavorito == true) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,

@@ -9,6 +9,8 @@ import androidx.navigation.compose.composable
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.AddRecipe
 import com.example.recipeat.ui.screens.DetailsScreen
+import com.example.recipeat.ui.screens.FavoritesScreen
+import com.example.recipeat.ui.screens.HistoryScreen
 import com.example.recipeat.ui.screens.HomeScreen
 import com.example.recipeat.ui.screens.LoginScreen
 import com.example.recipeat.ui.screens.MyRecipesScreen
@@ -57,10 +59,6 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 ProfileScreen(navController, usersViewModel) // Perfil
                 onBottomBarVisibilityChanged(true)
             }
-//            composable("nameSearch") { //TODO quitar la ruta, pq ya esta search
-//                NameSearchScreen(navController, recetasViewModel) // Búsqueda por nombre
-//                onBottomBarVisibilityChanged(false)
-//            }
             composable("resultados/{query}") { backStackEntry ->
                 val query = backStackEntry.arguments?.getString("query") ?: ""
                 ResNameScreen(nombreReceta = query, navController = navController, recetasViewModel, filtrosViewModel)
@@ -81,6 +79,14 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
             }
             composable("add_recipe") {
                 AddRecipe(navController, recetasViewModel)   //
+                onBottomBarVisibilityChanged(false)
+            }
+            composable("favoritos") {
+                FavoritesScreen(navController, recetasViewModel)   //
+                onBottomBarVisibilityChanged(false)
+            }
+            composable("historial") {
+                HistoryScreen(navController, recetasViewModel)   //
                 onBottomBarVisibilityChanged(false)
             }
             //TODO crear screen de editar perfil (imagen y username)

@@ -11,23 +11,25 @@ import com.example.recipeat.data.model.CookHistory
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
+import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.data.model.SugerenciaReceta
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import retrofit2.HttpException
 import java.util.UUID
 
 class RecetasViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
 
-   // private val _apiRecetas = MutableStateFlow<List<ApiReceta>>(emptyList())
-    //val apiRecetas: StateFlow<List<ApiReceta>> = _apiRecetas
+    private val _numRecetas = 400
 
     private val _recetasSugeridas = MutableStateFlow<List<SugerenciaReceta>>(emptyList())
     val recetasSugeridas: StateFlow<List<SugerenciaReceta>> = _recetasSugeridas
@@ -51,44 +53,33 @@ class RecetasViewModel : ViewModel() {
     private val _esFavorito = MutableLiveData<Boolean>()
     val esFavorito: LiveData<Boolean> get() = _esFavorito
 
+    private val _recetasFavoritas =  MutableLiveData<List<RecetaSimple>>(emptyList())
+    val recetasFavoritas: LiveData<List<RecetaSimple>> = _recetasFavoritas
 
-    fun verificarRecetasGuardadas(uid: String) {
-        val configRef = db.collection("config").document("recetas_guardadas")
 
-        // Verificar si las recetas ya fueron guardadas
-        configRef.get().addOnSuccessListener { document ->
-            if (document.exists() && document.getBoolean("ya_guardado") == true) {
-                Log.d(
-                    "RecetasViewModel",
-                    "Las recetas ya fueron almacenadas. No se ejecuta nuevamente."
-                )
-            } else {
-                if (!document.exists()) {
-                    // Si el documento no existe, lo creamos con el valor inicial de 'ya_guardado' = false
-                    configRef.set(hashMapOf("ya_guardado" to false))
-                        .addOnSuccessListener {
-                            Log.d(
-                                "RecetasViewModel",
-                                "Documento 'recetas_guardadas' creado exitosamente."
-                            )
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("RecetasViewModel", "Error al crear documento en Firestore", e)
-                        }
+    fun verificarRecetasGuardadasApi() {
+        // Verificar cuántas recetas hay actualmente en Firebase
+        db.collection("recetas").get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.size() >= _numRecetas) { // Si hay 500 o más recetas
+                    Log.d("RecetasViewModel", "Ya se tienen $_numRecetas recetas. No es necesario guardar más.")
+                } else {
+                    Log.d("RecetasViewModel", "Menos de $_numRecetas recetas (${snapshot.size()}). Se proceden a guardar nuevas recetas.")
+                    // Si no se ha alcanzado el límite de 500 recetas, se guardan las recetas aleatorias
+                    guardarRecetasApi()
                 }
-                // Si no se han guardado, comenzamos a guardar las recetas aleatorias
-                guardarRecetas(uid, configRef)
             }
-        }.addOnFailureListener {
-            Log.e("RecetasViewModel", "Error al verificar el estado de recetas en Firestore", it)
-        }
+            .addOnFailureListener { e ->
+                Log.e("RecetasViewModel", "Error al contar las recetas en Firebase", e)
+            }
     }
+
 
     /**
      * Guarda recetas en Firebase de la llamada random recipes de la API.
-     * Se ha de ejecutar hasta obtener 500 recetas.
+     * Se ha de ejecutar hasta obtener 400 recetas.
     */
-    fun guardarRecetas(uid: String, configRef: DocumentReference) {
+    fun guardarRecetasApi() {
         viewModelScope.launch {
             try {
                 delay(3000) // Delay para no sobrecargar las solicitudes
@@ -109,7 +100,7 @@ class RecetasViewModel : ViewModel() {
                                         delay(3000) // Delay para no sobrecargar las solicitudes
                                         val analyzedInstructions =
                                             RetrofitClient.api.obtenerInstruccionesReceta(apiReceta.id)
-                                        val receta = mapApiRecetaToReceta(apiReceta, uid, analyzedInstructions)
+                                        val receta = mapApiRecetaToReceta(apiReceta, "", analyzedInstructions)
 
                                         val recetaData = hashMapOf(
                                             "id" to receta.id,
@@ -127,7 +118,7 @@ class RecetasViewModel : ViewModel() {
                                             "steps" to receta.steps,
                                             "time" to receta.time,
                                             "dishTypes" to receta.dishTypes,
-                                            "user" to receta.userId,
+                                            //"user" to receta.userId,
                                             "glutenFree" to receta.glutenFree,
                                             "vegan" to receta.vegan,
                                             "vegetarian" to receta.vegetarian
@@ -152,25 +143,6 @@ class RecetasViewModel : ViewModel() {
                                 Log.e("RecetasViewModel", "Error al verificar receta en Firebase", e)
                             }
                     }
-
-                    // Verificar cuántas recetas hay actualmente en Firebase
-                    db.collection("recetas").get()
-                        .addOnSuccessListener { snapshot ->
-                            if (snapshot.size() >= 500) { // Si hay 500 o más recetas
-                                // Actualizar el estado de 'ya_guardado' en la configuración
-                                configRef.update("ya_guardado", true)
-                                    .addOnSuccessListener {
-                                        Log.d("RecetasViewModel", "Recetas guardadas y estado actualizado a 'true'.")
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Log.e("RecetasViewModel", "Error al actualizar el estado en Firestore", e)
-                                    }
-                            }
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("RecetasViewModel", "Error al contar las recetas en Firebase", e)
-                        }
-
                 } else {
                     Log.d("RecetasViewModel", "No se obtuvieron recetas aleatorias.")
                 }
@@ -183,80 +155,6 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-
-
-//    fun guardarRecetas(uid: String, configRef: DocumentReference) {
-//        viewModelScope.launch {
-//            try {
-//                var count = 0
-//                while (count < maxEjecuciones) {  // TODO 5 veces (500 recipes)
-//                    val response =
-//                        RetrofitClient.api.obtenerRecetasRandom() // Obtiene las recetas aleatorias
-//
-//                    // Verificar que la respuesta sea válida y no esté vacía
-//                    if (response.recipes.isNotEmpty()) {
-//                        response.recipes.forEach { apiReceta ->
-//                            val analyzedInstructions =
-//                                RetrofitClient.api.obtenerInstruccionesReceta(apiReceta.id)
-//
-//                            val receta = mapApiRecetaToReceta(apiReceta, uid, analyzedInstructions)
-//                            val recetaData = hashMapOf(
-//                                "id" to receta.id,
-//                                "title" to receta.title,
-//                                "image" to receta.image,
-//                                "servings" to receta.servings,
-//                                "ingredients" to receta.ingredients.map {
-//                                    hashMapOf(
-//                                        "name" to it.name,
-//                                        "amount" to it.amount,
-//                                        "unit" to it.unit,
-//                                        "image" to it.image
-//                                    )
-//                                },
-//                                "steps" to receta.steps,
-//                                "time" to receta.time,
-//                                "dishTypes" to receta.dishTypes,
-//                                "user" to receta.userId,
-//                                "glutenFree" to receta.glutenFree,
-//                                "vegan" to receta.vegan,
-//                                "vegetarian" to receta.vegetarian
-//                            )
-//
-//                            db.collection("recetas")
-//                                .document("${receta.id}")
-//                                .set(recetaData)
-//                                .addOnSuccessListener {
-//                                    println("Receta guardada correctamente en Firebase")
-//                                }
-//                                .addOnFailureListener { e ->
-//                                    Log.e(
-//                                        "RecetasViewModel",
-//                                        "Error al guardar receta en Firebase",
-//                                        e
-//                                    )
-//                                    println("Error al guardar receta: $e")
-//                                }
-//                        }
-//                    }
-//
-//                    count++  // Incrementar el contador para repetir hasta x veces
-//                }
-//
-//                // Una vez que se han guardado las recetas, actualizar el valor de 'ya_guardado'
-//                configRef.update("ya_guardado", true)
-//                    .addOnSuccessListener {
-//                        Log.d("RecetasViewModel", "Recetas guardadas y estado actualizado.")
-//                    }
-//                    .addOnFailureListener {
-//                        Log.e("RecetasViewModel", "Error al actualizar el estado en Firestore", it)
-//                    }
-//
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//                Log.e("RecetasViewModel", "Error al obtener recetas aleatorias: ${e.message}")
-//            }
-//        }
-//    }
 
     // Genera el ID único alfanumérico de la receta creada por el usuario
     fun generateRecipeId(): String {
@@ -496,8 +394,7 @@ class RecetasViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val document = db.collection("recetas")//.document(uid)
-                    //.collection("recetas_aleatorias")
+                val document = db.collection("recetas")
                     .document(recetaId)
                     .get()
                     .await()
@@ -778,7 +675,6 @@ class RecetasViewModel : ViewModel() {
             // Validación por ingredientes faltantes, solo se aplica si maxFaltantesFiltro no es null
             val faltantesValidos = maxFaltantesFiltro?.let { receta.missingIngredientCount <= it } ?: true
 
-
             // Validación por número de pasos, solo se aplica si maxPasosFiltro no es null
             val pasosValidos = maxPasosFiltro?.let { receta.steps.size <= it } ?: true
 
@@ -805,10 +701,10 @@ class RecetasViewModel : ViewModel() {
 
 
     //
-    fun toggleFavorito(uid: String?, recetaId: String) {
+    fun toggleFavorito(uid: String?, recetaId: String, title: String, image: String) {
         if (uid == null) return
 
-        val favoritosRef = db.collection("favoritos").document(uid).collection("recetas")
+        val favoritosRef = db.collection("favs_hist").document(uid).collection("favoritos")
 
         favoritosRef.document(recetaId).get()
             .addOnSuccessListener { document ->
@@ -819,8 +715,13 @@ class RecetasViewModel : ViewModel() {
                             _esFavorito.value = false
                         }
                 } else {
-                    // Si no está en favoritos, lo añadimos
-                    val favoritoData = hashMapOf("idReceta" to recetaId)
+                    // Si no está en favoritos, lo añadimos con más información
+                    val favoritoData = hashMapOf(
+                        "idReceta" to recetaId,
+                        "title" to title,
+                        "image" to image,
+                        "date" to System.currentTimeMillis()
+                    )
 
                     favoritosRef.document(recetaId).set(favoritoData)
                         .addOnSuccessListener {
@@ -830,11 +731,12 @@ class RecetasViewModel : ViewModel() {
             }
     }
 
+
     //
     fun verificarSiEsFavorito(uid: String?, recetaId: String) {
         if (uid == null) return
 
-        val favoritosRef = db.collection("favoritos").document(uid).collection("recetas")
+        val favoritosRef = db.collection("favs_hist").document(uid).collection("favoritos")
 
         favoritosRef.document(recetaId).get()
             .addOnSuccessListener { document ->
@@ -845,7 +747,7 @@ class RecetasViewModel : ViewModel() {
     fun añadirHistorial(uid: String?, recipeId: String) {
         if (uid == null) return
 
-        val historialRef = db.collection("historial").document(uid).collection("cocinadas")
+        val historialRef = db.collection("favs_hist").document(uid).collection("historial")
         val timestamp = System.currentTimeMillis()
 
         val historialEntry = CookHistory(
@@ -861,6 +763,45 @@ class RecetasViewModel : ViewModel() {
                 Log.e("Historial", "Error al añadir receta $recipeId al historial", e)
             }
     }
+
+
+    fun obtenerRecetasFavoritas(uid: String) {
+        val favoritosRef = db.collection("favs_hist")
+            .document(uid)
+            .collection("favoritos")
+            .orderBy("date", Query.Direction.DESCENDING) // Ordenamos por fecha de añadido
+
+        favoritosRef.get()
+            .addOnSuccessListener { snapshot ->
+                if (!snapshot.isEmpty) {
+                    val recetas = snapshot.documents.mapNotNull { document ->
+                        val recetaId = document.getString("idReceta")
+                        val title = document.getString("title")
+                        val image = document.getString("image")
+                        val date = document.getLong("date")
+
+                        if (recetaId != null && title != null && image != null && date != null) {
+                            RecetaSimple(
+                                id = recetaId,
+                                title = title,
+                                image = image,
+                                date = date
+                            )
+                        } else {
+                            null
+                        }
+                    }
+                    _recetasFavoritas.value = recetas
+                } else {
+                    _recetasFavoritas.value = emptyList()
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("RecetasViewModel", "Error al obtener los favoritos del usuario", e)
+            }
+    }
+
+
 
 
 

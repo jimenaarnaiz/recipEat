@@ -31,7 +31,10 @@ class IngredientesViewModel : ViewModel() {
         _ingredientes.value = emptyList()
     }
 
-
+    /**
+     * Si no existe la colección ingredientes, se guardan los ingredientes
+     * obtenidos de las recetas en formato IngredienteSimple
+    **/
     fun extraerIngredientesYGuardar() {
         val recetasCollection = db.collection("recetas")
         val ingredientesCollection = db.collection("ingredientes")

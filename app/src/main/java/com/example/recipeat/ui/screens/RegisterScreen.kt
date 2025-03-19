@@ -1,6 +1,5 @@
 package com.example.recipeat.ui.screens
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,7 +31,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.R
@@ -154,7 +152,7 @@ fun RegisterScreen(navController: NavHostController,
                                 //guardar 100 recetas para el user
                                 val uid = FirebaseAuth.getInstance().currentUser?.uid
                                 if (uid != null) {
-                                    recetasViewModel.verificarRecetasGuardadas(uid) //TODO cada dia puedo 100
+                                    recetasViewModel.verificarRecetasGuardadasApi() //TODO cada dia puedo unas 60
                                     ingredientesViewModel.extraerIngredientesYGuardar()
                                 }
                                 errorMessage = ""

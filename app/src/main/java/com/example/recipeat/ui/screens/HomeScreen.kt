@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.example.recipeat.R
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
@@ -96,21 +97,20 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
             }
     }
 
-    // Detecta si el usuario está cerca del final de la lista
+    // TODO Detecta si el usuario está cerca del final de la lista
     LaunchedEffect(listState) {
-        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-            .collect { index ->
-                Log.d("HomeScreen", "Índice visible actual: $index")
-                if (index == recetasState.size - 1 && !isLoadingMore) {
-                    Log.d("HomeScreen", "Cargando más recetas")
-                    uid?.let {
-                        recetasViewModel.obtenerRecetasHome(it, limpiarLista = false)
-                        Log.d("HomeScreen", "Num de recetas act: ${recetasState.size}")
-                    }
-                }
-            }
+//        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+//            .collect { index ->
+//                Log.d("HomeScreen", "Índice visible actual: $index")
+//                if (index == recetasState.size - 1 && !isLoadingMore) {
+//                    Log.d("HomeScreen", "Cargando más recetas")
+//                    uid?.let {
+//                        recetasViewModel.obtenerRecetasHome(it, limpiarLista = false)
+//                        Log.d("HomeScreen", "Num de recetas act: ${recetasState.size}")
+//                    }
+//                }
+//            }
     }
-
 
 
     Column(
@@ -124,7 +124,6 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
             modifier = Modifier
                 .padding(16.dp)
         )
-
 
         SearchBar(
             query = searchQuery,
@@ -157,9 +156,6 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
                     RecetaCard(receta = receta, navController)
                 }
 
-                // Cargar más recetas si el usuario está cerca del final
-
-
             // Indicador de carga al final de la lista
             if (isLoadingMore) {
                 item {
@@ -185,7 +181,6 @@ fun RecetaCard(receta: Receta, navController: NavController) {
             .shadow(4.dp, shape = RoundedCornerShape(16.dp))
             .clickable { navController.navigate("detalles/${receta.id}") },
         shape = RoundedCornerShape(16.dp),
-        //elevation = 4.dp // Sombra para un toque profesional
     ) {
         Column(
             modifier = Modifier
@@ -193,8 +188,15 @@ fun RecetaCard(receta: Receta, navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally // Alinear el contenido en el centro
         ) {
             // Cargar la imagen de la receta con esquinas redondeadas y sin padding
+            var imagen by remember { mutableStateOf("") }
+            imagen = if (receta.image?.isNotBlank() == true) {
+                receta.image
+            } else {
+                "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
+            }
+            // Cargar la imagen de la receta con esquinas redondeadas y sin padding
             Image(
-                painter = rememberAsyncImagePainter(receta.image),
+                painter = rememberAsyncImagePainter(imagen),
                 contentDescription = receta.title,
                 modifier = Modifier
                     .fillMaxWidth() // La imagen ocupa tdo el ancho de la Card

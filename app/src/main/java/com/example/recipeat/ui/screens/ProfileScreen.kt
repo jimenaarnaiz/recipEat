@@ -49,12 +49,6 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
         }
     }
 
-//    Scaffold(
-//        topBar = { AppBar(
-//            title = "Profile", navController = navController,
-//            onBackPressed = {navController.popBackStack()}
-//        ) }
-//    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -62,6 +56,8 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                 .padding(8.dp), // Más espaciado general
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(8.dp))
+
             // Imagen de perfil con borde sutil y efecto de sombra
             if (profileImageState.isNullOrEmpty()) {
                 Image(
@@ -93,7 +89,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
             usernameState?.let {
                 Text(
                     text = it,
-                    fontSize = 24.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.titleLarge
@@ -114,7 +110,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                     OptionCard(
                         title = "History",
                         icon = Icons.Filled.History,
-                        onClick = { navController.navigate("history") },
+                        onClick = { navController.navigate("historial") },
                         backgroundColor = LightYellow,
                         textColor = Color.Black
                     )
@@ -124,7 +120,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                     OptionCard(
                         title = "Favorites",
                         icon = Icons.Outlined.Favorite,
-                        onClick = { navController.navigate("favorites") },
+                        onClick = { navController.navigate("favoritos") },
                         backgroundColor = LightYellow,
                         textColor = Color.Black
                     )
@@ -147,7 +143,6 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
             }
         }
     }
-//}
 
 @Composable
 fun OptionCard(
@@ -159,7 +154,7 @@ fun OptionCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth() // Ocupa todo el ancho disponible
+            .fillMaxWidth()
             .padding(horizontal = 16.dp) // Alineación y espaciado de las tarjetas
             .clickable { onClick() }
             .shadow(8.dp, RoundedCornerShape(12.dp)), // Sombra suave y borde redondeado
@@ -169,7 +164,7 @@ fun OptionCard(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp), // Ajustamos el padding para que las tarjetas no sean tan altas
+                .padding(10.dp), // Ajustamos el padding para que las tarjetas no sean tan altas
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
@@ -179,7 +174,7 @@ fun OptionCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp), // Tamaño del ícono
+                    modifier = Modifier.size(20.dp), // Tamaño del ícono
                     tint = textColor
                 )
 
@@ -187,7 +182,7 @@ fun OptionCard(
 
                 Text(
                     text = title,
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = textColor,
                     style = MaterialTheme.typography.bodyLarge
