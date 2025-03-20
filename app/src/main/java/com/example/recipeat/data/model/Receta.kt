@@ -1,5 +1,7 @@
 package com.example.recipeat.data.model
 
+import com.google.firebase.Timestamp
+
 
 // Receta almacenada en Firebase
 data class Receta(
@@ -24,8 +26,8 @@ data class Receta(
 
 data class SugerenciaReceta(val id: String, val titulo: String, val coincidencias: Int)
 
-data class RecetaSimple(val id: String, val title: String, val image: String, val date: Long)
-
+// para mostrar en favs e historial
+data class RecetaSimple(val id: String, val title: String, val image: String, val date: Timestamp)
 
 
 // Para las recetas que crea localmente el user

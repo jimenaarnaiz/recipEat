@@ -2,6 +2,7 @@ package com.example.recipeat.ui.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.example.recipeat.data.model.Receta
 import com.example.recipeat.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -105,6 +106,39 @@ class UsersViewModel: ViewModel() {
                 onResult(null, null) // Error al obtener datos
             }
     }
+
+
+    //TODO eliminar cuando tenga todas las recetas bien
+//    fun eliminarRecetasDeBebidaFirestore() {
+//        val db = FirebaseFirestore.getInstance()
+//        var count = 0
+//
+//        db.collection("recetas")
+//            .get()
+//            .addOnSuccessListener { result ->
+//                val batch = db.batch() // Usamos batch para mejorar el rendimiento
+//                for (document in result) {
+//                    val dishTypes = document.get("dishTypes") as? List<String> ?: emptyList()
+//
+//                    if (dishTypes.contains("drink") || dishTypes.contains("beverage")) {
+//                        batch.delete(db.collection("recetas").document(document.id))
+//                        count++
+//                    }
+//                }
+//
+//                // Ejecutamos la operación en batch
+//                batch.commit()
+//                    .addOnSuccessListener {
+//                        println("Total de recetas eliminadas: $count")
+//                    }
+//                    .addOnFailureListener { exception ->
+//                        println("Error al eliminar recetas: $exception")
+//                    }
+//            }
+//            .addOnFailureListener { exception ->
+//                println("Error al obtener las recetas: $exception")
+//            }
+//    }
 
 
 

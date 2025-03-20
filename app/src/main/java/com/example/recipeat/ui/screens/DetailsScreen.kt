@@ -158,7 +158,13 @@ fun DetailsScreen(
                 Button(
                     onClick = {
                         if (!cocinado) {
-                            recetasViewModel.añadirHistorial(uid, idReceta.toString())
+                            receta!!.image?.let {
+                                recetasViewModel.añadirHistorial(
+                                    uid, idReceta.toString(),
+                                    title = receta!!.title,
+                                    image = it,
+                                )
+                            }
                             cocinado = true
                         }
                     },

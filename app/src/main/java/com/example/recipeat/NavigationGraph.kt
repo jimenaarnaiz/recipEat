@@ -40,7 +40,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
             //modifier = Modifier.padding(padding) AÑADE PADDING INNECESARIO ARRIBA
         ) {
             composable("login") {
-                LoginScreen(navController, usersViewModel) // Login
+                LoginScreen(navController, usersViewModel, recetasViewModel) // Login
                 onBottomBarVisibilityChanged(false)
             }
             composable("register") {

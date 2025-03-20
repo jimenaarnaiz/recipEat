@@ -1,9 +1,7 @@
 package com.example.recipeat.data.api
 
 import com.example.recipeat.data.model.ApiReceta
-import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.RandomRecipesResponse
-import com.example.recipeat.data.model.RecipesNameResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -29,5 +27,24 @@ interface SpoonacularApi {
         @Query("stepBreakdown") stepBreakdown: Boolean = true,
         @Query("apiKey") apiKey: String = "ec231e7612fa4dd399b9e2f2c0f9bcc8"
     ) : List<Map<String, Any>>
+
+
+    //  Buscar recetas por ingredientes
+    @GET("recipes/findByIngredients")
+    suspend fun buscarRecetasPorIngredientes(
+        @Query("ingredients") ingredientes: String,
+        @Query("number") number: Int = 14,
+        @Query("apiKey") apiKey: String = "ec231e7612fa4dd399b9e2f2c0f9bcc8"
+    ): List<ApiReceta>
+
+    //  Buscar recetas
+    @GET("recipes/informationBulk")
+    suspend fun obtenerRecetasBulk(
+        @Query("ids") recetas_ids: List<Int>,
+        @Query("includeNutrition") includeNutrition: Boolean = false,
+        @Query("apiKey") apiKey: String = "ec231e7612fa4dd399b9e2f2c0f9bcc8"
+    ): List<ApiReceta>
+
+
 
 }

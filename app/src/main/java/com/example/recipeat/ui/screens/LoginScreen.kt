@@ -32,13 +32,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.R
+import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 @Composable
-fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel) {
+fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel, recetasViewModel: RecetasViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
@@ -109,6 +112,7 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
             onClick = {
                 if (email.isEmpty() || password.isEmpty()) {
                     errorMessage = "Email and Password cannot be empty."
+                    //recetasViewModel.buscarRecetasPorIngredientes() //TODO
                 }else{
                     usersViewModel.login(email, password,
                         onResult = { success ->
