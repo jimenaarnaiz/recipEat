@@ -54,7 +54,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
-    implementation(libs.androidx.runtime.livedata) //navigation
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.material) //navigation
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -74,4 +75,6 @@ dependencies {
     implementation(libs.logging.interceptor)
     //más icons
     implementation(libs.androidx.material.icons.extended)
+    //calendario
+
 }
