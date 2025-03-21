@@ -1,11 +1,12 @@
 package com.example.recipeat.ui.viewmodels
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.recipeat.data.api.RetrofitClient
 import com.example.recipeat.data.api.RetrofitClient.api
 import com.example.recipeat.data.model.ApiReceta
 import com.example.recipeat.data.model.Ingrediente
@@ -22,8 +23,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.Calendar
-import java.util.Date
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 
 class RecetasViewModel : ViewModel() {
@@ -33,6 +34,8 @@ class RecetasViewModel : ViewModel() {
     private val _numRecetas = 400
 
     private val _apiRecetas = MutableStateFlow<List<ApiReceta>>(emptyList())
+    private val _apiRecetasIds = MutableStateFlow<List<ApiReceta>>(emptyList())
+
     private val _apiRecetasBulk = MutableStateFlow<List<ApiReceta>>(emptyList())
 
     private val _recetasSugeridas = MutableStateFlow<List<SugerenciaReceta>>(emptyList())
@@ -106,7 +109,7 @@ class RecetasViewModel : ViewModel() {
                                     viewModelScope.launch {
                                         delay(3000) // Delay para no sobrecargar las solicitudes
                                         val analyzedInstructions =
-                                            RetrofitClient.api.obtenerInstruccionesReceta(apiReceta.id)
+                                            api.obtenerInstruccionesReceta(apiReceta.id)
                                         val receta = mapApiRecetaToReceta(apiReceta, "", analyzedInstructions)
 
                                         val recetaData = hashMapOf(
@@ -774,10 +777,11 @@ class RecetasViewModel : ViewModel() {
 
 
 
-    fun obtenerRecetasPorRangoDeFecha(uid: String, rango: String) {
+    fun obtenerRecetasPorRangoDeFecha(uid: String, rango: Int) {
         val currentDate = Timestamp.now() // Fecha actual
         val startDate = when (rango) {
-            "ultimo_mes" -> Timestamp(currentDate.seconds - 30L * 24 * 60 * 60, 0) // Restamos 30 días en segundos
+            30 -> Timestamp(currentDate.seconds - 30L * 24 * 60 * 60, 0) // Restamos 30 días en segundos
+            7 -> Timestamp(currentDate.seconds - 7L * 24 * 60 * 60, 0) // Restamos 7 días en segundos
             else -> return
         }
 
@@ -817,7 +821,14 @@ class RecetasViewModel : ViewModel() {
             }
     }
 
-
+    // Filtrar las recetas según la fecha seleccionada
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun filtrarRecetasPorDiaSelecc(selectedDate: LocalDate): List<RecetaSimple> {
+        return _recetasHistorial.value?.filter {
+            val recetaDate = it.date.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+            recetaDate.isEqual(selectedDate) // Comparar solo con el día seleccionado
+        } ?: emptyList()
+    }
 
 
     fun obtenerRecetasFavoritas(uid: String) {
@@ -884,9 +895,9 @@ class RecetasViewModel : ViewModel() {
 //    oregano, breadcrumbs, parmesan cheese, peaches, pear, peas, pepper, pie crust, pineapple, banana, pork tenderloin, potato, powdered milk, prawns, bread, quinoa, radish, raisins, raspberry jam, red wine, salad oil, salmon, salt,
 //    sausage, scallion, chocolate, shrimp, soy sauce, spinach, onion, squash, sugar, sundried tomatoes, sweet potato, tomato, tomato paste, tomato sauce, tuna, vanilla, vanilla extract, vegetable broth, vegetable oil, vinegar, nuts, water, white wine, bell pepper, yogurt, lentils, corn, collard greens, olivas, zucchini, beef, apple, apples, hake
 
-    val ingredients = "avocado,cayenne,cauliflower head,celery,celery stalk,cheddar,cherries,almond,cherry tomato,chickpea,chicken,chicken breast,chicken broth,chicken sausage,chicken thigh,chili pepper,chocolate,chocolate chips,baking powder,cilantro,cinnamon,cocoa powder,coconut,condensed milk,cooking oil,corn,corn oil,cornstarch,couscous,crab,cranberries,cream,cream cheese,bacon,cumin,soy sauce,vinegar,double cream,dulce de leche,egg,egg white,egg yolk,eggplant,chocolate chips,evaporated milk,extra virgin olive oil,feta cheese,firm brown sugar,fish sauce,flour,parsley,ginger,garlic,garlic powder,gelatin,goat cheese,gorgonzola,greek yogurt,green bean,ground almonds,ground beef,ground cinnamon,ground ginger,ground pepper,ground pork,ham,honey,jalapeño,rice,kidney beans,leek,lime,macaroni,mascarpone,goat cheese,milk,mint,mushroom,mustard,mutton,navy beans,oats,oat,olive oil,onion,orange,lettuce,oregano,breadcrumbs,parmesan cheese,peaches,pear,peas,pepper,pie crust,pineapple,banana,pork tenderloin,potato,powdered milk,prawns,bread,quinoa,radish,raisins,raspberry jam,red wine,salad oil,salmon,salt,sausage,scallion,chocolate,shrimp,soy sauce,spinach,onion,squash,sugar,sundried tomatoes,sweet potato,tomato,tomato paste,tomato sauce,tuna,vanilla,vanilla extract,vegetable broth,vegetable oil,vinegar,nuts,water,white wine,bell pepper,yogurt,lentils,corn,collard greens,olivas,zucchini,beef,apple,apples,hake"
+    val ingredients = "avocado,cayenne,cauliflower head,celery,carrots,celery stalk,cheddar,cherries,almond,cherry tomato,chickpea,chicken,chicken breast,chicken broth,chicken sausage,chicken thigh,chili pepper,chocolate,chocolate chips,baking powder,cilantro,cinnamon,cocoa powder,coconut,condensed milk,cooking oil,corn,corn oil,cornstarch,couscous,crab,cranberries,cream,cream cheese,bacon,cumin,soy sauce,vinegar,double cream,dulce de leche,egg,egg white,egg yolk,eggplant,chocolate chips,evaporated milk,extra virgin olive oil,feta cheese,firm brown sugar,fish sauce,flour,parsley,ginger,garlic,garlic powder,gelatin,goat cheese,gorgonzola,greek yogurt,green bean,ground beef,ground cinnamon,ground ginger,ground pepper,ground pork,ham,honey,jalapeño,rice,kidney beans,leek,lime,macaroni,mascarpone,goat cheese,milk,mint,mushroom,mustard,mutton,navy beans,oats,oat,olive oil,onion,orange,lettuce,oregano,breadcrumbs,parmesan cheese,peaches,pear,peas,pepper,pie crust,pineapple,banana,pork tenderloin,potato,powdered milk,prawns,bread,quinoa,radish,raisins,raspberry jam,red wine,salad oil,salmon,salt,sausage,scallion,chocolate,shrimp,soy sauce,spinach,onion,squash,sugar,sundried tomatoes,sweet potato,tomato,tomato paste,tomato sauce,tuna,vanilla,vanilla extract,vegetable broth,vegetable oil,vinegar,nuts,water,white wine,bell pepper,yogurt,lentils,corn,collard greens,olivas,zucchini,beef,apple,apples,hake"
 
-    // 389 recetas (14 por cada 5 ingredientes)
+    // 390 recetas (14 por cada 5 ingredientes)
     fun buscarRecetasPorIngredientes() {
         val ingredientList = ingredients.split(",") // Dividimos la cadena de ingredientes en una lista
         val batchSize = 5
@@ -894,35 +905,40 @@ class RecetasViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // Recorremos los ingredientes en lotes de 5
                 for (i in 0 until totalBatches) {
                     val startIndex = i * batchSize
                     val endIndex = minOf((i + 1) * batchSize, ingredientList.size)
-                    val ingredientBatch = ingredientList.subList(startIndex, endIndex).joinToString(",") // Lote de ingredientes en formato string
+                    val ingredientBatch = ingredientList.subList(startIndex, endIndex).joinToString(",")
 
-                    // Verificar si la cadena tiene algún espacio extra
-                    val formattedIngredients = ingredientBatch//.trim().replace("\\s+".toRegex(), "")
+                    val response = api.buscarRecetasPorIngredientes(ingredientBatch)
 
-                    // Hacer la búsqueda de recetas con el lote actual de ingredientes
-                    val response = RetrofitClient.api.buscarRecetasPorIngredientes(formattedIngredients)
-
-                    // Verificar si la respuesta es nula o contiene errores
-                    if (response != null && response.isNotEmpty()) {
-                        // Filtrar recetas nulas antes de agregarlas
-                        val filteredResponse = response.filterNotNull()
-
-                        // Obtener los IDs actuales de las recetas
-                        val currentRecipeIds = _apiRecetas.value.map { it.id }.toSet()
-
-                        // Filtrar recetas nuevas eliminando las que ya tienen el mismo ID
+                    if (response.isNotEmpty()) {
+                        val filteredResponse = response
+                        val currentRecipeIds = _apiRecetasIds.value.map { it.id }.toSet()
                         val uniqueRecipes = filteredResponse.filterNot { currentRecipeIds.contains(it.id) }
 
-                        // Usar el operador 'plus' para agregar las recetas nuevas sin duplicados de ID
-                        _apiRecetas.value = (_apiRecetas.value + uniqueRecipes).toList()
+                        // Actualizar la lista de recetas
+                        _apiRecetasIds.value = (_apiRecetasIds.value + uniqueRecipes).toList()
 
-                        Log.d("RecetasViewModel", "Recetas después de agregar nuevas: ${_apiRecetas.value.size}")
+                        // Guardar en Firebase en la colección "idsRecetas"
+                        val db = FirebaseFirestore.getInstance()
+                        val recetasCollection = db.collection("idsRecetas")
+
+                        _apiRecetasIds.value.forEach { receta ->
+                            val recetaData = mapOf("id" to receta.id)
+                            recetasCollection.document(receta.id.toString())
+                                .set(recetaData)
+                                .addOnSuccessListener {
+                                    Log.d("RecetasViewModel", "ID de receta ${receta.id} guardado en Firebase correctamente.")
+                                }
+                                .addOnFailureListener { e ->
+                                    Log.e("RecetasViewModel", "Error al guardar el ID en Firebase: ${e.message}")
+                                }
+                        }
+
+                        Log.d("RecetasViewModel", "Recetas después de agregar nuevas: ${_apiRecetasIds.value.size}")
                     } else {
-                        Log.e("RecetasViewModel", "Respuesta vacía o nula de la API para ingredientes: $formattedIngredients")
+                        Log.e("RecetasViewModel", "Respuesta vacía o nula de la API para ingredientes: $ingredientBatch")
                     }
                 }
             } catch (e: Exception) {
@@ -933,49 +949,108 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-    var haObtenidoPrimeraMitad = false // Variable para saber si ya obtuviste la primera mitad
+    private var batchIndex = 0 // Para llevar el control de los lotes procesados
 
-    fun obtenerRecetasPorIds() { //TODO
+    fun guardarRecetasBulk() {
         viewModelScope.launch {
             try {
-                // Paso 1: Obtener todos los IDs de las recetas actuales
-                val recetaIds = _apiRecetas.value.map { it.id } // Obtener los IDs como una lista
-                val mitad = recetaIds.size / 2
+                val db = FirebaseFirestore.getInstance()
+                db.collection("idsRecetas").get()
+                    .addOnSuccessListener { documents ->
+                        val recetaIds=documents.mapNotNull { it.getLong("id")?.toInt() }.joinToString(",")
+                        Log.d("RecetasViewModel", "IDs de recetas en Firebase: $recetaIds")
 
-                if (!haObtenidoPrimeraMitad) {
-                    // Obtener solo la primera mitad
-                    val primerosIds = recetaIds.subList(0, mitad).joinToString(",")
-                    val responsePrimeraMitad = api.obtenerRecetasBulk(
-                        recetas_ids = primerosIds.split(",").map { it.toInt() }, // Convertir la cadena a lista de enteros
-                    )
+                        if (recetaIds.isEmpty()) {
+                            Log.e("RecetasViewModel", "No hay IDs de recetas en Firebase.")
+                            return@addOnSuccessListener
+                        }
 
-                    // Actualizar recetas con la respuesta de la primera mitad
-                    if (responsePrimeraMitad.isNotEmpty()) {
-                        _apiRecetas.value = responsePrimeraMitad
-                        Log.d("RecetasViewModel", "Primera mitad de recetas obtenidas correctamente: ${_apiRecetas.value.size}")
-                        haObtenidoPrimeraMitad = true // Marcar que ya obtuviste la primera mitad
-                    } else {
-                        Log.e("RecetasViewModel", "No se encontraron recetas con los primeros IDs.")
+                        // Dividir los IDs en lotes de 130
+                        val batchSize = 130
+                        val batches = recetaIds.chunked(batchSize)
+
+                        // Verificar si hay más lotes disponibles
+                        if (batchIndex >= batches.size) {
+                            Log.d("RecetasViewModel", "Todos los lotes han sido procesados.")
+                            return@addOnSuccessListener
+                        }
+
+                        val batch = batches[batchIndex] // Obtener el lote actual
+                        batchIndex++ // Incrementar para la próxima llamada
+
+                        viewModelScope.launch {
+                            delay(3000) // Delay para evitar sobrecarga
+
+                            // Llamar a la API con el lote de IDs actual
+                            val response = api.obtenerRecetasBulk(recetas_ids = batch)
+
+                            if (response.isNotEmpty()) {
+                                response.forEach { apiReceta ->
+                                    val recetaId = apiReceta.id.toString()
+
+                                    // Verificar si la receta ya existe en Firebase
+                                    db.collection("bulkRecetas").document(recetaId).get()
+                                        .addOnSuccessListener { document ->
+                                            if (!document.exists()) { // Si no existe, la guardamos
+                                                viewModelScope.launch {
+                                                    delay(3000) // Delay para evitar sobrecarga
+                                                    val analyzedInstructions =
+                                                        api.obtenerInstruccionesReceta(apiReceta.id)
+                                                    val receta = mapApiRecetaToReceta(apiReceta, "", analyzedInstructions)
+
+                                                    val recetaData = hashMapOf(
+                                                        "id" to receta.id,
+                                                        "title" to receta.title,
+                                                        "image" to receta.image,
+                                                        "servings" to receta.servings,
+                                                        "ingredients" to receta.ingredients.map {
+                                                            hashMapOf(
+                                                                "name" to it.name,
+                                                                "amount" to it.amount,
+                                                                "unit" to it.unit,
+                                                                "image" to it.image
+                                                            )
+                                                        },
+                                                        "steps" to receta.steps,
+                                                        "time" to receta.time,
+                                                        "dishTypes" to receta.dishTypes,
+                                                        //"user" to receta.userId,
+                                                        "glutenFree" to receta.glutenFree,
+                                                        "vegan" to receta.vegan,
+                                                        "vegetarian" to receta.vegetarian
+                                                    )
+
+
+                                                    // Guardar la receta en Firebase
+                                                    db.collection("bulkRecetas")
+                                                        .document(recetaId)
+                                                        .set(recetaData)
+                                                        .addOnSuccessListener {
+                                                            Log.d("RecetasViewModel", "Receta $recetaId guardada correctamente en Firebase")
+                                                        }
+                                                        .addOnFailureListener { e ->
+                                                            Log.e("RecetasViewModel", "Error al guardar receta en Firebase", e)
+                                                        }
+                                                }
+                                            } else {
+                                                Log.d("RecetasViewModel", "Receta con ID $recetaId ya existe en Firebase, no se guarda.")
+                                            }
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Log.e("RecetasViewModel", "Error al verificar receta en Firebase", e)
+                                        }
+                                }
+                            } else {
+                                Log.e("RecetasViewModel", "No se encontraron recetas con los IDs: $batch")
+                            }
+                        }
                     }
-                } else {
-                    // Obtener solo la segunda mitad
-                    val restantesIds = recetaIds.subList(mitad, recetaIds.size).joinToString(",")
-                    val responseSegundaMitad = api.obtenerRecetasBulk(
-                        recetas_ids = restantesIds.split(",").map { it.toInt() } // Convertir la cadena a lista de enteros
-                    )
-
-                    // Añadir las recetas de la segunda mitad a las anteriores
-                    if (responseSegundaMitad.isNotEmpty()) {
-                        _apiRecetasBulk.value = _apiRecetasBulk.value + responseSegundaMitad
-                        Log.d("RecetasViewModel", "Segunda mitad de recetas obtenidas correctamente: ${_apiRecetas.value.size}")
-                        //haObtenidoPrimeraMitad = false // Después de la segunda vez, reiniciar el flag si es necesario
-                    } else {
-                        Log.e("RecetasViewModel", "No se encontraron recetas con los segundos IDs.")
+                    .addOnFailureListener { e ->
+                        Log.e("RecetasViewModel", "Error al obtener los IDs de Firebase: ${e.message}")
                     }
-                }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Log.e("RecetasViewModel", "Error al obtener las recetas: ${e.message}")
+                Log.e("RecetasViewModel", "Error al guardar recetas bulk: ${e.message}")
             }
         }
     }

@@ -1,11 +1,9 @@
 package com.example.recipeat.ui.screens
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,6 +17,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -36,15 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.CalendarView
 import com.example.recipeat.ui.theme.Cherry
-import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -58,6 +56,10 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
 
     // Formatear el nombre del mes y año
     val monthName = selectedDate.format(DateTimeFormatter.ofPattern("MMMM yyyy"))
+
+    // Estado para cambiar entre 7 días y 30 días
+    var viewMode by rememberSaveable { mutableIntStateOf(7) } // 7 días por defecto
+    var rango by rememberSaveable { mutableIntStateOf(7) } // Variable para el rango de días
 
     // Estado para manejar la habilitación de los iconos
     var isPreviousMonthEnabled by rememberSaveable { mutableStateOf(true) }
@@ -80,6 +82,15 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
             isPreviousMonthEnabled = true // Habilitar el icono de mes anterior
         }
     }
+
+    LaunchedEffect(rango) {
+        recetasViewModel.obtenerRecetasPorRangoDeFecha(uid.toString(),
+            rango
+        )
+        Log.d("HistoryScreen", "El rango ha cambiado")
+    }
+
+
     Scaffold(
         topBar = {
             AppBar(
@@ -90,6 +101,25 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
+
+            Button(
+                onClick = {
+                    // Alternar entre 7 días y 30 días
+                    rango = if (rango == 7) 30 else 7
+                    viewMode = if (rango == 7) 7 else 30
+                },
+                modifier = Modifier
+                    .padding(8.dp)
+                    .align(Alignment.End),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Cherry,
+                    contentColor = Color.White
+                )
+            ) {
+                Text(
+                    text = if (rango == 7) "Last 7 Days" else "Last 30 Days",
+                )
+            }
 
             // Barra superior con los iconos para navegar entre los meses
             Row(
@@ -123,22 +153,21 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
                 }
             }
 
+
             // Vista de calendario
             CalendarView(
+                viewMode = viewMode,
                 selectedDate = selectedDate,
                 onDaySelected = { newSelectedDate -> selectedDate = newSelectedDate },
                 recetasHistorial = recetasHistorial.value
             )
 
-            // 📌 Filtrar recetas del día seleccionado
-            val recetasDelDia = recetasHistorial.value.filter {
-                val recetaDate = it.date.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-                recetaDate == selectedDate
-            }
+            // Filtrar recetas según los días seleccionados
+            val filteredRecetas = recetasViewModel.filtrarRecetasPorDiaSelecc(selectedDate)
 
-            if (recetasDelDia.isEmpty()) {
+            if (filteredRecetas.isEmpty()) {
                 Text(
-                    text = "No recipes for this date",
+                    text = "You haven't cooked on this day!",
                     modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center)
                 )
             } else {
@@ -147,7 +176,7 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
                     contentPadding = PaddingValues(16.dp),
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    items(recetasDelDia) { receta ->
+                    items(filteredRecetas) { receta ->
                         RecetaItem(receta = receta, navController = navController)
                     }
                 }

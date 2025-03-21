@@ -26,12 +26,16 @@ import java.time.ZoneId
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CalendarView(
+    viewMode: Int,
     selectedDate: LocalDate,
     onDaySelected: (LocalDate) -> Unit,
     recetasHistorial: List<RecetaSimple>
 ) {
-    // Definir los últimos 30 días
-    val last30Days = LocalDate.now().minusDays(30)..LocalDate.now()
+    val lastDaysRange = if (viewMode == 7) {
+        LocalDate.now().minusDays(7)..LocalDate.now()
+    } else {
+        LocalDate.now().minusDays(30)..LocalDate.now()
+    }
 
     // Calcular el primer y último día del mes seleccionado
     val firstDayOfMonth = selectedDate.withDayOfMonth(1)
@@ -42,9 +46,9 @@ fun CalendarView(
         .takeWhile { it <= lastDayOfMonth }
         .toList()
 
-    // Ajustar selectedDate si no está dentro de los últimos 30 días
-    val validSelectedDate = if (selectedDate !in last30Days) {
-        last30Days.start // Ajusta al primer día de los últimos 30 días si la fecha no está dentro
+    // Ajustar selectedDate si no está dentro del rango de los últimos días
+    val validSelectedDate = if (selectedDate !in lastDaysRange) {
+        lastDaysRange.start // Ajusta al primer día del rango si la fecha no está dentro
     } else {
         selectedDate
     }
@@ -56,7 +60,7 @@ fun CalendarView(
     ) {
         itemsIndexed(displayedDays) { index, day ->
             val isSelected = day == validSelectedDate
-            val isInLast30Days = day in last30Days // Comprobamos si el día está dentro de los últimos 30 días
+            val isInLastDaysRange = day in lastDaysRange  // Comprobamos si el día está dentro de los últimos 30 días
 
             // Verificar si hay recetas para el día en el historial
             val isCookedDay = recetasHistorial.any {
@@ -71,11 +75,11 @@ fun CalendarView(
                         when {
                             isSelected -> Cherry
                             isCookedDay -> LightYellow
-                            !isInLast30Days -> Color.Transparent
-                            else -> Color.White // Gris para días fuera de los últimos 30 días
+                            !isInLastDaysRange -> Color.Transparent
+                            else -> Color.White // Gris para días fuera de los últimos x días
                         }
                     )
-                    .clickable { if (isInLast30Days) onDaySelected(day) }
+                    .clickable { if (isInLastDaysRange) onDaySelected(day) }
                     .padding(8.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -84,7 +88,7 @@ fun CalendarView(
                     style = MaterialTheme.typography.bodyMedium,
                     color = when {
                         isSelected -> MaterialTheme.colorScheme.onPrimary
-                        !isInLast30Days -> Color.Gray
+                        !isInLastDaysRange -> Color.Gray //si no está en el rango, sin fondo y text gris
                         else -> MaterialTheme.colorScheme.onSurface
                     }
                 )
