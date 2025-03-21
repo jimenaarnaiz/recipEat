@@ -8,9 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.recipeat.R
-import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -40,9 +38,9 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
     var profileImageState by remember { mutableStateOf<String?>(null) }
 
     // Obtener los datos desde Firestore
-    LaunchedEffect(uid) {
+    LaunchedEffect(Unit) {
         if (uid != null) {
-            usersViewModel.obtenerUsuario(uid) { username, profileImageUrl ->
+            usersViewModel.obtenerUsuarioCompleto(uid) { username, profileImageUrl, email ->
                 usernameState = username
                 profileImageState = profileImageUrl
             }
@@ -106,6 +104,19 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                item {
+                    OptionCard(
+                        title = "Edit profile",
+                        icon = Icons.Default.Edit,
+                        onClick = {
+                            FirebaseAuth.getInstance().signOut()
+                            navController.navigate("editarPerfil")
+                        },
+                        backgroundColor = LightYellow,
+                        textColor = Color.Black
+                    )
+                }
+
                 item {
                     OptionCard(
                         title = "History",

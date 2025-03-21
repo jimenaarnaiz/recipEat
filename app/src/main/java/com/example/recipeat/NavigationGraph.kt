@@ -1,5 +1,7 @@
 package com.example.recipeat
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -9,6 +11,7 @@ import androidx.navigation.compose.composable
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.AddRecipe
 import com.example.recipeat.ui.screens.DetailsScreen
+import com.example.recipeat.ui.screens.EditProfileScreen
 import com.example.recipeat.ui.screens.FavoritesScreen
 import com.example.recipeat.ui.screens.HistoryScreen
 import com.example.recipeat.ui.screens.HomeScreen
@@ -26,6 +29,7 @@ import com.example.recipeat.ui.viewmodels.UsersViewModel
 
 
 // Función para definir el grafo de navegación
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChanged: (Boolean) -> Unit) {
     val recetasViewModel: RecetasViewModel = viewModel()
@@ -89,7 +93,12 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 HistoryScreen(navController, recetasViewModel)   //
                 onBottomBarVisibilityChanged(false)
             }
-            //TODO crear screen de editar perfil (imagen y username)
+            composable("editarPerfil") { //backStackEntry ->
+//                val id = backStackEntry.arguments?.getString("userId") ?: ""
+                EditProfileScreen(navController, usersViewModel)
+                onBottomBarVisibilityChanged(false)
+            }
+
             //TODO screen de editar mi receta
 
 
