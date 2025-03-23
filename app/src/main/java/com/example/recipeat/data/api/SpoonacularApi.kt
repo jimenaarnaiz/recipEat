@@ -40,7 +40,7 @@ interface SpoonacularApi {
     //  Buscar recetas
     @GET("recipes/informationBulk")
     suspend fun obtenerRecetasBulk(
-        @Query("ids") recetas_ids: List<Int>,
+        @Query("ids") recetas_ids: String,
         @Query("includeNutrition") includeNutrition: Boolean = false,
         @Query("apiKey") apiKey: String = "ec231e7612fa4dd399b9e2f2c0f9bcc8"
     ): List<ApiReceta>

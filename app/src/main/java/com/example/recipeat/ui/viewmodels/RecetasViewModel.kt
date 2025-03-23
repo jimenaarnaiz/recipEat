@@ -3,6 +3,7 @@ package com.example.recipeat.ui.viewmodels
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -949,110 +950,139 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-    private var batchIndex = 0 // Para llevar el control de los lotes procesados
 
     fun guardarRecetasBulk() {
         viewModelScope.launch {
             try {
                 val db = FirebaseFirestore.getInstance()
-                db.collection("idsRecetas").get()
-                    .addOnSuccessListener { documents ->
-                        val recetaIds=documents.mapNotNull { it.getLong("id")?.toInt() }.joinToString(",")
-                        Log.d("RecetasViewModel", "IDs de recetas en Firebase: $recetaIds")
 
-                        if (recetaIds.isEmpty()) {
-                            Log.e("RecetasViewModel", "No hay IDs de recetas en Firebase.")
-                            return@addOnSuccessListener
-                        }
+                // Cargar batchIndex desde Firebase antes de iniciar
+                loadBatchIndexFromFirebase { loadedBatchIndex ->
+                    var batchIndex = loadedBatchIndex // Usar el valor cargado
 
-                        // Dividir los IDs en lotes de 130
-                        val batchSize = 130
-                        val batches = recetaIds.chunked(batchSize)
+                    db.collection("idsRecetas").get()
+                        .addOnSuccessListener { documents ->
+                            val recetaIds = documents.mapNotNull { it.getLong("id")?.toInt() }.joinToString(",")
 
-                        // Verificar si hay más lotes disponibles
-                        if (batchIndex >= batches.size) {
-                            Log.d("RecetasViewModel", "Todos los lotes han sido procesados.")
-                            return@addOnSuccessListener
-                        }
+                            if (recetaIds.isEmpty()) {
+                                Log.e("RecetasViewModel", "No hay IDs de recetas en Firebase.")
+                                return@addOnSuccessListener
+                            }
 
-                        val batch = batches[batchIndex] // Obtener el lote actual
-                        batchIndex++ // Incrementar para la próxima llamada
+                            val batchSize = 130
+                            val batches = recetaIds.chunked(batchSize)
 
-                        viewModelScope.launch {
-                            delay(3000) // Delay para evitar sobrecarga
+                            if (batchIndex >= batches.size) {
+                                Log.d("RecetasViewModel", "Todos los lotes han sido procesados.")
+                                return@addOnSuccessListener
+                            }
 
-                            // Llamar a la API con el lote de IDs actual
-                            val response = api.obtenerRecetasBulk(recetas_ids = batch)
+                            val batch = batches[batchIndex]
+                            batchIndex++ // Incrementar
+                            saveBatchIndexToFirebase(batchIndex) // Guardar el nuevo valor en Firebase
 
-                            if (response.isNotEmpty()) {
-                                response.forEach { apiReceta ->
-                                    val recetaId = apiReceta.id.toString()
+                            viewModelScope.launch {
+                                delay(3000)
+                                val response = api.obtenerRecetasBulk(recetas_ids = batch)
 
-                                    // Verificar si la receta ya existe en Firebase
-                                    db.collection("bulkRecetas").document(recetaId).get()
-                                        .addOnSuccessListener { document ->
-                                            if (!document.exists()) { // Si no existe, la guardamos
-                                                viewModelScope.launch {
-                                                    delay(3000) // Delay para evitar sobrecarga
-                                                    val analyzedInstructions =
-                                                        api.obtenerInstruccionesReceta(apiReceta.id)
-                                                    val receta = mapApiRecetaToReceta(apiReceta, "", analyzedInstructions)
+                                if (response.isNotEmpty()) {
+                                    response.forEach { apiReceta ->
+                                        val recetaId = apiReceta.id.toString()
+                                        db.collection("bulkRecetas").document(recetaId).get()
+                                            .addOnSuccessListener { document ->
+                                                if (!document.exists()) {
+                                                    viewModelScope.launch {
+                                                        delay(3000)
+                                                        val analyzedInstructions = api.obtenerInstruccionesReceta(apiReceta.id)
+                                                        val receta = mapApiRecetaToReceta(apiReceta, "", analyzedInstructions)
 
-                                                    val recetaData = hashMapOf(
-                                                        "id" to receta.id,
-                                                        "title" to receta.title,
-                                                        "image" to receta.image,
-                                                        "servings" to receta.servings,
-                                                        "ingredients" to receta.ingredients.map {
-                                                            hashMapOf(
-                                                                "name" to it.name,
-                                                                "amount" to it.amount,
-                                                                "unit" to it.unit,
-                                                                "image" to it.image
-                                                            )
-                                                        },
-                                                        "steps" to receta.steps,
-                                                        "time" to receta.time,
-                                                        "dishTypes" to receta.dishTypes,
-                                                        //"user" to receta.userId,
-                                                        "glutenFree" to receta.glutenFree,
-                                                        "vegan" to receta.vegan,
-                                                        "vegetarian" to receta.vegetarian
-                                                    )
+                                                        val recetaData = hashMapOf(
+                                                            "id" to receta.id,
+                                                            "title" to receta.title,
+                                                            "image" to receta.image,
+                                                            "servings" to receta.servings,
+                                                            "ingredients" to receta.ingredients.map {
+                                                                hashMapOf(
+                                                                    "name" to it.name,
+                                                                    "amount" to it.amount,
+                                                                    "unit" to it.unit,
+                                                                    "image" to it.image
+                                                                )
+                                                            },
+                                                            "steps" to receta.steps,
+                                                            "time" to receta.time,
+                                                            "dishTypes" to receta.dishTypes,
+                                                            "glutenFree" to receta.glutenFree,
+                                                            "vegan" to receta.vegan,
+                                                            "vegetarian" to receta.vegetarian
+                                                        )
 
-
-                                                    // Guardar la receta en Firebase
-                                                    db.collection("bulkRecetas")
-                                                        .document(recetaId)
-                                                        .set(recetaData)
-                                                        .addOnSuccessListener {
-                                                            Log.d("RecetasViewModel", "Receta $recetaId guardada correctamente en Firebase")
-                                                        }
-                                                        .addOnFailureListener { e ->
-                                                            Log.e("RecetasViewModel", "Error al guardar receta en Firebase", e)
-                                                        }
+                                                        db.collection("bulkRecetas")
+                                                            .document(recetaId)
+                                                            .set(recetaData)
+                                                            .addOnSuccessListener {
+                                                                Log.d("RecetasViewModel", "Receta $recetaId guardada en Firebase")
+                                                            }
+                                                            .addOnFailureListener { e ->
+                                                                Log.e("RecetasViewModel", "Error al guardar receta en Firebase", e)
+                                                            }
+                                                    }
+                                                } else {
+                                                    Log.d("RecetasViewModel", "Receta con ID $recetaId ya existe en Firebase, no se guarda.")
                                                 }
-                                            } else {
-                                                Log.d("RecetasViewModel", "Receta con ID $recetaId ya existe en Firebase, no se guarda.")
                                             }
-                                        }
-                                        .addOnFailureListener { e ->
-                                            Log.e("RecetasViewModel", "Error al verificar receta en Firebase", e)
-                                        }
+                                            .addOnFailureListener { e ->
+                                                Log.e("RecetasViewModel", "Error al verificar receta en Firebase", e)
+                                            }
+                                    }
+                                } else {
+                                    Log.e("RecetasViewModel", "No se encontraron recetas con los IDs: $batch")
                                 }
-                            } else {
-                                Log.e("RecetasViewModel", "No se encontraron recetas con los IDs: $batch")
                             }
                         }
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e("RecetasViewModel", "Error al obtener los IDs de Firebase: ${e.message}")
-                    }
+                        .addOnFailureListener { e ->
+                            Log.e("RecetasViewModel", "Error al obtener los IDs de Firebase: ${e.message}")
+                        }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 Log.e("RecetasViewModel", "Error al guardar recetas bulk: ${e.message}")
             }
         }
+    }
+
+
+
+    private fun saveBatchIndexToFirebase(index: Int) {
+        val db = FirebaseFirestore.getInstance()
+        val batchData = hashMapOf("batchIndex" to index)
+
+        db.collection("config")
+            .document("batchIndex")
+            .set(batchData)
+            .addOnSuccessListener {
+                Log.d("RecetasViewModel", "batchIndex actualizado en Firebase: $index")
+            }
+            .addOnFailureListener { e ->
+                Log.e("RecetasViewModel", "Error al guardar batchIndex en Firebase", e)
+            }
+    }
+
+
+    private fun loadBatchIndexFromFirebase(onComplete: (Int) -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("config")
+            .document("batchIndex")
+            .get()
+            .addOnSuccessListener { document ->
+                val index = document.getLong("batchIndex")?.toInt() ?: 0
+                Log.d("RecetasViewModel", "batchIndex cargado desde Firebase: $index")
+                onComplete(index)
+            }
+            .addOnFailureListener { e ->
+                Log.e("RecetasViewModel", "Error al cargar batchIndex desde Firebase", e)
+                onComplete(0) // Si hay error, usa 0 como valor por defecto
+            }
     }
 
 

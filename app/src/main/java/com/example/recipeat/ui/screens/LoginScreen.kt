@@ -1,5 +1,6 @@
 package com.example.recipeat.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -113,6 +114,7 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
                 if (email.isEmpty() || password.isEmpty()) {
                     errorMessage = "Email and Password cannot be empty."
                     //recetasViewModel.buscarRecetasPorIngredientes() //TODO
+                   // recetasViewModel.guardarRecetasBulk()
                 }else{
                     usersViewModel.login(email, password,
                         onResult = { success ->

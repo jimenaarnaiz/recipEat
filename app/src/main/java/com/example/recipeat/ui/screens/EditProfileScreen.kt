@@ -2,7 +2,13 @@ package com.example.recipeat.ui.screens
 
 
 
+import android.graphics.Bitmap
+import android.net.Uri
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -13,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -21,6 +29,8 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.recipeat.R
 import com.example.recipeat.data.model.User
+import com.example.recipeat.ui.components.AppBar
+import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -32,109 +42,125 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
     var usernameState by remember { mutableStateOf<String?>(null) }
     var profileImageState by remember { mutableStateOf<String?>(null) }
 
-    // Obtener los datos desde Firestore
+    // Estado para almacenar el objeto User
+    var userState by remember { mutableStateOf<User?>(null) }
+
+    var newUsername by remember { mutableStateOf("") }
+    var newEmail by rememberSaveable { mutableStateOf("") }
+    var newImage by rememberSaveable { mutableStateOf("") }
+    var newPassword by rememberSaveable { mutableStateOf("") }
+
+    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val context = LocalContext.current
+
+
+    // Obtener los datos desde Firestore cuando la pantalla esté lanzada
     LaunchedEffect(uid) {
         if (uid != null) {
-            println( "current user edit profile screen $uid")
-            usersViewModel.obtenerUsuarioCompleto(uid) { username, profileImageUrl, email ->
-                usernameState = username
-                profileImageState = profileImageUrl
+            usersViewModel.obtenerUsuarioCompleto(uid) { user ->
+                // Actualizar el estado con el objeto User obtenido
+                userState = user
+                newUsername = user?.username ?: ""
+                newEmail = user?.email ?: ""
+                //newImage = user?.image ?: ""
+                bitmap = usersViewModel.loadImageFromFile(context)
             }
         }
     }
 
+    // Photo picker (1 pic)
+    val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            Log.d("PhotoPicker", "Selected URI: $uri")
+            imageUri = uri
+            usersViewModel.saveImageLocally(context, uri)
+            bitmap = usersViewModel.loadImageFromFile(context)
+            //newImage = uri.toString()
+        } else {
+            Log.d("PhotoPicker", "No media selected")
+        }
+    }
 
 
-//    val uid = userId
-//
-//    val uidAuth = FirebaseAuth.getInstance().currentUser?.uid
-//
-//
-//    // Estado para almacenar el objeto User
-//    var userState by rememberSaveable { mutableStateOf<User?>(null) }
-//
-//    var newUsername by rememberSaveable { mutableStateOf("") }
-//    var newEmail by rememberSaveable { mutableStateOf("") }
-//    var newImage by rememberSaveable { mutableStateOf("") }
-//    var newPassword by rememberSaveable { mutableStateOf("") }
-//
-//
-//    // Obtener los datos desde Firestore cuando la pantalla esté lanzada
-//    LaunchedEffect(userId) {
-//        usersViewModel.obtenerUsuarioCompleto(uid) { user ->
-//            // Actualizar el estado con el objeto User obtenido
-//            userState = user
-//            newUsername = user?.username ?: ""
-//            newEmail = user?.email ?: ""
-//            newImage = user?.image ?: ""
-//        }
-//    }
-//
-//    println( "current user edit profile screen $uidAuth")
+    Scaffold(
+        topBar = {
+            AppBar(
+                title = "",
+                navController = navController,
+                onBackPressed = { navController.popBackStack() }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp), // Ajustado el padding para mayor espacio
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(16.dp), // Ajustado el padding para mayor espacio
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        // Imagen de perfil con borde sutil y efecto de sombra
-//        if (userState?.image.isNullOrEmpty()) {
-//            Image(
-//                painter = painterResource(id = R.drawable.profile_avatar_placeholder),
-//                contentDescription = "Profile picture",
-//                modifier = Modifier
-//                    .padding(16.dp)
-//                    .size(120.dp)
-//                    .clip(CircleShape)
-//                    .shadow(4.dp, CircleShape)
-//                    .align(Alignment.CenterHorizontally)
-//            )
-//        } else {
-//            AsyncImage(
-//                model = newImage,
-//                contentDescription = "Profile Image",
-//                modifier = Modifier
-//                    .padding(16.dp)
-//                    .size(120.dp)
-//                    .clip(CircleShape)
-//                    .shadow(4.dp, CircleShape)
-//                    .align(Alignment.CenterHorizontally)
-//            )
-//        }
-//
-//        // Botón para elegir una nueva imagen de perfil
-//            Button(onClick = {
-//                // Aquí agregar la lógica para seleccionar una nueva imagen
-//                // Utilizar una librería como `Accompanist` para acceder a la galería
-//            }) {
-//                Text("Change Profile Picture")
-//            }
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        // Campo para cambiar el nombre de usuario
-//        TextField(
-//            value = newUsername,
-//            onValueChange = { newUsername = it },
-//            label = { Text("Username") },
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//
-//        // Campo para cambiar el email
-//        TextField(
-//            value = newEmail,
-//            onValueChange = { newEmail = it },
-//            label = { Text("Email") },
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//
+
+            bitmap?.let {
+                Log.d("EditProfileScreen", "ImageLoading...Bitmap cargado: ${it}")
+                Image(
+                    bitmap = it.asImageBitmap(),
+                    contentDescription = "Imagen de perfil",
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .shadow(4.dp, CircleShape)
+                        .align(Alignment.CenterHorizontally),
+                    contentScale = ContentScale.Crop
+                )
+            } ?: run {
+                Log.d("EditProfileScreen", "Usando imagen por defecto")
+                // Muestra una imagen por defecto si no hay imagen seleccionada
+                Image(
+                    painter = painterResource(id = R.drawable.profile_avatar_placeholder),
+                    contentDescription = "Imagen de perfil",
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .shadow(4.dp, CircleShape)
+                        .align(Alignment.CenterHorizontally)
+                )
+            }
+
+            // Botón para elegir una nueva imagen de perfil
+            Button(onClick = {
+                pickMedia.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }) {
+                Text("Change Profile Picture")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo para cambiar el nombre de usuario
+            TextField(
+                value = newUsername,
+                onValueChange = { newUsername = it },
+                label = { Text("Username") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Campo para cambiar el email
+            TextField(
+                value = newEmail,
+                onValueChange = { newEmail = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
 //        // Campo para cambiar la contraseña
 //        TextField(
 //            value = newPassword,
@@ -143,30 +169,42 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
 //            modifier = Modifier.fillMaxWidth(),
 //            visualTransformation = PasswordVisualTransformation()
 //        )
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        val context = LocalContext.current
-//        //Botón para guardar los cambios
-//        Button(
-//            onClick = {
-//                usersViewModel.updateUserProfile(
-//                    uid = uid,
-//                    newUsername = newUsername,
-//                    newEmail = newEmail,
-//                    newPassword = newPassword,
-//                    newProfileImage = newImage,
-//                    onResult = { success ->
-//                        if (success) {
-//                            Toast.makeText(context, "Perfil actualizado" ,Toast.LENGTH_SHORT).show()
-//                        } else {
-//                            Toast.makeText(context, "Error al actualizar perfil" ,Toast.LENGTH_SHORT).show()
-//                        }
-//                    }
-//                )
-//            }
-//        ) {
-//            Text("Save Changes")
-//        }
-//    }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val context = LocalContext.current
+            //Botón para guardar los cambios
+            Button(
+                onClick = {
+                    if (uid != null) {
+                        usersViewModel.updateUserProfile(
+                            uid = uid,
+                            newUsername = newUsername,
+                            newEmail = newEmail,
+                            //newPassword = newPassword,
+                            newProfileImage = newImage,
+                            onResult = { success ->
+                                if (success) {
+                                    Toast.makeText(
+                                        context,
+                                        "Perfil actualizado",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    navController.navigate(BottomNavItem.Profile.route)
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Error al actualizar perfil",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        )
+                    }
+                }
+            ) {
+                Text("Save Changes")
+            }
+        }
+    }
 }

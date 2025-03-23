@@ -1,5 +1,8 @@
 package com.example.recipeat.ui.screens
 
+import android.graphics.Bitmap
+import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,12 +16,16 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,6 +44,10 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
     var usernameState by remember { mutableStateOf<String?>(null) }
     var profileImageState by remember { mutableStateOf<String?>(null) }
 
+
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val context = LocalContext.current
+
     // Obtener los datos desde Firestore
     LaunchedEffect(Unit) {
         if (uid != null) {
@@ -44,6 +55,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                 usernameState = username
                 profileImageState = profileImageUrl
             }
+            bitmap = usersViewModel.loadImageFromFile(context)
         }
     }
 
@@ -56,22 +68,25 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Imagen de perfil con borde sutil y efecto de sombra
-            if (profileImageState.isNullOrEmpty()) {
+            bitmap?.let {
+                Log.d("ProfileScreen", "ImageLoading...Bitmap cargado: ${it}")
                 Image(
-                    painter = painterResource(id = R.drawable.profile_avatar_placeholder),
+                    bitmap = it.asImageBitmap(),
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .padding(16.dp)
                         .size(120.dp)
                         .clip(CircleShape)
                         .shadow(4.dp, CircleShape)
-                        .align(Alignment.CenterHorizontally)
+                        .align(Alignment.CenterHorizontally),
+                    contentScale = ContentScale.Crop
                 )
-            } else {
-                AsyncImage(
-                    model = profileImageState,
-                    contentDescription = "Profile Image",
+            } ?: run {
+                Log.d("ProfileScreen", "Usando imagen por defecto")
+                // Muestra una imagen por defecto si no hay imagen seleccionada
+                Image(
+                    painter = painterResource(id = R.drawable.profile_avatar_placeholder),
+                    contentDescription = "Profile picture",
                     modifier = Modifier
                         .padding(16.dp)
                         .size(120.dp)
@@ -109,7 +124,6 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                         title = "Edit profile",
                         icon = Icons.Default.Edit,
                         onClick = {
-                            FirebaseAuth.getInstance().signOut()
                             navController.navigate("editarPerfil")
                         },
                         backgroundColor = LightYellow,

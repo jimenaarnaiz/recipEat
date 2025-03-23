@@ -1,31 +1,83 @@
 package com.example.recipeat.ui.viewmodels
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import coil.ImageLoader
+import coil.request.ImageRequest
 import com.example.recipeat.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.io.File
+import java.io.FileOutputStream
 
 class UsersViewModel: ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
+
     fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener() { task ->
+            .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // El login fue exitoso
                     val user = auth.currentUser
-                    Log.d("Login", "signInWithEmail:success, user: ${user?.uid}")
-                    onResult(true)  // Retorna true si el login es exitoso
+                    if (user != null) {
+                        user.reload().addOnCompleteListener { reloadTask ->
+                            if (reloadTask.isSuccessful) {
+                                val newEmail = user.email // Nuevo email después de verificación
+                                val uid = user.uid
+                                val db = FirebaseFirestore.getInstance()
+                                val userRef = db.collection("users").document(uid)
+
+                                userRef.get()
+                                    .addOnSuccessListener { document ->
+                                        if (document.exists()) {
+                                            val firestoreEmail = document.getString("email")
+
+                                            if (newEmail != null && firestoreEmail != null && newEmail != firestoreEmail) {
+                                                // Actualizar Firestore con el nuevo email
+                                                userRef.update("email", newEmail)
+                                                    .addOnSuccessListener {
+                                                        Log.d("Login", "Email actualizado en Firestore.")
+                                                        onResult(true)
+                                                    }
+                                                    .addOnFailureListener { e ->
+                                                        Log.e("Login", "Error al actualizar email en Firestore", e)
+                                                        onResult(false)
+                                                    }
+                                            } else {
+                                                onResult(true)
+                                            }
+                                        } else {
+                                            Log.e("Login", "No se encontró el usuario en Firestore.")
+                                            onResult(false)
+                                        }
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e("Login", "Error al obtener datos del usuario en Firestore", e)
+                                        onResult(false)
+                                    }
+                            } else {
+                                Log.e("Login", "Error al recargar usuario")
+                                onResult(false)
+                            }
+                        }
+                    } else {
+                        Log.e("Login", "Usuario no autenticado después del login.")
+                        onResult(false)
+                    }
                 } else {
-                    // El login falló
-                    Log.w("Login", "signInWithEmail:failure", task.exception)
-                    onResult(false)  // Retorna false si el login falla
+                    Log.e("Login", "Error al iniciar sesión", task.exception)
+                    onResult(false)
                 }
             }
     }
+
 
 
     fun register(username: String, email: String, password: String, onResult: (Boolean) -> Unit) {
@@ -141,64 +193,45 @@ class UsersViewModel: ViewModel() {
             }
     }
 
-
     fun updateUserProfile(
         newUsername: String?,
         newEmail: String?,
-        newPassword: String?,
         newProfileImage: String?,
-        onResult: (Boolean) -> Unit,
+        onResult: (Boolean) -> Unit, // Retornamos mensaje de error opcional
         uid: String
     ) {
         val user = auth.currentUser
         val db = FirebaseFirestore.getInstance()
 
-        if (user != null) {
-            Log.d("UpdateUser", "uid: ${uid}  y user.uid: ${user.uid}")
+        // Verificar que el usuario está autenticado antes de continuar
+        if (user == null) {
+            Log.e("UpdateUser", "No authenticated user found.")
+            onResult(false, /*"Usuario no autenticado."*/)
+            return
         }
 
-        // Cambiar correo en Firebase Auth si es necesario
-        if (newEmail != null && newEmail != user?.email) {
-            user?.updateEmail(newEmail)
-                ?.addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        // El correo se actualizó correctamente en Firebase Auth
-                        Log.d("UpdateUser", "Email updated successfully in Auth")
+        Log.d("UpdateUser", "uid: ${uid}  y user.uid: ${user.uid}")
 
-                        // Si el correo se actualiza, también lo actualizamos en Firestore
-                        val userRef = db.collection("users").document(uid)
-                        val updatedData = mutableMapOf<String, Any>()
-                        updatedData["email"] = newEmail
-
-                        // Actualizamos el correo en Firestore
-                        userRef.update(updatedData)
-                            .addOnSuccessListener {
-                                // Si la actualización en Firestore es exitosa
-                                Log.d("UpdateUser", "Email updated successfully in Firestore")
-                            }
-                            .addOnFailureListener { e ->
-                                Log.e("UpdateUser", "Failed to update email in Firestore", e)
-                                onResult(false)
-                            }
+        // Verificar si el nuevo email ya está registrado antes de actualizarlo
+        if (newEmail != null && newEmail != user.email) {
+            user.verifyBeforeUpdateEmail(newEmail)
+                .addOnCompleteListener { verifyTask ->
+                    if (verifyTask.isSuccessful) {
+                        Log.d(
+                            "UpdateUser",
+                            "Verification email sent. User must verify before update."
+                        )
+                        onResult(true /*"Se ha enviado un correo de verificación. Verifícalo antes de actualizar."*/)
                     } else {
-                        Log.e("UpdateUser", "Failed to update email in Auth", task.exception)
-                        onResult(false)
+                        Log.e(
+                            "UpdateUser",
+                            "Failed to send verification email",
+                            verifyTask.exception
+                        )
+                        onResult(false /*"Error al enviar el correo de verificación."*/)
                     }
                 }
-        }
-
-        // Cambiar la contraseña en Firebase Auth si es necesario
-        if (newPassword != null) {
-            user?.updatePassword(newPassword)
-                ?.addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        // La contraseña se actualizó correctamente en Firebase Auth
-                        Log.d("UpdateUser", "Password updated successfully")
-                    } else {
-                        Log.e("UpdateUser", "Failed to update password", task.exception)
-                        onResult(false)
-                    }
-                }
+            return
         }
 
         // Actualizar username y profile image en Firestore
@@ -206,30 +239,89 @@ class UsersViewModel: ViewModel() {
             val userRef = db.collection("users").document(uid)
             val updatedData = mutableMapOf<String, Any>()
 
-            newUsername?.let {
-                updatedData["username"] = it
-            }
-
-            newProfileImage?.let {
-                updatedData["image"] = it
-            }
+            newUsername?.let { updatedData["username"] = it }
+            newProfileImage?.let { updatedData["image"] = it }
 
             userRef.update(updatedData)
                 .addOnSuccessListener {
-                    // Datos actualizados correctamente en Firestore
                     Log.d("UpdateUser", "User data updated successfully in Firestore")
                     onResult(true)
                 }
                 .addOnFailureListener { e ->
                     Log.e("UpdateUser", "Failed to update user data in Firestore", e)
-                    onResult(false)
+                    onResult(false, /*"Error al actualizar los datos en Firestore."*/)
                 }
         } else {
-            // Si no hay cambios en username ni en la foto
-            onResult(true)
+            onResult(true, )
         }
     }
 
+
+//    fun confirmEmailUpdate(newEmail: String, uid: String, onResult: (Boolean, String?) -> Unit) {
+//        val user = auth.currentUser
+//        val db = FirebaseFirestore.getInstance()
+//
+//        if (user == null) {
+//            onResult(false, "Usuario no autenticado.")
+//            return
+//        }
+//
+//        // Verificar que el usuario haya confirmado el email en Firebase
+//        user.reload().addOnCompleteListener {
+//            if (user.email == newEmail) {
+//                db.collection("users").document(uid)
+//                    .update("email", newEmail)
+//                    .addOnSuccessListener {
+//                        onResult(true, "Correo actualizado correctamente en Firestore.")
+//                    }
+//                    .addOnFailureListener { e ->
+//                        Log.e("UpdateUser", "Failed to update email in Firestore", e)
+//                        onResult(false, "Error al actualizar el correo en Firestore.")
+//                    }
+//            } else {
+//                onResult(false, "El correo aún no ha sido verificado.")
+//            }
+//        }
+//    }
+
+
+    /**
+     * Guarda la imagen de perfil en el almacenamiento local del dispositivo
+     * (en el directorio de archivos internos de la aplicación)
+     */
+    fun saveImageLocally(context: Context, imageUri: Uri) {
+        try {
+            val contentResolver = context.contentResolver
+            val inputStream = contentResolver.openInputStream(imageUri)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            val fileName = "profile_image.jpg"
+            val file = File(context.filesDir, fileName)
+            FileOutputStream(file).use {
+                // guarda el Bitmap en el archivo como un archivo JPEG con la máxima calidad (100).
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+            }
+            inputStream?.close()
+            Log.d("ImageSave", "Imagen guardada en: ${file.absolutePath}")
+        } catch (e: Exception) {
+            Log.e("ImageSaveError", "Error al guardar la imagen: ${e.message}")
+        }
+    }
+
+    /**
+     * Busca el archivo, lo lee y lo convierte nuevamente en un Bitmap.
+     * Si el archivo no existe o hay un error, se devuelve null.
+     */
+    fun loadImageFromFile(context: Context): Bitmap? {
+        try {
+            val file = File(context.filesDir, "profile_image.jpg")
+            if (file.exists()) {
+                return BitmapFactory.decodeFile(file.absolutePath)
+            }
+        } catch (e: Exception) {
+            Log.e("ImageLoad", "Error al cargar la imagen", e)
+        }
+        return null
+    }
 
 
 
