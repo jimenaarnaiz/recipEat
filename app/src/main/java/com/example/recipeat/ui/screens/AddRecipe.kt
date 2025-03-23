@@ -1,5 +1,7 @@
 package com.example.recipeat.ui.screens
 
+import android.util.Log
+import androidx.compose.foundation.Image
 import com.example.recipeat.data.model.DishTypes
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.ui.components.AppBar
@@ -10,11 +12,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -27,37 +28,71 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.recipeat.R
+import com.example.recipeat.data.model.Receta
+import com.example.recipeat.ui.theme.Cherry
+import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun AddRecipe(navController: NavController, recetasViewModel: RecetasViewModel) {
-    var title by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf<String?>(null) }
-    var ingredients by remember { mutableStateOf<List<Ingrediente>>(emptyList()) }
-    var instructions by remember { mutableStateOf(listOf("")) }
-    var readyInMinutes by remember { mutableStateOf<Int?>(null) }
+fun AddRecipe(navController: NavController, recetasViewModel: RecetasViewModel, ingredientesViewModel: IngredientesViewModel) {
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+    var title by rememberSaveable { mutableStateOf("") }
+    var imageUri by rememberSaveable { mutableStateOf("") }
+    var servings by rememberSaveable { mutableStateOf("") }
+    var ingredients by rememberSaveable { mutableStateOf<List<Ingrediente>>(emptyList()) }
+    var instructions by rememberSaveable { mutableStateOf(listOf("")) }
+    var time by rememberSaveable { mutableStateOf("") }
     var occasions by remember { mutableStateOf(listOf("")) }
 
     // Nuevo estado para las opciones de Vegan, Vegetarian y Gluten-Free
-    var isVegan by remember { mutableStateOf(false) }
-    var isVegetarian by remember { mutableStateOf(false) }
-    var isGlutenFree by remember { mutableStateOf(false) }
+    var isVegan by rememberSaveable { mutableStateOf(false) }
+    var isVegetarian by rememberSaveable { mutableStateOf(false) }
+    var isGlutenFree by rememberSaveable { mutableStateOf(false) }
 
     var isPressed by remember { mutableStateOf(false) }
+
+    // Obtenemos la lista de ingredientes válidos
+    val ingredientesValidos = ingredientesViewModel.ingredientesValidos.collectAsState()
+    var ingredientName by rememberSaveable { mutableStateOf("") }
+    var ingredientImage by rememberSaveable { mutableStateOf("") }
+    var amount by rememberSaveable { mutableStateOf("") }  // cantidad
+    var unit by rememberSaveable { mutableStateOf("") }    // unidad
+    var isIngredientValid by remember { mutableStateOf(true) } // Controlar si el ingrediente es válido
+
+
+    // Comprobar si el ingrediente ingresado es válido
+    fun validateIngredient(input: String) {
+        val nombresIngredientes = ingredientesValidos.value.map { it.name }
+        isIngredientValid = nombresIngredientes.contains(input)
+    }
+
+    LaunchedEffect(navController) {
+        ingredientesViewModel.loadIngredientsFromFirebase()
+    }
 
     Scaffold(
         topBar = { AppBar(
@@ -75,70 +110,230 @@ fun AddRecipe(navController: NavController, recetasViewModel: RecetasViewModel) 
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(), // Asegura que ocupe el ancho disponible
+                        //.padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp), // Espacio entre los elementos
+                    verticalAlignment = Alignment.CenterVertically // Alinea verticalmente los elementos
+                ) {
 
-                // Name Field
-                Text(
-                    text = "Add Image (Optional)",
-                    style = MaterialTheme.typography.titleSmall,
+//                if (receta.image.isNullOrBlank()){
+//                    AsyncImage(
+//                        model = receta.image,
+//                        contentDescription = "Recipe Image",
+//                        modifier = Modifier
+//                            .size(120.dp)
+//                            .clip(RoundedCornerShape(8.dp)),
+//                        contentScale = ContentScale.Crop
+//                    )
+//                }else{
+                        Image(
+                            painter = painterResource(id = R.drawable.food_placeholder),
+                            contentDescription = "Recipe picture",
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .size(150.dp)
+                                .shadow(4.dp),
+                            //.align(Alignment.CenterHorizontally)
+                            contentScale = ContentScale.Crop
+                        )
+                    //}
+                    // Name Field
+
+                    // Botón
+                    Button(
+                        onClick = {
+                            //TODO: Acción al hacer clic
+                        },
+                        modifier = Modifier.align(Alignment.CenterVertically), // Alineación vertical del botón
+                        colors = buttonColors(
+                            containerColor = LightYellow,
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Text("Select image")
+                    }
+                }
+            }
+
+            // Sección de "Receta"
+            item {
+                SectionHeader("Recipe Details")
+            }
+
+
+            item {
+                // Campo para el nombre de la receta
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Recipe Name") },
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth(),
-                    //textAlign = TextAlign.Center
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
+                        unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
+                        focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
+                    )
                 )
-                Spacer(modifier = Modifier.height(5.dp))
-
 
             }
 
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Name Field
-                Text(
-                    text = "Name",
-                    style = MaterialTheme.typography.titleSmall,
+                // Fila para Servings y Time
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    //textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(5.dp))
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Servings
+                    OutlinedTextField(
+                        value = servings,
+                        onValueChange = { servings = it },
+                        label = { Text("Servings") },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
+                            unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
+                            focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
+                        ),
+                    )
+
+                    // Time
+                    OutlinedTextField(
+                        value = time,
+                        onValueChange = { time = it },
+                        label = { Text("Time (min)") },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
+                            unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
+                            focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
+                        ),
+                    )
+                }
+            }
+
+            // Sección de "Ingredientes"
+            item {
+                SectionHeader("Ingredients")
+            }
+
+            item {
                 OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Next,
-                        keyboardType = KeyboardType.Text
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    value = ingredientName,
+                    onValueChange = {
+                        ingredientName = it
+                        validateIngredient(it)
+                    },
+                    label = { Text("Ingredient Name") },
+                    isError = !isIngredientValid,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
+                        unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
+                        focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
+                    )
                 )
+
+                if (!isIngredientValid) {
+                    Text(
+                        text = "Ingredient is not valid. Please choose a valid one.",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                if (isIngredientValid) {
+                    val validIngredient = ingredientesValidos.value.find { it.name == ingredientName }
+                    ingredientImage = validIngredient?.image.orEmpty()
+                }
             }
 
-            item { // Ingredients
-                Spacer(modifier = Modifier.height(16.dp))
+            if (isIngredientValid) {
+                item {
+                    // Fila para Amount y Unit
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Amount
+                        OutlinedTextField(
+                            value = amount,
+                            onValueChange = { amount = it },
+                            label = { Text("Amount") },
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.weight(1f),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
+                                unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
+                                focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
+                            ),
+                        )
 
-                Text(
-                    text = "Ingredients",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.fillMaxWidth(),
-                    //textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                // Aquí puedes agregar campos para ingredientes si es necesario
-
-                Spacer(modifier = Modifier.height(16.dp))
+                        // Unit
+                        OutlinedTextField(
+                            value = unit,
+                            onValueChange = { unit = it },
+                            label = { Text("Unit") },
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
+                            modifier = Modifier.weight(1f),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
+                                unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
+                                focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
+                            ),
+                        )
+                    }
+                }
             }
 
-
-            item { // Instructions
-                // Instructions Header
-                Text(
-                    text = "Instructions",
-                    style = MaterialTheme.typography.titleSmall,
+            item {
+                // Botón para añadir ingrediente
+                Button(
+                    onClick = {
+                        if (isIngredientValid && amount.isNotEmpty() && unit.isNotEmpty()) {
+                            val newIngredient = Ingrediente(
+                                name = ingredientName,
+                                image = "https://img.spoonacular.com/ingredients_100x100/${ingredientImage}",
+                                amount = amount.toDouble(),
+                                unit = unit
+                            )
+                            ingredients = ingredients + newIngredient
+                            ingredientName = ""
+                            ingredientImage = ""
+                            amount = ""
+                            unit = ""
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    //textAlign = TextAlign.Center
-                )
-                //(modifier = Modifier.height(5.dp))
+                    colors = buttonColors(
+                        containerColor = LightYellow,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Text("Add Ingredient")
+                }
+            }
 
-                // Mostrar los pasos
+            item {
+                // Mostrar los ingredientes añadidos
+                ingredients.forEach { ingredientItem ->
+                    Text("Ingredient: ${ingredientItem.name}, Amount: ${ingredientItem.amount}, Unit: ${ingredientItem.unit}")
+                }
+            }
+
+            // Sección de "Pasos"
+            item {
+                SectionHeader("Instructions")
+            }
+
+            item {
+                // Instructions
                 instructions.forEachIndexed { index, step ->
                     Row(
                         modifier = Modifier
@@ -153,18 +348,16 @@ fun AddRecipe(navController: NavController, recetasViewModel: RecetasViewModel) 
                                     this[index] = newStep
                                 }
                             },
-                            label = {
-                                Text(
-                                    "Step ${index + 1}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            },
-                            textStyle = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f)
+                            label = { Text("Step ${index + 1}") },
+                            modifier = Modifier.weight(1f),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
+                                unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
+                                focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
+                            ),
                         )
 
-                        // Botón de papelera para eliminar el paso
-                        if (index > 0) {  // El primer paso no puede ser eliminado
+                        if (index > 0) {
                             IconButton(
                                 onClick = {
                                     instructions = instructions.toMutableList().apply {
@@ -172,151 +365,100 @@ fun AddRecipe(navController: NavController, recetasViewModel: RecetasViewModel) 
                                     }
                                 }
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Delete,
-                                    contentDescription = "Delete Step",
-                                    tint = Color.Red
-                                )
+                                Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete Step", tint = Color.Red)
                             }
                         }
                     }
                 }
 
                 Row(
-                    modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
-                        onClick = {
-                            instructions = instructions + ""  // Agregar un paso vacío
-                        },
-                        colors = buttonColors(containerColor = LightYellow, contentColor = Color.Black),
-                        modifier = Modifier
-                            .fillMaxWidth(0.6f)
-                        //.padding(10.dp)
+                        onClick = { instructions = instructions + "" },
+                        modifier = Modifier.fillMaxWidth(0.6f),
+                        colors = buttonColors(
+                            containerColor = LightYellow,
+                            contentColor = Color.Black
+                        )
                     ) {
                         Text("Add Step")
                     }
                 }
             }
 
-
+            // Sección de "Preferencias dietéticas"
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Time
-                Text(
-                    text = "Time (min)",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.fillMaxWidth(),
-                    //textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Aquí puedes agregar el campo de tiempo
-                OutlinedTextField(
-                    value = readyInMinutes?.toString() ?: "",
-                    onValueChange = {
-                        readyInMinutes = it.toIntOrNull()
-                    },
-                    modifier = Modifier.width(110.dp),
-                    keyboardOptions = KeyboardOptions
-                        .Default.copy(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Next //con Enter salta al sig campo
-                        ),
-                )
+                SectionHeader("Meal Type")
             }
 
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Occasions
-                Text(
-                    text = "Occasions",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.fillMaxWidth(),
-                    //textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                // Row con botones para cada valor de la enum
+                // Occasions buttons
                 Row(
                     modifier = Modifier
-                        .horizontalScroll(rememberScrollState()) // Habilita el desplazamiento horizontal
+                        .horizontalScroll(rememberScrollState())
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp), // Espaciado entre botones
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     DishTypes.entries.forEach { occasion ->
                         Button(
                             onClick = {
-                                // Aquí puedes manejar la lógica al presionar cada botón
-                                println("Selected: $occasion")
-                                !isPressed
+                                occasions += occasion.name
+                                println("AddRecipe: $occasion")
                             },
-                            colors = if (isPressed) buttonColors(containerColor = LightYellow, contentColor = Color.Black) else
-                                buttonColors(containerColor = LightGray, contentColor = Color.Black),
-                            modifier = Modifier.width(110.dp) // Los botones ocuparán el mismo ancho
+                            colors = buttonColors(
+                                containerColor = if (isPressed) LightYellow else LightGray,
+                                contentColor = Color.Black
+                            ),
+                            modifier = Modifier.width(110.dp)
                         ) {
-                            Text(text = occasion.name) // El nombre del valor de la enum
+                            Text(text = occasion.name)
                         }
                     }
                 }
+            }
 
+            // Sección de "Preferencias dietéticas"
+            item {
+                SectionHeader("Dietary Preferences")
             }
 
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Textos de sección
-                Text(
-                    text = "Dietary Preferences",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Row con botones para cada opción
                 Row(
                     modifier = Modifier
-                        .horizontalScroll(rememberScrollState()) // Habilita el desplazamiento horizontal
+                        .horizontalScroll(rememberScrollState())
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp), // Espaciado entre botones
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Botón para Gluten-Free
                     Button(
-                        onClick = {
-                            isGlutenFree = !isGlutenFree // Alternar estado de Gluten-Free
-                        },
-                        colors = if (isGlutenFree) buttonColors(containerColor = LightYellow, contentColor = Color.Black) else
-                            buttonColors(containerColor = LightGray, contentColor = Color.Black),
+                        onClick = { isGlutenFree = !isGlutenFree },
+                        colors = buttonColors(
+                            containerColor = if (isGlutenFree) LightYellow else LightGray,
+                            contentColor = Color.Black
+                        ),
                         modifier = Modifier.width(130.dp)
                     ) {
                         Text(text = "Gluten-Free")
                     }
 
-                    // Botón para Vegan
                     Button(
-                        onClick = {
-                            isVegan = !isVegan // Alternar estado de Vegan
-                        },
-                        colors = if (isVegan) buttonColors(containerColor = LightYellow, contentColor = Color.Black) else
-                            buttonColors(containerColor = LightGray, contentColor = Color.Black),
+                        onClick = { isVegan = !isVegan },
+                        colors = buttonColors(
+                            containerColor = if (isVegan) LightYellow else LightGray,
+                            contentColor = Color.Black
+                        ),
                         modifier = Modifier.width(110.dp)
                     ) {
                         Text(text = "Vegan")
                     }
 
-                    // Botón para Vegetarian
                     Button(
-                        onClick = {
-                            isVegetarian = !isVegetarian // Alternar estado de Vegetarian
-                        },
-                        colors = if (isVegetarian) buttonColors(containerColor = LightYellow, contentColor = Color.Black) else
-                            buttonColors(containerColor = LightGray, contentColor = Color.Black),
+                        onClick = { isVegetarian = !isVegetarian },
+                        colors = buttonColors(
+                            containerColor = if (isVegetarian) LightYellow else LightGray,
+                            contentColor = Color.Black
+                        ),
                         modifier = Modifier.width(150.dp)
                     ) {
                         Text(text = "Vegetarian")
@@ -325,27 +467,59 @@ fun AddRecipe(navController: NavController, recetasViewModel: RecetasViewModel) 
             }
 
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Botón para añadir receta
                 Button(
                     onClick = {
-                        navController.navigate(BottomNavItem.MyRecipes.route)
+                        val newReceta = Receta(
+                            id = recetasViewModel.generateRecipeId(),
+                            title = title,
+                            image = imageUri,
+                            servings = servings.toInt(),
+                            ingredients = ingredients,
+                            steps = instructions,
+                            time = time.toInt(),
+                            dishTypes = occasions,
+                            userId = uid.toString(),
+                            usedIngredientCount = ingredients.size,
+                            glutenFree = isGlutenFree,
+                            vegan = isVegan,
+                            vegetarian = isVegetarian,
+                            date = System.currentTimeMillis(),
+                            unusedIngredients = emptyList(),
+                            missingIngredientCount = 0,
+                            unusedIngredientCount = 0
+                        )
+                        recetasViewModel.addMyRecipe(
+                            uid.toString(), newReceta,
+                            onComplete = { success, error ->
+                                if (success) {
+                                    Log.d("AddRecipe", "Receta añadida correctamente")
+                                    navController.navigate(BottomNavItem.MyRecipes.route)
+                                } else {
+                                    Log.e("AddRecipe", "Error al añadir receta: $error")
+                                }
+                            }
+                        )
                     },
-                    colors = buttonColors(
-                        containerColor = LightYellow,
-                        contentColor = Color.Black
-                    ),
+                    colors = buttonColors(containerColor = Cherry, contentColor = Color.Black),
                     modifier = Modifier
-                        .padding(16.dp)
                         .fillMaxWidth()
+                        .padding(16.dp),
                 ) {
-                    Text(text = "Create Recipe")
+                    Text(text = "Create Recipe", color = Color.White)
                 }
             }
-
         }
     }
 }
 
 
+@Composable
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+    )
+}

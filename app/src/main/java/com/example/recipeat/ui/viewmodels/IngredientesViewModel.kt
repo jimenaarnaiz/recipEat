@@ -18,6 +18,11 @@ class IngredientesViewModel : ViewModel() {
     private val _ingredientes = MutableStateFlow<List<IngredienteSimple>>(emptyList())
     val ingredientes: StateFlow<List<IngredienteSimple>> = _ingredientes
 
+    //ingredientes seleccionados
+    private val _ingredientesValidos = MutableStateFlow<List<IngredienteSimple>>(emptyList())
+    val ingredientesValidos: StateFlow<List<IngredienteSimple>> = _ingredientesValidos
+
+
     fun addIngredient(ingrediente: IngredienteSimple) {
         _ingredientes.value += ingrediente
     }
@@ -139,22 +144,29 @@ class IngredientesViewModel : ViewModel() {
 
 
 
+    fun loadIngredientsFromFirebase() {
+        db.collection("ingredientes") // Suponiendo que la colección se llama 'ingredients'
+            .get()
+            .addOnSuccessListener { result ->
+                // Mapear cada documento de Firebase a un objeto IngredienteSimple
+                val ingredients = result.mapNotNull { document ->
+                    val name = document.getString("name") ?: ""
+                    val image = document.getString("image") ?: ""// Esto podría ser null si no está presente
+                    IngredienteSimple(name, image)
+                }
+                _ingredientesValidos.value = ingredients
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Firebase", "Error getting ingredients from firebase: ", exception)
+            }
+    }
 
 
 
 
-    //API
 
-    // Buscar ingredientes
-//    fun buscarIngredientes(ingrediente: String) {
-//        viewModelScope.launch {
-//            try {
-//                val response = RetrofitClient.api.buscarIngredientesAutocompletado(ingrediente)
-//                _ingredientesSugeridos.value = response
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
-//        }
-//    }
+
+
+
 }
 

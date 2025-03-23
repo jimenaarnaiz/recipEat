@@ -32,5 +32,5 @@ data class RecetaSimple(val id: String, val title: String, val image: String, va
 
 // Para las recetas que crea localmente el user
 enum class DishTypes {
-    breakfast, lunch, dessert, snack, dinner
+    breakfast, lunch, dessert, dinner
 }

@@ -82,7 +82,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 onBottomBarVisibilityChanged(false)
             }
             composable("add_recipe") {
-                AddRecipe(navController, recetasViewModel)   //
+                AddRecipe(navController, recetasViewModel, ingredientesViewModel)   //
                 onBottomBarVisibilityChanged(false)
             }
             composable("favoritos") {

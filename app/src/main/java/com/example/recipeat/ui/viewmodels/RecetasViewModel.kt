@@ -172,103 +172,101 @@ class RecetasViewModel : ViewModel() {
         return UUID.randomUUID().toString().replace("-", "")
     }
 
-    // Crea y guarda la receta del usuario en Firebase
-    fun createRecipe(
-        recipeName: String,
-        image: String?,
-        servings: Int,
-        ingredients: List<Ingrediente>,
-        steps: List<String>,
-        time: Int,
-        dishTypes: List<String>,
-        userId: String, // ID del usuario que ha creado la receta
-        glutenFree: Boolean,
-        vegan: Boolean,
-        vegetarian: Boolean
-    ) {
-        val db = FirebaseFirestore.getInstance()
-
-        // Generar un ID único para la receta
-        val recipeId = db.collection("my_recipes").document(userId).collection("recipes").document().id
-
-        val newRecipe = Receta(
-            id = recipeId,
-            title = recipeName,
-            image = image,
-            servings = servings,
-            ingredients = ingredients,
-            steps = steps,
-            time = time,
-            userId = userId,
-            dishTypes = dishTypes,
-            usedIngredientCount = ingredients.size,
-            glutenFree = glutenFree,
-            vegan = vegan,
-            vegetarian = vegetarian,
-            date = System.currentTimeMillis(), // Fecha de creación,
-            missingIngredientCount = 0,
-            unusedIngredientCount = 0,
-            unusedIngredients = emptyList()
-        )
-
-        // Guardar la receta directamente en `my_recipes/{uid}/{recipeId}`
-        val userRecipesRef = db.collection("my_recipes").document(userId) // Documento del usuario
-            .collection("recipes").document(recipeId) // Cada receta es un documento en `my_recipes/{uid}/`
-
-        userRecipesRef.set(newRecipe)
-            .addOnSuccessListener {
-                Log.d("Firestore", "Recipe successfully added!")
-            }
-            .addOnFailureListener { e ->
-                Log.w("Firestore", "Error adding recipe", e)
-            }
-    }
 
 
     // Función para obtener las recetas del usuario
     // TODO PAGINACIÓN
     fun getRecetasUser(uid: String) {
         db.collection("my_recipes").document(uid)
+            .collection("recipes")
             .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val recetasList = document.data?.values?.mapNotNull {
-                        it as? Map<*, *> // Convertir los valores en mapas
-                    }?.mapNotNull { recetaMap ->
-                        try {
+            .addOnSuccessListener { result ->
+                val recetasList = result.documents.mapNotNull { document ->
+                    try {
+                        // Si el documento tiene datos, intenta procesarlo
+                        val recetaMap = document.data // Recupera los datos del documento
+                        recetaMap?.let { // Si los datos no son nulos, los usamos
                             Receta(
-                                id = recetaMap["id"] as String,
-                                title = recetaMap["title"] as String,
-                                image = recetaMap["image"] as? String,
-                                servings = (recetaMap["servings"] as Long).toInt(),
-                                ingredients = recetaMap["ingredients"] as List<Ingrediente>,
-                                steps = recetaMap["steps"] as List<String>,
-                                time = (recetaMap["time"] as Long).toInt(),
-                                userId = recetaMap["userId"] as String,
-                                dishTypes = recetaMap["dishTypes"] as List<String>,
-                                usedIngredientCount = (recetaMap["usedIngredientCount"] as Long).toInt(),
-                                glutenFree = recetaMap["glutenFree"] as Boolean,
-                                vegan = recetaMap["vegan"] as Boolean,
-                                vegetarian = recetaMap["vegetarian"] as Boolean,
-                                date = recetaMap["date"] as Long,
-                                missingIngredientCount = recetaMap["missingIngredientCount"] as Int,
-                                unusedIngredientCount = recetaMap["unusedIngredientCount"] as Int,
-                                unusedIngredients = recetaMap["unusedIngredients"] as List<IngredienteSimple>
+                                id = it["id"] as String,
+                                title = it["title"] as String,
+                                image = it["image"] as? String,
+                                servings = (it["servings"] as Number).toInt() ,  // Convierte el valor a Int, o usa 0 si es nulo
+                                ingredients = it["ingredients"] as List<Ingrediente>,
+                                steps = it["steps"] as List<String>,
+                                time = (it["time"] as Number).toInt(),
+                                userId = it["user"] as String,
+                                dishTypes = it["dishTypes"] as List<String>,
+                                //usedIngredientCount = it["usedIngredientCount"] as Int,
+                                glutenFree = it["glutenFree"] as Boolean,
+                                vegan = it["vegan"] as Boolean,
+                                vegetarian = it["vegetarian"] as Boolean,
+                                date = it["date"] as Long,
+                                unusedIngredients = emptyList(),
+                                missingIngredientCount = 0,
+                                unusedIngredientCount = 0,
                             )
-                        } catch (e: Exception) {
-                            Log.w("Firestore", "Error parsing recipe", e)
-                            null
                         }
-                    } ?: emptyList()
-
-                    _recetasUser.value = recetasList // Guardar en la variable
-                } else {
-                    _recetasUser.value = emptyList() // No hay recetas
+                    } catch (e: Exception) {
+                        Log.w("Firestore", "Error parsing recipe", e)
+                        null // Si ocurre un error, devolvemos null para que no se añada a la lista
+                    }
                 }
+
+                // Asignar la lista filtrada a la variable que almacena las recetas
+                _recetasUser.value = recetasList
             }
             .addOnFailureListener { e ->
                 Log.w("Firestore", "Error fetching recipes", e)
                 _recetasUser.value = emptyList() // En caso de error, retorna una lista vacía
+            }
+    }
+
+
+
+
+    /**
+     * Añade a Firebase una receta creada por el user.
+     */
+    fun addMyRecipe(uid: String, receta: Receta, onComplete: (Boolean, String?) -> Unit) {
+        Log.d("RecetasViewModel", "recetaId generado: ${receta.id}")
+
+        val db = FirebaseFirestore.getInstance()
+
+        // Convertir el objeto `Receta` a un HashMap
+        val recipeMap = hashMapOf(
+            "id" to receta.id,
+            "title" to receta.title,
+            "image" to receta.image,
+            "servings" to receta.servings,
+            "ingredients" to receta.ingredients.map {
+                hashMapOf(
+                    "name" to it.name,
+                    "amount" to it.amount,
+                    "unit" to it.unit,
+                    "image" to it.image
+                )
+            },
+            "steps" to receta.steps,
+            "time" to receta.time,
+            "dishTypes" to receta.dishTypes,
+            "user" to receta.userId,
+            "glutenFree" to receta.glutenFree,
+            "vegan" to receta.vegan,
+            "vegetarian" to receta.vegetarian,
+            "date" to receta.date
+        )
+
+        // Referencia al documento de la receta
+        val recipeRef =
+            db.collection("my_recipes").document(uid).collection("recipes").document(receta.id)
+
+        // Guardar el HashMap en Firestore
+        recipeRef.set(recipeMap)
+            .addOnSuccessListener {
+                onComplete(true, null)
+            }
+            .addOnFailureListener { e ->
+                onComplete(false, e.message)
             }
     }
 
@@ -870,14 +868,6 @@ class RecetasViewModel : ViewModel() {
                 Log.e("RecetasViewModel", "Error al obtener los favoritos del usuario", e)
             }
     }
-
-
-
-
-
-
-
-
 
 
 
