@@ -172,7 +172,6 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-
     // Función para obtener las recetas del usuario
     // TODO PAGINACIÓN
     fun getRecetasUser(uid: String) {
@@ -396,7 +395,10 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-    //TODO añadir param de deApi: Boolean para saber si busco en una coleccion u otra !!!
+    /**
+     * Obtener receta por id
+     * deUser: Boolean para saber si se tiene que buscar en una coleccion u otra
+     */
     fun obtenerRecetaPorId(uid: String, recetaId: String, deUser: Boolean) {
         Log.d("RecetasViewModel", "deUser: $deUser Obteniendo receta con ID: $recetaId para el usuario $uid")
 
@@ -453,6 +455,61 @@ class RecetasViewModel : ViewModel() {
             }
         }
     }
+
+
+    fun eliminarReceta(uid: String, recetaId: String) {
+        Log.d("RecetasViewModel", "Eliminando receta con ID: $recetaId para el usuario $uid")
+
+        viewModelScope.launch {
+            try {
+                val documentRef =
+                    db.collection("my_recipes") // Colección de recetas del usuario
+                        .document(uid) // Documento del usuario
+                        .collection("recipes") // Subcolección de recetas
+                        .document(recetaId) // Documento específico de la receta con recetaId
+
+                // Eliminar el documento
+                documentRef.delete().await()
+
+                Log.d("RecetasViewModel", "Receta con ID: $recetaId eliminada exitosamente")
+
+                //_recetaSeleccionada.value = null
+
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Error al eliminar receta: ${e.message}")
+            }
+        }
+    }
+
+    fun eliminarRecetaDelHistorial(uid: String, recetaId: String) {
+        viewModelScope.launch {
+            try {
+                // Eliminar de las recetas del historial
+                val historialRef = db.collection("favs_hist")
+                    .document(uid)
+                    .collection("historial")
+
+                // Buscar si la receta está en el historial
+                val historialSnapshot = historialRef.whereEqualTo("id", recetaId).get().await()
+
+                if (historialSnapshot.isEmpty) {
+                    Log.d("RecetasViewModel", "La receta no se encuentra en el historial.")
+                    return@launch
+                }
+
+                // Eliminar todas las instancias de la receta en el historial
+                for (document in historialSnapshot.documents) {
+                    historialRef.document(document.id).delete().await()
+                    Log.d("RecetasViewModel", "Receta $recetaId eliminada del historial.")
+                }
+
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Error al eliminar receta del historial: ${e.message}")
+            }
+        }
+    }
+
+
 
 
     /**

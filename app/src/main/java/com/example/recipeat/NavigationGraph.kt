@@ -13,6 +13,7 @@ import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.AddRecipe
 import com.example.recipeat.ui.screens.DetailsScreen
 import com.example.recipeat.ui.screens.EditProfileScreen
+import com.example.recipeat.ui.screens.EditRecipeScreen
 import com.example.recipeat.ui.screens.FavoritesScreen
 import com.example.recipeat.ui.screens.HistoryScreen
 import com.example.recipeat.ui.screens.HomeScreen
@@ -100,13 +101,18 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 HistoryScreen(navController, recetasViewModel)   //
                 onBottomBarVisibilityChanged(false)
             }
-            composable("editarPerfil") { //backStackEntry ->
-//                val id = backStackEntry.arguments?.getString("userId") ?: ""
+            composable("editarPerfil") {
                 EditProfileScreen(navController, usersViewModel)
                 onBottomBarVisibilityChanged(false)
             }
-
             //TODO screen de editar mi receta
+            composable("editRecipe/{idReceta}/{deUser}") { backStackEntry ->
+                val idReceta = backStackEntry.arguments?.getString("idReceta") ?: ""
+                val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
+                // Ahora pasamos 'deUser' a la pantalla
+                EditRecipeScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, ingredientesViewModel, deUser = deUser)
+                onBottomBarVisibilityChanged(false)
+            }
 
 
         }

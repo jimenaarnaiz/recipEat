@@ -29,6 +29,7 @@ import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.R
 import com.example.recipeat.ui.components.AppBar
+import com.example.recipeat.ui.components.TopBarWithIcons
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
@@ -47,6 +48,9 @@ fun DetailsScreen(
 
     var cocinado by remember { mutableStateOf(false) }
 
+    // Estado para mostrar el AlertDialog de confirmación de eliminación
+    var showDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(navController) {
         if (uid != null) {
             Log.d("DetailsScreen", "Llamando a obtenerRecetaPorId con recetaId: $idReceta deUser: $deUser")
@@ -61,10 +65,18 @@ fun DetailsScreen(
 
     Scaffold(
         topBar = {
-            AppBar(
-                title = "", navController = navController,
-                onBackPressed = { navController.popBackStack() }
-            )
+            if (deUser) {
+                TopBarWithIcons(
+                    onBackPressed = { navController.popBackStack() },
+                    onEditPressed = { navController.navigate("editRecipe/$idReceta/$deUser") },
+                    onDeletePressed = { showDialog = true }
+                )
+            } else {
+                AppBar(
+                    title = "", navController = navController,
+                    onBackPressed = { navController.popBackStack() }
+                )
+            }
         }
     ) { paddingValues ->
         receta?.let { recetaDetalle ->
@@ -215,4 +227,49 @@ fun DetailsScreen(
             }
         }
     }
+
+    // AlertDialog de confirmación de eliminación
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false }, // Cierra el dialogo si se toca fuera de él
+            title = { Text("Confirm deletion") },
+            text = { Text("Are you sure you want to delete this recipe?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (uid != null) {
+                            // Eliminar la receta
+                            recetasViewModel.eliminarReceta(uid, idReceta)
+                            // eliminar de favoritos
+                            if (esFavorito == true){
+                                receta!!.image?.let {
+                                    recetasViewModel.toggleFavorito(
+                                        uid, idReceta,
+                                        title = receta!!.title,
+                                        image = it,
+                                    )
+                                }
+                            }
+                            // eliminar de historial
+                            recetasViewModel.eliminarRecetaDelHistorial(uid, recetaId = idReceta)
+
+                            // Cerrar el dialogo
+                            showDialog = false
+                            // Volver a la pantalla anterior
+                            navController.popBackStack()
+                        }
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
+
+
