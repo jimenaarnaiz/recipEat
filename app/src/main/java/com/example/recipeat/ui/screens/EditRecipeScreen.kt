@@ -58,6 +58,9 @@ import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.google.firebase.auth.FirebaseAuth
 
+
+//TODO hacer las comprobaciones de los campos!!!
+
 @Composable
 fun EditRecipeScreen(
     idReceta: String, navController: NavHostController, recetasViewModel: RecetasViewModel,

@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -117,7 +119,7 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-            .padding(bottom = 16.dp)
+            .padding(bottom = 80.dp)
     ) {
         Text(
             text = "Welcome, $username!",
@@ -149,24 +151,25 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
             // Carrusel de recetas
             LazyColumn(
                 state = listState, // Vincular el estado de la lista
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(bottom = 16.dp) // Agregar espacio al final de la lista
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp), // Asegúrate de que no se solapen con el BottomBar
             ) {
                 items(recetasState) { receta ->
                     RecetaCard(receta = receta, navController)
                 }
 
-            // Indicador de carga al final de la lista
-            if (isLoadingMore) {
-                item {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
+                // Indicador de carga al final de la lista
+                if (isLoadingMore) {
+                    item {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp)
+                                .align(Alignment.CenterHorizontally)
+                        )
+                    }
                 }
-            }
             }
         }
     }
@@ -175,7 +178,6 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
 @Composable
 fun RecetaCard(receta: Receta, navController: NavController) {
 
-    // Declarar e inicializar la variable esDeUser
     val esDeUser = receta.userId.isNotEmpty()
 
     Log.d("RecetaCard", "idReceta: ${receta.id} esDeUser: $esDeUser  ")

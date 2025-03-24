@@ -193,7 +193,10 @@ class UsersViewModel: ViewModel() {
             }
     }
 
-    fun updateUserProfile(
+    /**
+     *
+     */
+    fun actualizarUserProfile(
         newUsername: String?,
         newEmail: String?,
         newProfileImage: String?,
@@ -287,7 +290,7 @@ class UsersViewModel: ViewModel() {
 
     /**
      * Guarda la imagen de perfil en el almacenamiento local del dispositivo
-     * (en el directorio de archivos internos de la aplicación)
+     * (en el directorio de archivos internos de la aplicación) bajo el nombre profile_image.jpg
      */
     fun saveImageLocally(context: Context, imageUri: Uri) {
         try {

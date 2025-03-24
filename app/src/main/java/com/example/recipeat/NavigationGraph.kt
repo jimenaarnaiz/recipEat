@@ -1,5 +1,6 @@
 package com.example.recipeat
 
+import LoginScreen
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -17,7 +18,6 @@ import com.example.recipeat.ui.screens.EditRecipeScreen
 import com.example.recipeat.ui.screens.FavoritesScreen
 import com.example.recipeat.ui.screens.HistoryScreen
 import com.example.recipeat.ui.screens.HomeScreen
-import com.example.recipeat.ui.screens.LoginScreen
 import com.example.recipeat.ui.screens.MyRecipesScreen
 import com.example.recipeat.ui.screens.ProfileScreen
 import com.example.recipeat.ui.screens.RegisterScreen

@@ -56,6 +56,8 @@ import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.google.firebase.auth.FirebaseAuth
 
+//TODO hacer las comprobaciones de los campos!!!
+
 @Composable
 fun AddRecipe(navController: NavController, recetasViewModel: RecetasViewModel, ingredientesViewModel: IngredientesViewModel) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid

@@ -175,7 +175,7 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
             Button(
                 onClick = {
                     if (uid != null) {
-                        usersViewModel.updateUserProfile(
+                        usersViewModel.actualizarUserProfile(
                             uid = uid,
                             newUsername = newUsername,
                             newEmail = newEmail,

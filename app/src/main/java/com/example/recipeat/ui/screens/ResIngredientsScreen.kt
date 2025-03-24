@@ -197,12 +197,15 @@ fun ResIngredientsScreen(
 
 @Composable
 fun RecetaCardRes2(receta: Receta, navController: NavController, ingredientes: List<IngredienteSimple>) {
+
+    val esDeUser = receta.userId.isNotEmpty()
+
     Card(
         modifier = Modifier
             .fillMaxWidth() // Hace que la Card ocupe tdo el ancho disponible
             .padding(vertical = 8.dp) // Separación vertical entre las Cards
             .shadow(4.dp, shape = RoundedCornerShape(16.dp))
-            .clickable { navController.navigate("detalles/${receta.id}") },
+            .clickable { navController.navigate("detalles/${receta.id}/$esDeUser") },
         shape = RoundedCornerShape(16.dp),
     ) {
         Column(

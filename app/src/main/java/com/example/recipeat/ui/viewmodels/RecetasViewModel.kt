@@ -1048,7 +1048,7 @@ class RecetasViewModel : ViewModel() {
                                     return@loadLastProcessedRecipeId
                                 }
 
-                                // Solo intentamos guardar el batch si todo va bien
+                                // Solo intentamos guardar el batch si tdo va bien
                                 viewModelScope.launch {
                                     try {
                                         val response = api.obtenerRecetasBulk(recetas_ids = batch.joinToString(","))
