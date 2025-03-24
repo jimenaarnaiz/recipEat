@@ -1,8 +1,10 @@
 package com.example.recipeat.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -18,12 +20,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.example.recipeat.R
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
@@ -32,9 +36,10 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun DetailsScreen(
-    idReceta: Int,
+    idReceta: String,
     navController: NavHostController,
     recetasViewModel: RecetasViewModel,
+    deUser: Boolean,
 ) {
     val receta by recetasViewModel.recetaSeleccionada.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
@@ -44,12 +49,14 @@ fun DetailsScreen(
 
     LaunchedEffect(navController) {
         if (uid != null) {
+            Log.d("DetailsScreen", "Llamando a obtenerRecetaPorId con recetaId: $idReceta deUser: $deUser")
             recetasViewModel.obtenerRecetaPorId(
                 uid = uid,
-                recetaId = idReceta.toString()
+                recetaId = idReceta,
+                deUser = deUser
             )
         }
-        recetasViewModel.verificarSiEsFavorito(uid, idReceta.toString())
+        recetasViewModel.verificarSiEsFavorito(uid, idReceta)
     }
 
     Scaffold(
@@ -68,8 +75,15 @@ fun DetailsScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(bottom = 16.dp)
             ) {
+                // Cargar la imagen de la receta con esquinas redondeadas y sin padding
+                val image = if (recetaDetalle.image.isNullOrEmpty()) {
+                    "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
+                } else {
+                    recetaDetalle.image
+                }
+
                 Image(
-                    painter = rememberAsyncImagePainter(model = recetaDetalle.image),
+                    painter = rememberAsyncImagePainter(image),
                     contentDescription = "Recipe Image",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -95,7 +109,7 @@ fun DetailsScreen(
                     IconButton(onClick = {
                         receta!!.image?.let {
                             recetasViewModel.toggleFavorito(
-                                uid, idReceta.toString(),
+                                uid, idReceta,
                                 title = receta!!.title,
                                 image = it,
                                 )
@@ -160,7 +174,7 @@ fun DetailsScreen(
                         if (!cocinado) {
                             receta!!.image?.let {
                                 recetasViewModel.añadirHistorial(
-                                    uid, idReceta.toString(),
+                                    uid, idReceta,
                                     title = receta!!.title,
                                     image = it,
                                 )

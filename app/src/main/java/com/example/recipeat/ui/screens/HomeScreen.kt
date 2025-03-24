@@ -174,12 +174,18 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
 
 @Composable
 fun RecetaCard(receta: Receta, navController: NavController) {
+
+    // Declarar e inicializar la variable esDeUser
+    val esDeUser = receta.userId.isNotEmpty()
+
+    Log.d("RecetaCard", "idReceta: ${receta.id} esDeUser: $esDeUser  ")
+
     Card(
         modifier = Modifier
             .fillMaxWidth() // Hace que la Card ocupe tdo el ancho disponible
             .padding(vertical = 8.dp) // Separación vertical entre las Cards
             .shadow(4.dp, shape = RoundedCornerShape(16.dp))
-            .clickable { navController.navigate("detalles/${receta.id}") },
+            .clickable { navController.navigate("detalles/${receta.id}/$esDeUser") },
         shape = RoundedCornerShape(16.dp),
     ) {
         Column(

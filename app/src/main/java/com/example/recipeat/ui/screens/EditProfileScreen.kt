@@ -39,8 +39,6 @@ import com.google.firebase.auth.FirebaseAuth
 fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewModel) {
 
     val uid = FirebaseAuth.getInstance().currentUser?.uid
-    var usernameState by remember { mutableStateOf<String?>(null) }
-    var profileImageState by remember { mutableStateOf<String?>(null) }
 
     // Estado para almacenar el objeto User
     var userState by remember { mutableStateOf<User?>(null) }
@@ -187,14 +185,14 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
                                 if (success) {
                                     Toast.makeText(
                                         context,
-                                        "Perfil actualizado",
+                                        "Profile updated successfully!",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     navController.navigate(BottomNavItem.Profile.route)
                                 } else {
                                     Toast.makeText(
                                         context,
-                                        "Error al actualizar perfil",
+                                        "Error updating profile",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }

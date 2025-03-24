@@ -114,7 +114,7 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
                 if (email.isEmpty() || password.isEmpty()) {
                     errorMessage = "Email and Password cannot be empty."
                     //recetasViewModel.buscarRecetasPorIngredientes() //TODO
-                   // recetasViewModel.guardarRecetasBulk()
+                   //recetasViewModel.guardarRecetasBulk()
                 }else{
                     usersViewModel.login(email, password,
                         onResult = { success ->

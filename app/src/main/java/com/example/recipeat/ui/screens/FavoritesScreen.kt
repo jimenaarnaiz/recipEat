@@ -93,6 +93,8 @@ fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasV
 
 @Composable
 fun RecetaItem(receta: RecetaSimple, navController: NavHostController) {
+    val esDeUser = receta.uid.isNotEmpty()
+
     // Este Composable es el que muestra cada receta en el Grid
     Card(
         modifier = Modifier
@@ -100,22 +102,16 @@ fun RecetaItem(receta: RecetaSimple, navController: NavHostController) {
             .padding(8.dp)
             .shadow(4.dp)
             .clickable {
-                navController.navigate("detalles/${receta.id}")
+                navController.navigate("detalles/${receta.id}/$esDeUser")
             },
         shape = MaterialTheme.shapes.medium,
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.clickable {
-                // Aquí puedes manejar la navegación a la pantalla de detalles de la receta
-                navController.navigate("detalles/${receta.id}")
-            }
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Cargar la imagen de la receta con esquinas redondeadas y sin padding
             var imagen by remember { mutableStateOf("") }
-            imagen = if (receta.image.isNotBlank() == true) {
-                receta.image
-            } else {
+            imagen = receta.image.ifBlank {
                 "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
             }
             Image(

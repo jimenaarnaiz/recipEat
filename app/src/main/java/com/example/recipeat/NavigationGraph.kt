@@ -1,6 +1,7 @@
 package com.example.recipeat
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -68,9 +69,15 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 ResNameScreen(nombreReceta = query, navController = navController, recetasViewModel, filtrosViewModel)
                 onBottomBarVisibilityChanged(false)
             }
-            composable("detalles/{query}") { backStackEntry ->
-                val query = backStackEntry.arguments?.getString("query")?.toIntOrNull() ?: 0
-                DetailsScreen(idReceta = query, navController = navController, recetasViewModel,)
+            composable("detalles/{idReceta}/{deUser}") { backStackEntry ->
+                val idReceta = backStackEntry.arguments?.getString("idReceta") ?: ""
+                val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
+
+                // Verifica que se haya obtenido el valor correctamente
+                Log.d("DetailsScreen", "Valor de deUser: $deUser")
+
+                // Ahora pasamos el parámetro 'deUser' a la pantalla de detalles
+                DetailsScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, deUser = deUser)
                 onBottomBarVisibilityChanged(false)
             }
             composable("search") {
