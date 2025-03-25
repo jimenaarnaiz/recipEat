@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "607928853348",
+    "project_id": "recipeat-7d5a2",
+    "storage_bucket": "recipeat-7d5a2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607928853348:android:f4cf208703e494c0035071",
+        "android_client_info": {
+          "package_name": "com.example.recipeat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJJDCmgdZSEk4U5szn2-mpmzyqQ5sqYZ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
