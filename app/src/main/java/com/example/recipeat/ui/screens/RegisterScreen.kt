@@ -50,7 +50,6 @@ import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     navController: NavHostController,
