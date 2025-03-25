@@ -268,6 +268,120 @@ class RecetasViewModel : ViewModel() {
             }
     }
 
+    /**
+     * Edita una receta en Firebase solo con los campos modificados.
+     */
+    fun editMyRecipe(uid: String, recetaModificada: Receta, onComplete: (Boolean, String?) -> Unit) {
+        Log.d("RecetasViewModel", "Editando receta con id: ${recetaModificada.id}")
+
+        val db = FirebaseFirestore.getInstance()
+
+        // Referencia al documento de la receta original
+        val recipeRef =
+            db.collection("my_recipes").document(uid).collection("recipes").document(recetaModificada.id)
+
+        // Obtener la receta original desde Firebase
+        recipeRef.get().addOnSuccessListener { document ->
+            if (document.exists()) {
+
+                // Obtener los datos del documento como un mapa
+                val recetaOriginalData = document.data
+
+                // Si no existe, devolver un error
+                if (recetaOriginalData == null) {
+                    onComplete(false, "Receta no encontrada.")
+                    return@addOnSuccessListener
+                }
+
+                // Convertir manualmente el mapa a un objeto Receta
+                val recetaOriginal = Receta(
+                    id = recetaOriginalData["id"] as String,
+                    title = recetaOriginalData["title"] as String,
+                    image = recetaOriginalData["image"] as? String,
+                    servings = (recetaOriginalData["servings"] as Number).toInt() ,  // Convierte el valor a Int, o usa 0 si es nulo
+                    ingredients = recetaOriginalData["ingredients"] as List<Ingrediente>,
+                    steps = recetaOriginalData["steps"] as List<String>,
+                    time = (recetaOriginalData["time"] as Number).toInt(),
+                    userId = recetaOriginalData["user"] as String,
+                    dishTypes = recetaOriginalData["dishTypes"] as List<String>,
+                    //usedIngredientCount = it["usedIngredientCount"] as Int,
+                    glutenFree = recetaOriginalData["glutenFree"] as Boolean,
+                    vegan = recetaOriginalData["vegan"] as Boolean,
+                    vegetarian = recetaOriginalData["vegetarian"] as Boolean,
+                    date = recetaOriginalData["date"] as Long,
+                    unusedIngredients = emptyList(),
+                    missingIngredientCount = 0,
+                    unusedIngredientCount = 0,
+                )
+
+                // Crear un mapa vacío para los cambios
+                val updatesMap = mutableMapOf<String, Any>()
+
+                // Comparar y agregar solo los campos modificados
+                if (recetaModificada.title != recetaOriginal.title) {
+                    updatesMap["title"] = recetaModificada.title
+                }
+                if (recetaModificada.image != recetaOriginal.image) {
+                    updatesMap["image"] = recetaModificada.image.toString()
+                }
+                if (recetaModificada.servings != recetaOriginal.servings) {
+                    updatesMap["servings"] = recetaModificada.servings
+                }
+                if (recetaModificada.ingredients != recetaOriginal.ingredients) {
+                    updatesMap["ingredients"] = recetaModificada.ingredients.map {
+                        hashMapOf(
+                            "name" to it.name,
+                            "amount" to it.amount,
+                            "unit" to it.unit,
+                            "image" to it.image
+                        )
+                    }
+                }
+                if (recetaModificada.steps != recetaOriginal.steps) {
+                    updatesMap["steps"] = recetaModificada.steps
+                }
+                if (recetaModificada.time != recetaOriginal.time) {
+                    updatesMap["time"] = recetaModificada.time
+                }
+                if (recetaModificada.dishTypes != recetaOriginal.dishTypes) {
+                    updatesMap["dishTypes"] = recetaModificada.dishTypes
+                }
+                if (recetaModificada.glutenFree != recetaOriginal.glutenFree) {
+                    updatesMap["glutenFree"] = recetaModificada.glutenFree
+                }
+                if (recetaModificada.vegan != recetaOriginal.vegan) {
+                    updatesMap["vegan"] = recetaModificada.vegan
+                }
+                if (recetaModificada.vegetarian != recetaOriginal.vegetarian) {
+                    updatesMap["vegetarian"] = recetaModificada.vegetarian
+                }
+                if (recetaModificada.date != recetaOriginal.date) {
+                    updatesMap["date"] = recetaModificada.date
+                }
+
+                // Verificar si hay cambios
+                if (updatesMap.isNotEmpty()) {
+                    // Actualizar solo los campos modificados en Firestore
+                    recipeRef.update(updatesMap)
+                        .addOnSuccessListener {
+                            onComplete(true, null)
+                        }
+                        .addOnFailureListener { e ->
+                            onComplete(false, e.message)
+                        }
+                } else {
+                    // Si no hay cambios, devolver éxito sin realizar ninguna actualización
+                    onComplete(true, null)
+                }
+            } else {
+                onComplete(false, "Receta no encontrada.")
+            }
+        }.addOnFailureListener { e ->
+            onComplete(false, e.message)
+        }
+    }
+
+
 
 
     // Función para mapear ApiReceta a Receta

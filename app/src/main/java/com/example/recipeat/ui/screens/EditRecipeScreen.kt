@@ -508,7 +508,7 @@ fun EditRecipeScreen(
                 Button(
                     onClick = {
                         val newReceta = Receta(
-                            id = recetasViewModel.generateRecipeId(),
+                            id = idReceta,
                             title = title,
                             image = imageUri,
                             servings = servings.toInt(),
@@ -526,7 +526,7 @@ fun EditRecipeScreen(
                             missingIngredientCount = 0,
                             unusedIngredientCount = 0
                         )
-                        recetasViewModel.addMyRecipe(
+                        recetasViewModel.editMyRecipe(
                             uid.toString(), newReceta,
                             onComplete = { success, error ->
                                 if (success) {
