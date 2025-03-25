@@ -1,5 +1,7 @@
 package com.example.recipeat.data.model
 
+import java.io.Serializable
+
 data class Ingrediente(
     val name: String,
     val image: String,

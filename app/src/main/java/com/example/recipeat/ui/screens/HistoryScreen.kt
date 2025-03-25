@@ -100,8 +100,11 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
             )
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
+        Column(
+            modifier = Modifier.padding(paddingValues)
 
+
+        ) {
             Button(
                 onClick = {
                     // Alternar entre 7 días y 30 días
@@ -117,7 +120,7 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
                 )
             ) {
                 Text(
-                    text = if (rango == 7) "Last 7 Days" else "Last 30 Days",
+                    text = if (rango == 7) "View Last 30 Days" else "View Last 7 Days"
                 )
             }
 
