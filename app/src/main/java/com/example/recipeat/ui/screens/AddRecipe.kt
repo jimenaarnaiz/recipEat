@@ -78,8 +78,7 @@ fun AddRecipe(
     var ingredients by rememberSaveable { mutableStateOf<List<Ingrediente>>(emptyList()) }
     var instructions by rememberSaveable { mutableStateOf(listOf("")) }
     var time by rememberSaveable { mutableStateOf("") }
-    var occasions by remember { mutableStateOf(emptyList<String>()) }
-    var selectedOccasion by remember { mutableStateOf(emptyList<String>()) }
+    var selectedOccasion by rememberSaveable { mutableStateOf(emptyList<String>()) }
 
     // Nuevo estado para las opciones de Vegan, Vegetarian y Gluten-Free
     var isVegan by rememberSaveable { mutableStateOf(false) }
@@ -92,10 +91,10 @@ fun AddRecipe(
     var ingredientImage by rememberSaveable { mutableStateOf("") }
     var amount by rememberSaveable { mutableStateOf("") }  // cantidad
     var unit by rememberSaveable { mutableStateOf("") }    // unidad
-    var isIngredientValid by remember { mutableStateOf(true) } // Controlar si el ingrediente es válido
+    var isIngredientValid by rememberSaveable { mutableStateOf(true) } // Controlar si el ingrediente es válido
 
     // Estado mutable para la validación
-    var isValid by remember { mutableStateOf(false) }
+    var isValid by rememberSaveable { mutableStateOf(false) }
 
     // Comprobar si el ingrediente ingresado es válido
     fun validateIngredient(input: String) {
@@ -236,7 +235,7 @@ fun AddRecipe(
                             ingredients = ingredients,
                             steps = instructions,
                             time = time.toInt(),
-                            dishTypes = occasions,
+                            dishTypes = selectedOccasion,
                             userId = uid.toString(),
                             usedIngredientCount = ingredients.size,
                             glutenFree = isGlutenFree,

@@ -76,14 +76,13 @@ fun EditRecipeScreen(
     var ingredients by rememberSaveable { mutableStateOf<List<Ingrediente>>(emptyList()) }
     var instructions by rememberSaveable { mutableStateOf(listOf("")) }
     var time by rememberSaveable { mutableStateOf("") }
-    var occasions by remember { mutableStateOf(listOf("")) }
+    var selectedOccasion by rememberSaveable { mutableStateOf(emptyList<String>()) }
 
     // Nuevo estado para las opciones de Vegan, Vegetarian y Gluten-Free
     var isVegan by rememberSaveable { mutableStateOf(false) }
     var isVegetarian by rememberSaveable { mutableStateOf(false) }
     var isGlutenFree by rememberSaveable { mutableStateOf(false) }
 
-    var isPressed by remember { mutableStateOf(false) }
 
     // Obtenemos la lista de ingredientes válidos
     val ingredientesValidos = ingredientesViewModel.ingredientesValidos.collectAsState()
@@ -91,7 +90,10 @@ fun EditRecipeScreen(
     var ingredientImage by rememberSaveable { mutableStateOf("") }
     var amount by rememberSaveable { mutableStateOf("") }  // cantidad
     var unit by rememberSaveable { mutableStateOf("") }    // unidad
-    var isIngredientValid by remember { mutableStateOf(true) } // Controlar si el ingrediente es válido
+    var isIngredientValid by rememberSaveable { mutableStateOf(true) } // Controlar si el ingrediente es válido
+
+    // Estado mutable para la validación
+    var isValid by rememberSaveable { mutableStateOf(false) }
 
 
     // Comprobar si el ingrediente ingresado es válido
@@ -115,7 +117,7 @@ fun EditRecipeScreen(
                     ingredients = receta.ingredients
                     instructions = receta.steps
                     time = receta.time.toString()
-                    occasions = receta.dishTypes
+                    selectedOccasion = receta.dishTypes
 
                     // Marcar opciones de dieta
                     isVegan = receta.vegan
@@ -123,6 +125,15 @@ fun EditRecipeScreen(
                     isGlutenFree = receta.glutenFree
                 }
         }
+    }
+
+    // Recalcular isValid cada vez que los valores cambien
+    LaunchedEffect(title, servings, ingredients, instructions, time) {
+        isValid = title.isNotEmpty() &&
+                servings.isNotBlank() &&
+                ingredients.isNotEmpty() &&
+                instructions.all { it.isNotBlank() } && //comprobar q los steps no son ""
+                time.isNotBlank()
     }
 
     Scaffold(
@@ -142,112 +153,28 @@ fun EditRecipeScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(), // Asegura que ocupe el ancho disponible
-                    //.padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp), // Espacio entre los elementos
-                    verticalAlignment = Alignment.CenterVertically // Alinea verticalmente los elementos
-                ) {
-
-//                if (receta.image.isNullOrBlank()){
-//                    AsyncImage(
-//                        model = receta.image,
-//                        contentDescription = "Recipe Image",
-//                        modifier = Modifier
-//                            .size(120.dp)
-//                            .clip(RoundedCornerShape(8.dp)),
-//                        contentScale = ContentScale.Crop
-//                    )
-//                }else{
-                    Image(
-                        painter = painterResource(id = R.drawable.food_placeholder),
-                        contentDescription = "Recipe picture",
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .size(150.dp)
-                            .shadow(4.dp),
-                        //.align(Alignment.CenterHorizontally)
-                        contentScale = ContentScale.Crop
-                    )
-                    //}
-                    // Name Field
-
-                    // Botón
-                    Button(
-                        onClick = {
-                            //TODO: Acción al hacer clic
-                        },
-                        modifier = Modifier.align(Alignment.CenterVertically), // Alineación vertical del botón
-                        colors = buttonColors(
-                            containerColor = LightYellow,
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Text("Select image")
-                    }
-                }
+                ImageSection()
             }
-
-            // Sección de "Receta"
             item {
                 SectionHeader("Recipe Details")
             }
-
-
             item {
-                // Campo para el nombre de la receta
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Recipe Name") },
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
-                        unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
-                        focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
-                    )
-                )
-
+                InputField(title, "Recipe Name") { title = it }
             }
 
             item {
                 // Fila para Servings y Time
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Servings
-                    OutlinedTextField(
-                        value = servings,
-                        onValueChange = { servings = it },
-                        label = { Text("Servings") },
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
-                            unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
-                            focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
-                        ),
-                    )
-
-                    // Time
-                    OutlinedTextField(
-                        value = time,
-                        onValueChange = { time = it },
-                        label = { Text("Time (min)") },
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
-                            unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
-                            focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
-                        ),
-                    )
-                }
+                NumericInputRow(
+                    value1 = servings,
+                    label1 = "Servings",
+                    value2 = time,
+                    label2 = "Time (min)",
+                    isUnit = false,
+                    onValueChange1 = { newServings -> servings = newServings },
+                    onValueChange2 = { newTime -> time = newTime }
+                )
             }
 
             // Sección de "Ingredientes"
@@ -256,80 +183,17 @@ fun EditRecipeScreen(
             }
 
             item {
-                OutlinedTextField(
-                    value = ingredientName,
-                    onValueChange = {
-                        ingredientName = it
-                        validateIngredient(it)
-                    },
-                    label = { Text("Ingredient Name") },
-                    isError = !isIngredientValid,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
-                        unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
-                        focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
-                    )
-                )
-
-                if (!isIngredientValid) {
-                    Text(
-                        text = "Ingredient is not valid. Please choose a valid one.",
-                        color = Color.Red,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                if (isIngredientValid) {
-                    val validIngredient =
-                        ingredientesValidos.value.find { it.name == ingredientName }
-                    ingredientImage = validIngredient?.image.orEmpty()
-                }
-            }
-
-            if (isIngredientValid) {
-                item {
-                    // Fila para Amount y Unit
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Amount
-                        OutlinedTextField(
-                            value = amount,
-                            onValueChange = { amount = it },
-                            label = { Text("Amount") },
-                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
-                                unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
-                                focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
-                            ),
-                        )
-
-                        // Unit
-                        OutlinedTextField(
-                            value = unit,
-                            onValueChange = { unit = it },
-                            label = { Text("Unit") },
-                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
-                            modifier = Modifier.weight(1f),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
-                                unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
-                                focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
-                            ),
-                        )
-                    }
-                }
-            }
-
-            item {
-                // Botón para añadir ingrediente
-                Button(
-                    onClick = {
+                IngredientField(
+                    ingredientName,
+                    ingredientImage,
+                    amount,
+                    unit,
+                    isIngredientValid,
+                    ingredientesValidos,
+                    onNameChange = { ingredientName = it; validateIngredient(it) },
+                    onAmountChange = { amount = it },
+                    onUnitChange = { unit = it },
+                    onAddIngredient = {
                         if (isIngredientValid && amount.isNotEmpty() && unit.isNotEmpty()) {
                             val newIngredient = Ingrediente(
                                 name = ingredientName,
@@ -343,22 +207,16 @@ fun EditRecipeScreen(
                             amount = ""
                             unit = ""
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = buttonColors(
-                        containerColor = LightYellow,
-                        contentColor = Color.Black
-                    )
-                ) {
-                    Text("Add Ingredient")
-                }
+                    }
+                )
             }
-
             item {
-                // Mostrar los ingredientes añadidos
-                ingredients.forEach { ingredientItem ->
-                    Text("Ingredient: ${ingredientItem.name}, Amount: ${ingredientItem.amount}, Unit: ${ingredientItem.unit}")
-                }
+                IngredientList(
+                    ingredients = ingredients,
+                    onRemoveIngredient = { ingredientToRemove ->
+                        ingredients = ingredients.filter { it != ingredientToRemove }
+                    }
+                )
             }
 
             // Sección de "Pasos"
@@ -367,63 +225,7 @@ fun EditRecipeScreen(
             }
 
             item {
-                // Instructions
-                instructions.forEachIndexed { index, step ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = step,
-                            onValueChange = { newStep ->
-                                instructions = instructions.toMutableList().apply {
-                                    this[index] = newStep
-                                }
-                            },
-                            label = { Text("Step ${index + 1}") },
-                            modifier = Modifier.weight(1f),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.DarkGray,    // Color del borde cuando está enfocado
-                                unfocusedBorderColor = Color.Gray, // Color del borde cuando no está enfocado
-                                focusedLabelColor = Color.DarkGray,     // Color de la etiqueta cuando está enfocado
-                            ),
-                        )
-
-                        if (index > 0) {
-                            IconButton(
-                                onClick = {
-                                    instructions = instructions.toMutableList().apply {
-                                        removeAt(index)
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Delete,
-                                    contentDescription = "Delete Step",
-                                    tint = Color.Red
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Button(
-                        onClick = { instructions = instructions + "" },
-                        modifier = Modifier.fillMaxWidth(0.6f),
-                        colors = buttonColors(
-                            containerColor = LightYellow,
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Text("Add Step")
-                    }
-                }
+                InstructionsField(instructions, onInstructionChange = { instructions = it })
             }
 
             // Sección de "Preferencias dietéticas"
@@ -432,80 +234,32 @@ fun EditRecipeScreen(
             }
 
             item {
-                // Occasions buttons
-                Row(
-                    modifier = Modifier
-                        .horizontalScroll(rememberScrollState())
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    DishTypes.entries.forEach { occasion ->
-                        Button(
-                            onClick = {
-                                occasions += occasion.name
-                                println("AddRecipe: $occasion")
-                            },
-                            colors = buttonColors(
-                                containerColor = if (isPressed) LightYellow else LightGray,
-                                contentColor = Color.Black
-                            ),
-                            modifier = Modifier.width(110.dp)
-                        ) {
-                            Text(text = occasion.name)
-                        }
+                OccasionButtons(
+                    occasions = selectedOccasion,
+                    onOccasionClicked = { newSelection ->
+                        selectedOccasion = newSelection
                     }
-                }
+                )
             }
-
             // Sección de "Preferencias dietéticas"
             item {
                 SectionHeader("Dietary Preferences")
             }
 
             item {
-                Row(
-                    modifier = Modifier
-                        .horizontalScroll(rememberScrollState())
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = { isGlutenFree = !isGlutenFree },
-                        colors = buttonColors(
-                            containerColor = if (isGlutenFree) LightYellow else LightGray,
-                            contentColor = Color.Black
-                        ),
-                        modifier = Modifier.width(130.dp)
-                    ) {
-                        Text(text = "Gluten-Free")
-                    }
-
-                    Button(
-                        onClick = { isVegan = !isVegan },
-                        colors = buttonColors(
-                            containerColor = if (isVegan) LightYellow else LightGray,
-                            contentColor = Color.Black
-                        ),
-                        modifier = Modifier.width(110.dp)
-                    ) {
-                        Text(text = "Vegan")
-                    }
-
-                    Button(
-                        onClick = { isVegetarian = !isVegetarian },
-                        colors = buttonColors(
-                            containerColor = if (isVegetarian) LightYellow else LightGray,
-                            contentColor = Color.Black
-                        ),
-                        modifier = Modifier.width(150.dp)
-                    ) {
-                        Text(text = "Vegetarian")
+                DietaryPreferenceButtons(isVegan, isVegetarian, isGlutenFree) { preference ->
+                    when (preference) {
+                        "Vegan" -> isVegan = !isVegan
+                        "Vegetarian" -> isVegetarian = !isVegetarian
+                        "Gluten-Free" -> isGlutenFree = !isGlutenFree
                     }
                 }
             }
 
             item {
-                Button(
+                CreateRecipeButton(
+                    "Update Recipe",
+                    isValid,
                     onClick = {
                         val newReceta = Receta(
                             id = idReceta,
@@ -515,7 +269,7 @@ fun EditRecipeScreen(
                             ingredients = ingredients,
                             steps = instructions,
                             time = time.toInt(),
-                            dishTypes = occasions,
+                            dishTypes = selectedOccasion,
                             userId = uid.toString(),
                             usedIngredientCount = ingredients.size,
                             glutenFree = isGlutenFree,
@@ -537,17 +291,8 @@ fun EditRecipeScreen(
                                 }
                             }
                         )
-                    },
-                    colors = buttonColors(
-                        containerColor = Cherry,
-                        contentColor = Color.Black
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                ) {
-                    Text(text = "Update Recipe", color = Color.White)
-                }
+                    }
+                )
             }
         }
     }
