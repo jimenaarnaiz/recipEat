@@ -54,7 +54,7 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
 
                 Spacer(modifier = Modifier.width(35.dp))
 
-                LoginForm(navController, usersViewModel, fieldWidth, email, password, errorMessage) {
+                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage) {
                     // para que se actualicen los cambios de una orientación a otra
                     email = it.first
                     password = it.second
@@ -81,7 +81,7 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                LoginForm(navController, usersViewModel, fieldWidth, email, password, errorMessage) {
+                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage) {
                     email = it.first
                     password = it.second
                     errorMessage = it.third
@@ -94,6 +94,7 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
 @Composable
 fun LoginForm(
     navController: NavHostController,
+    recetasViewModel: RecetasViewModel,
     usersViewModel: UsersViewModel,
     fieldWidth: Float,
     email: String,
@@ -158,7 +159,8 @@ fun LoginForm(
                     localError = "Email and Password cannot be empty."
 
                     //recetasViewModel.buscarRecetasPorIngredientes() //TODO
-                    //recetasViewModel.guardarRecetasBulk()
+                    recetasViewModel.guardarRecetasBulk2()
+                    recetasViewModel.logRecetasCount()
                 } else {
                     usersViewModel.login(localEmail, localPassword) { success ->
                         if (success) {
