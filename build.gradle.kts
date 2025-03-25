@@ -9,6 +9,7 @@ plugins {
 
 sonarqube {
     properties {
+        property("sonar.host.url", "http://localhost:9000") // Actualiza con la URL correcta de tu servidor
         property("sonar.projectKey", "com.example.recipeat")  // Mi proyecto
         property("sonar.projectName", "recipEat")
         property("sonar.projectVersion", "1.0")
