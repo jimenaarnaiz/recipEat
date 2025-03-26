@@ -172,7 +172,8 @@ fun AddRecipe(
                                 name = ingredientName,
                                 image = "https://img.spoonacular.com/ingredients_100x100/${ingredientImage}",
                                 amount = amount.toDouble(),
-                                unit = unit
+                                unit = unit,
+                                aisle = ""
                             )
                             ingredients = ingredients + newIngredient
                             ingredientName = ""

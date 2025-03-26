@@ -159,8 +159,10 @@ fun LoginForm(
                     localError = "Email and Password cannot be empty."
 
                     //recetasViewModel.buscarRecetasPorIngredientes() //TODO
-                    recetasViewModel.guardarRecetasBulk2()
+                   // recetasViewModel.guardarRecetasBulk2()
                     recetasViewModel.logRecetasCount()
+                    recetasViewModel.obtenerValoresAisleUnicos()
+                    //recetasViewModel.actualizarAisleEnRecetas()
                 } else {
                     usersViewModel.login(localEmail, localPassword) { success ->
                         if (success) {

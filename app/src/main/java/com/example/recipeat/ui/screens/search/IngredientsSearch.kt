@@ -41,13 +41,15 @@ fun IngredientsSearch(
     val ingredientesSugeridos by ingredientesViewModel.ingredientesSugeridos.collectAsState()
     val ingredientesReceta by ingredientesViewModel.ingredientes.collectAsState()
 
-    var ingrediente by remember { mutableStateOf("") } // ingrediente a buscar
+    var ingredienteBusqueda by remember { mutableStateOf("") } // ingrediente a buscar
 
 
     // Cuando cambia el nombre del ingrediente, busca los ingredientes
-    LaunchedEffect(ingrediente) {
-        if (ingrediente.isNotEmpty()) { // Agregar una verificación para no hacer la búsqueda cuando la cadena esté vacía
-            ingredientesViewModel.buscarIngredientes(ingrediente)
+    LaunchedEffect(ingredienteBusqueda) {
+        if (ingredienteBusqueda.isNotBlank()) { // Agregar una verificación para no hacer la búsqueda cuando la cadena esté vacía
+            ingredientesViewModel.buscarIngredientes(ingredienteBusqueda)
+        }else{
+            ingredientesViewModel.clearIngredientesSugeridos()
         }
     }
 
@@ -56,8 +58,8 @@ fun IngredientsSearch(
        .fillMaxSize()
        .padding(16.dp)) {
         TextField(
-            value = ingrediente,
-            onValueChange = { ingrediente = it.lowercase() },
+            value = ingredienteBusqueda,
+            onValueChange = { ingredienteBusqueda = it.lowercase() },
             label = { Text("E.g.: apple", style = MaterialTheme.typography.bodyMedium) },
             modifier = Modifier.fillMaxWidth(),
             textStyle = MaterialTheme.typography.bodyMedium,
@@ -148,8 +150,12 @@ fun IngredientsSearch(
                                 .background(MaterialTheme.colorScheme.surface)
                                 .clickable(
                                     onClick = {
-                                        if (!ingredientesReceta.contains(ingrediente) && ingredientesReceta.size < 6)
+                                        if (!ingredientesReceta.contains(ingrediente) && ingredientesReceta.size < 6) {
                                             ingredientesViewModel.addIngredient(ingrediente)
+                                            //resetear para no tener q borrar el ing tú mismo
+                                            ingredienteBusqueda = ""
+                                        }
+
                                     }
                                 ),
                             contentScale = ContentScale.Crop
@@ -164,8 +170,11 @@ fun IngredientsSearch(
                                 .background(MaterialTheme.colorScheme.surface)
                                 .clickable(
                                     onClick = {
-                                        if (!ingredientesReceta.contains(ingrediente) && ingredientesReceta.size < 6)
+                                        if (!ingredientesReceta.contains(ingrediente) && ingredientesReceta.size < 6) {
+                                            //resetear para no tener q borrar el ing tú mismo
                                             ingredientesViewModel.addIngredient(ingrediente)
+                                            ingredienteBusqueda = ""
+                                        }
                                     }
                                 ),
                             contentScale = ContentScale.Crop

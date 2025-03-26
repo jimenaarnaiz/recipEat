@@ -5,7 +5,8 @@ data class Ingrediente(
     val name: String,
     val image: String,
     val amount: Double,
-    val unit: String
+    val unit: String,
+    val aisle: String
 )
 
 data class IngredienteSimple(val name: String, val image: String)

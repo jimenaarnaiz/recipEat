@@ -23,6 +23,11 @@ class IngredientesViewModel : ViewModel() {
     val ingredientesValidos: StateFlow<List<IngredienteSimple>> = _ingredientesValidos
 
 
+    // Limpiar la lista de ingredientes sugeridos en la busqueda by ingredients
+    fun clearIngredientesSugeridos() {
+        _ingredientesSugeridos.value = emptyList()
+    }
+
     fun addIngredient(ingrediente: IngredienteSimple) {
         _ingredientes.value += ingrediente
     }

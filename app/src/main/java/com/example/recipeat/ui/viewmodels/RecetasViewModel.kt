@@ -19,6 +19,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -122,7 +123,8 @@ class RecetasViewModel : ViewModel() {
                                                     "name" to it.name,
                                                     "amount" to it.amount,
                                                     "unit" to it.unit,
-                                                    "image" to it.image
+                                                    "image" to it.image,
+                                                    "aisle" to it.aisle
                                                 )
                                             },
                                             "steps" to receta.steps,
@@ -241,7 +243,8 @@ class RecetasViewModel : ViewModel() {
                     "name" to it.name,
                     "amount" to it.amount,
                     "unit" to it.unit,
-                    "image" to it.image
+                    "image" to it.image,
+                    "aisle" to it.aisle
                 )
             },
             "steps" to receta.steps,
@@ -333,7 +336,8 @@ class RecetasViewModel : ViewModel() {
                             "name" to it.name,
                             "amount" to it.amount,
                             "unit" to it.unit,
-                            "image" to it.image
+                            "image" to it.image,
+                            "aisle" to it.aisle
                         )
                     }
                 }
@@ -468,7 +472,8 @@ class RecetasViewModel : ViewModel() {
                                         name = ing["name"] as? String ?: "",
                                         amount = (ing["amount"] as? Number)?.toDouble() ?: 0.0,
                                         unit = ing["unit"] as? String ?: "",
-                                        image = ing["image"] as? String ?: ""
+                                        image = ing["image"] as? String ?: "",
+                                        aisle = ing["aisle"] as? String ?: "",
                                     )
                                 } ?: emptyList(),
                                 steps = document.get("steps") as? List<String> ?: emptyList(),
@@ -541,7 +546,8 @@ class RecetasViewModel : ViewModel() {
                                 name = ing["name"] as? String ?: "",
                                 amount = (ing["amount"] as? Number)?.toDouble() ?: 0.0,
                                 unit = ing["unit"] as? String ?: "",
-                                image = ing["image"] as? String ?: ""
+                                image = ing["image"] as? String ?: "",
+                                aisle = ing["aisle"] as? String ?: "",
                             )
                         } ?: emptyList(),
                         steps = document.get("steps") as? List<String> ?: emptyList(),
@@ -652,7 +658,8 @@ class RecetasViewModel : ViewModel() {
                                 name = (it["name"] as? String)?.lowercase() ?: "",
                                 image = it["image"] as? String ?: "",
                                 amount = (it["amount"] as? Double) ?: 0.0,
-                                unit = it["unit"] as? String ?: ""
+                                unit = it["unit"] as? String ?: "",
+                                aisle = it["aisle"] as? String ?: "",
                             )
                         }
 
@@ -808,7 +815,8 @@ class RecetasViewModel : ViewModel() {
                                         name = (ingrediente["name"] as? String) ?: "",
                                         image = ingrediente["image"] as? String ?: "",
                                         amount = (ingrediente["amount"] as? Double) ?: 0.0,
-                                        unit = ingrediente["unit"] as? String ?: ""
+                                        unit = ingrediente["unit"] as? String ?: "",
+                                        aisle = ingrediente["aisle"] as? String ?: ""
                                     )
                                 } ?: emptyList(),
                                 steps = document.get("steps") as? List<String> ?: emptyList(),
@@ -1059,19 +1067,11 @@ class RecetasViewModel : ViewModel() {
 
 
 
-
-
     //API
-
-//    avocado, cayenne, celery, celery stalk, cheddar, cherries, almond, cherry tomato, chickpea, chicken, chicken breast, chicken broth, chicken sausage, chicken thigh, chili pepper, chocolate, chocolate chips, baking powder, cilantro, cinnamon, cocoa powder, coconut, condensed milk, cooking oil, corn, corn oil, cornstarch, couscous, crab, cranberries, cream, cream cheese, bacon, cumin, soy sauce, vinegar, double cream, dulce de leche, egg, egg white, egg yolk, eggplant, chocolate chips, evaporated milk, extra virgin olive oil, feta cheese, firm brown sugar, fish sauce, flour, parsley, ginger, garlic, garlic powder, gelatin, goat cheese, gorgonzola,
-//    greek yogurt, green bean, ground almonds, ground beef, ground cinnamon, ground ginger, ground pepper, ground pork, ham, honey, jalapeño, rice, kidney beans, leek, lime, macaroni, mascarpone, goat cheese, milk, mint, mushroom, mustard, mutton, navy beans, oats, oat, olive oil, onion, orange, lettuce,
-//    oregano, breadcrumbs, parmesan cheese, peaches, pear, peas, pepper, pie crust, pineapple, banana, pork tenderloin, potato, powdered milk, prawns, bread, quinoa, radish, raisins, raspberry jam, red wine, salad oil, salmon, salt,
-//    sausage, scallion, chocolate, shrimp, soy sauce, spinach, onion, squash, sugar, sundried tomatoes, sweet potato, tomato, tomato paste, tomato sauce, tuna, vanilla, vanilla extract, vegetable broth, vegetable oil, vinegar, nuts, water, white wine, bell pepper, yogurt, lentils, corn, collard greens, olivas, zucchini, beef, apple, apples, hake
 
     val ingredients = "avocado,cayenne,cauliflower head,celery,carrots,celery stalk,cheddar,cherries,almond,cherry tomato,chickpea,chicken,chicken breast,chicken broth,chicken sausage,chicken thigh,chili pepper,chocolate,chocolate chips,baking powder,cilantro,cinnamon,cocoa powder,coconut,condensed milk,cooking oil,corn,corn oil,cornstarch,couscous,crab,cranberries,cream,cream cheese,bacon,cumin,soy sauce,vinegar,double cream,dulce de leche,egg,egg white,egg yolk,eggplant,chocolate chips,evaporated milk,extra virgin olive oil,feta cheese,firm brown sugar,fish sauce,flour,parsley,ginger,garlic,garlic powder,gelatin,goat cheese,gorgonzola,greek yogurt,green bean,ground beef,ground cinnamon,ground ginger,ground pepper,ground pork,ham,honey,jalapeño,rice,kidney beans,leek,lime,macaroni,mascarpone,goat cheese,milk,mint,mushroom,mustard,mutton,navy beans,oats,oat,olive oil,onion,orange,lettuce,oregano,breadcrumbs,parmesan cheese,peaches,pear,peas,pepper,pie crust,pineapple,banana,pork tenderloin,potato,powdered milk,prawns,bread,quinoa,radish,raisins,raspberry jam,red wine,salad oil,salmon,salt,sausage,scallion,chocolate,shrimp,soy sauce,spinach,onion,squash,sugar,sundried tomatoes,sweet potato,tomato,tomato paste,tomato sauce,tuna,vanilla,vanilla extract,vegetable broth,vegetable oil,vinegar,nuts,water,white wine,bell pepper,yogurt,lentils,corn,collard greens,olivas,zucchini,beef,apple,apples,hake"
 
-    // TODO buscar por nombre los ingredientes y añadir el id de la api
-    // TODO obtener info de cad aingrediente y añadir el campo aisle
+    // TODO añadir mas ingredientes: anchovies,cucumber,mayonnaise,ketchup,chard,pumpkin,lemon,cabbage,octopus,strawberries,squid,cod,trout,sea bream,sardines,white fish,smoked salmon,surimi,clams,pork,lamb,turkey,quail,ground meat
 
 
     // 390 recetas (14 por cada 5 ingredientes)
@@ -1223,7 +1223,7 @@ class RecetasViewModel : ViewModel() {
                                                 val documentSnapshot = db.collection("bulkRecetas").document(recetaId).get().await()
 
                                                 if (!documentSnapshot.exists()) {
-                                                    val receta = mapApiRecetaToReceta(apiReceta, "", api.obtenerInstruccionesReceta(apiReceta.id))
+                                                   val receta = mapApiRecetaToReceta(apiReceta, "", api.obtenerInstruccionesReceta(apiReceta.id))
 
                                                     val recetaData = hashMapOf(
                                                         "id" to receta.id,
@@ -1235,7 +1235,9 @@ class RecetasViewModel : ViewModel() {
                                                                 "name" to it.name,
                                                                 "amount" to it.amount,
                                                                 "unit" to it.unit,
-                                                                "image" to it.image
+                                                                "image" to it.image,
+                                                                "aisle" to it.aisle
+
                                                             )
                                                         },
                                                         "steps" to receta.steps,
@@ -1284,6 +1286,7 @@ class RecetasViewModel : ViewModel() {
     }
 
 
+    // guardar las rccetas en recetasBulk que faltan de idsRecetas
     fun guardarRecetasBulk2() {
         viewModelScope.launch {
             try {
@@ -1341,7 +1344,8 @@ class RecetasViewModel : ViewModel() {
                                                                     "name" to it.name,
                                                                     "amount" to it.amount,
                                                                     "unit" to it.unit,
-                                                                    "image" to it.image
+                                                                    "image" to it.image,
+                                                                    "aisle" to it.aisle
                                                                 )
                                                             },
                                                             "steps" to receta.steps,
@@ -1458,6 +1462,145 @@ class RecetasViewModel : ViewModel() {
             }
     }
 
+
+    fun obtenerValoresAisleUnicos(): List<String> {
+        val aislesUnicos = mutableSetOf<String>()  // Usamos un Set para evitar duplicados
+
+        viewModelScope.launch {
+            val db = FirebaseFirestore.getInstance()
+
+            try {
+                // Obtener todas las recetas
+                val recetaDocs = db.collection("bulkRecetas").get().await()
+                val recetaIds = recetaDocs.mapNotNull { it.id.toIntOrNull() }
+
+                // Recorrer las recetas y extraer los valores de aisle
+                for (recetaId in recetaIds) {
+                    val recetaDoc = db.collection("bulkRecetas").document(recetaId.toString()).get().await()
+                    val ingredientes = recetaDoc.get("ingredients") as? List<Map<String, Any>> ?: continue
+
+                    // Extraer los valores únicos de aisle
+                    for (ingrediente in ingredientes) {
+                        val aisle = ingrediente["aisle"] as? String
+                        if (!aisle.isNullOrEmpty()) {
+                            aislesUnicos.add(aisle)  // Añadir al Set, evitando duplicados
+                        }
+                    }
+                }
+
+                // Convertir el Set a lista y mostrarla
+                val aislesList = aislesUnicos.toList()
+                Log.d("ObtenerAisleUnicos", "Valores únicos de aisle: $aislesList")
+
+            } catch (e: Exception) {
+                Log.e("ObtenerAisleUnicos", "Error al obtener los valores de aisle: ${e.message}")
+            }
+        }
+
+        return aislesUnicos.toList()  // Devolver la lista de aisles únicos
+    }
+
+
+    fun actualizarAisleEnRecetas() {
+        viewModelScope.launch {
+            val db = FirebaseFirestore.getInstance()
+
+            try {
+                // Obtener el progreso previo
+                val progressDoc = db.collection("config").document("aisleProgress").get().await()
+                var lastProcessedId = progressDoc.getLong("idParaAisle")?.toInt()
+                var lastBatchIndex = progressDoc.getLong("batchAisle")?.toInt() ?: 0
+
+                // Obtener todas las recetas
+                val recetaDocs = db.collection("bulkRecetas").get().await()
+                val recetaIds = recetaDocs.mapNotNull { it.id.toIntOrNull() }
+
+                val batches = recetaIds.chunked(100)
+                if (batches.isEmpty()) {
+                    Log.d("ActualizarAisle", "No hay recetas en Firebase.")
+                    return@launch
+                }
+
+                // Si ya procesamos todos los batches, reiniciamos el progreso
+                if (lastBatchIndex >= batches.size) {
+                    Log.d("ActualizarAisle", "Se procesaron todas las recetas. Reiniciando progreso.")
+                    db.collection("config").document("aisleProgress")
+                        .set(mapOf("idParaAisle" to null, "batchAisle" to 0), SetOptions.merge())
+                        .await()
+                    lastBatchIndex = 0
+                    lastProcessedId = null
+                }
+
+                // Avanzar al siguiente batch si el actual está vacío o el último ID era el último del batch
+                while (lastBatchIndex < batches.size) {
+                    var batch = batches[lastBatchIndex]
+
+                    // Si hay un lastProcessedId, quitar las recetas ya procesadas dentro del batch
+                    if (lastProcessedId != null) {
+                        val index = batch.indexOf(lastProcessedId)
+                        if (index != -1) {
+                            batch = batch.drop(index + 1)
+                        }
+                    }
+
+                    // Si el batch sigue vacío, avanzar al siguiente batch
+                    if (batch.isEmpty()) {
+                        lastBatchIndex++
+                        continue
+                    }
+
+                    // Obtener recetas desde la API
+                    val response = api.obtenerRecetasBulk(recetas_ids = batch.joinToString(","))
+                    if (response.isEmpty()) {
+                        Log.e("ActualizarAisle", "No se encontraron recetas en la API para batch $lastBatchIndex")
+                        lastBatchIndex++
+                        continue
+                    }
+
+                    // Actualizar en Firebase
+                    for ((index, apiReceta) in response.withIndex()) {
+                        val recetaId = apiReceta.id.toString()
+                        val updatedIngredients = apiReceta.extendedIngredients.map { apiIng ->
+                            mapOf(
+                                "name" to apiIng.name,
+                                "amount" to apiIng.amount,
+                                "unit" to apiIng.unit,
+                                "image" to apiIng.image,
+                                "aisle" to apiIng.aisle
+                            )
+                        }
+
+                        db.collection("bulkRecetas").document(recetaId)
+                            .update("ingredients", updatedIngredients)
+                            .await()
+                        Log.d("ActualizarAisle", "Receta $recetaId actualizada con aisle.")
+
+                        // Guardar el progreso
+                        db.collection("config").document("aisleProgress")
+                            .set(mapOf("idParaAisle" to apiReceta.id, "batchAisle" to lastBatchIndex), SetOptions.merge())
+                            .await()
+
+                        // Si es la última receta del batch, avanzar al siguiente
+                        if (index == response.lastIndex) {
+                            lastBatchIndex++
+                        }
+                    }
+
+                    // Guardar el nuevo batch index
+                    db.collection("config").document("aisleProgress")
+                        .set(mapOf("batchAisle" to lastBatchIndex), SetOptions.merge())
+                        .await()
+
+                    return@launch // Salir después de procesar un batch
+                }
+
+                Log.d("ActualizarAisle", "Todos los batches han sido procesados.")
+
+            } catch (e: Exception) {
+                Log.e("ActualizarAisle", "Error en el proceso de actualización: ${e.message}")
+            }
+        }
+    }
 
 
 
