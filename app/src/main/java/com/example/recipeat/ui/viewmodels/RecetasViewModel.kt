@@ -3,6 +3,7 @@ package com.example.recipeat.ui.viewmodels
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.recipeat.data.api.RetrofitClient.api
 import com.example.recipeat.data.model.ApiReceta
+import com.example.recipeat.data.model.Equipment
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
@@ -20,11 +22,15 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.UUID
@@ -67,6 +73,12 @@ class RecetasViewModel : ViewModel() {
 
     private val _recetasHistorial =  MutableLiveData<List<RecetaSimple>>(emptyList())
     val recetasHistorial: LiveData<List<RecetaSimple>> = _recetasHistorial
+
+    // MutableState para almacenar los pasos con las imágenes de los equipos
+    private val _equipmentSteps =  MutableLiveData<List<List<String>>>(emptyList())
+    val equipmentSteps: LiveData<List<List<String>>> = _equipmentSteps
+
+
 
     fun verificarRecetasGuardadasApi() {
         // Verificar cuántas recetas hay actualmente en Firebase
@@ -939,8 +951,7 @@ class RecetasViewModel : ViewModel() {
             }
     }
 
-    fun añadirHistorial(uid: String, recetaId: String, title: String, image: String) {
-        if (uid == null) return
+    fun añadirHistorial(uid: String, userReceta: String, recetaId: String, title: String, image: String) {
 
         val historialRef = db.collection("favs_hist").document(uid).collection("historial")
 
@@ -949,7 +960,7 @@ class RecetasViewModel : ViewModel() {
             title = title,
             image = image,
             date = Timestamp.now(),
-            uid = uid
+            userReceta = userReceta
         )
 
         historialRef.add(historialEntry)
@@ -993,7 +1004,7 @@ class RecetasViewModel : ViewModel() {
                         Log.d("RecetasViewModel", "Receta encontrada: id=$recetaId, title=$title, date=$date")
 
                         if (recetaId != null && title != null && date != null && userId != null) {
-                            RecetaSimple(id = recetaId, title = title, image = image, date = date, uid = userId )
+                            RecetaSimple(id = recetaId, title = title, image = image, date = date, userReceta = userId )
                         } else null
                     }
                     _recetasHistorial.value = recetas
@@ -1040,7 +1051,7 @@ class RecetasViewModel : ViewModel() {
                                 title = title,
                                 image = image,
                                 date = date,
-                                uid = userId
+                                userReceta = userId
                             )
                         } else {
                             null
@@ -1058,6 +1069,124 @@ class RecetasViewModel : ViewModel() {
                 Log.e("RecetasViewModel", "Error al obtener los favoritos del usuario", e)
             }
     }
+
+
+
+
+    // Lista de nombres de posibles equipos
+    val equipmentNames = listOf(
+        "sauce pan", "frying pan", "oven", "whisk", "bowl", "griddle", "food processor",
+        "plastic wrap", "knife", "ladle", "spatula", "strainer", "grater", "hand mixer",
+        "coffee maker", "microwave", "blender", "juicer", "teaspoon", "tablespoon",
+        "mandoline", "vacuum sealer", "thermometer", "kettle", "toaster", "baking dish",
+        "muffin tin", "timer", "cutting board", "mortar and pestle", "siphon", "meat grinder",
+        "pasta maker", "pizza cutter", "stove", "juicer", "scale", "blow torch", "loaf pan",
+        "casserole dish", "teapot", "espresso machine", "citrus press", "baking tray",
+        "nonstick pan", "cooling rack", "drainer", "mixing bowl", "tongs", "baking sheet", "potato-masher", "fridge","grill"
+    )
+
+    fun checkAndSaveEquipmentImage(equipmentName: String) {
+        // Lanzar la operación en una coroutine para no bloquear el hilo principal
+        CoroutineScope(Dispatchers.IO).launch {
+            val firestore = FirebaseFirestore.getInstance()
+            val client = OkHttpClient()
+
+            // Formatear el nombre del equipo para crear la URL
+            val formattedName = equipmentName.lowercase().replace(" ", "-")
+            val imageUrl = "https://img.spoonacular.com/equipment_100x100/$formattedName.jpg"
+
+            // Crear la petición HTTP para verificar si la imagen está disponible
+            val request = Request.Builder().url(imageUrl).build()
+
+            try {
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        // Si la imagen existe, se guarda en Firebase
+                        val equipmentData = hashMapOf(
+                            "name" to equipmentName,
+                            "imageUrl" to imageUrl
+                        )
+
+                        firestore.collection("equipment")
+                            .add(equipmentData)
+                            .addOnSuccessListener { documentReference ->
+                                println("Equipment saved successfully with ID: ${documentReference.id}")
+                            }
+                            .addOnFailureListener { e ->
+                                println("Error saving equipment: $e")
+                            }
+                    } else {
+                        // Si la imagen no está disponible
+                        println("No image found for $equipmentName")
+                    }
+                }
+            } catch (e: Exception) {
+                println("Error during network request: $e")
+            }
+        }
+    }
+
+    // Llamar la función para cada equipo
+    fun saveAllEquipmentImages() {
+        equipmentNames.forEach { equipmentName ->
+            checkAndSaveEquipmentImage(equipmentName)
+        }
+    }
+
+
+    fun updateEquipmentSteps(steps: List<String>) {
+        db.collection("equipment").get()
+            .addOnSuccessListener { querySnapshot ->
+                val equipos = mutableMapOf<String, String>()
+
+                querySnapshot.documents.forEach { document ->
+                    val nombreEquipo = document.getString("name") ?: ""
+                    val urlImagen = document.getString("imageUrl") ?: ""
+
+                    if (nombreEquipo.isNotEmpty() && urlImagen.isNotEmpty()) {
+                        equipos[nombreEquipo] = urlImagen
+                    }
+                }
+
+                Log.d("RecetasViewModel", "Equipos obtenidos: $equipos")
+
+                val stepsWithImages = mutableListOf<List<String>>()
+
+                steps.forEach { step ->
+                    val equipmentImages = mutableListOf<String>()
+
+                    equipos.forEach { (equipo, imageUrl) ->
+                        if (step.contains(equipo, ignoreCase = true)) {
+                            equipmentImages.add(imageUrl)
+                        }
+                    }
+
+                    Log.d("RecetasViewModel", "Paso: $step, Equipos detectados: $equipmentImages")
+
+                    stepsWithImages.add(equipmentImages)
+                }
+
+                _equipmentSteps.value = stepsWithImages
+                Log.d("RecetasViewModel", "Lista final de imágenes por paso: ${_equipmentSteps.value}")
+            }
+            .addOnFailureListener { exception ->
+                Log.e("RecetasViewModel", "Error obteniendo los equipos: ", exception)
+            }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

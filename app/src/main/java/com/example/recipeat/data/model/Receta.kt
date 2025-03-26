@@ -27,10 +27,13 @@ data class Receta(
 data class SugerenciaReceta(val id: String, val titulo: String, val coincidencias: Int)
 
 // para mostrar en favs e historial
-data class RecetaSimple(val id: String, val uid: String, val title: String, val image: String, val date: Timestamp)
+data class RecetaSimple(val id: String, val userReceta: String, val title: String, val image: String, val date: Timestamp)
 
+data class Equipment(val name: String, val imageUrl: String)
 
 // Para las recetas que crea localmente el user
 enum class DishTypes {
     breakfast, lunch, dessert, dinner
 }
+
+

@@ -218,11 +218,11 @@ fun DetailsScreen(
                 ) {
                     // Botón para mostrar los pasos
                     Button(
-                        onClick = { isStepsVisible = true },
+                        onClick = { navController.navigate("steps/${idReceta}/${deUser}") },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !isStepsVisible, // Habilitar solo si los pasos no están visibles
+                        //enabled = !isStepsVisible, // Habilitar solo si los pasos no están visibles
                         colors = ButtonDefaults.buttonColors(
-                            containerColor =  LightYellow,
+                            containerColor = LightYellow,
                             contentColor = Color.Black
                         )
                     ) {
@@ -231,104 +231,105 @@ fun DetailsScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Si los pasos están visibles, mostramos el paso actual
-                    if (isStepsVisible) {
-                        // Barra de progreso
-                        LinearProgressIndicator(
-                            progress = { progress },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = Cherry,
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Mostrar el paso actual
-                        if (currentStepIndex < totalSteps) {
-                            Text(
-                                text = "${currentStepIndex + 1}. ${recetaDetalle.steps[currentStepIndex]}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        }
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp)
-                        ) {
-                            // Botón para retroceder al paso anterior
-                            if (currentStepIndex > 0 && !cocinado) {
-                                Button(
-                                    onClick = { currentStepIndex-- },
-                                    modifier = if (currentStepIndex == totalSteps - 1) Modifier.weight(0.8f) else Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor =  LightYellow,
-                                        contentColor = Color.Black
-                                    )
-                                ) {
-                                    Text("Back")
-                                }
-                            }
-
-                            // Botón para adelantar al siguiente paso
-                            if (currentStepIndex < totalSteps - 1) {
-                                Button(
-                                    onClick = { currentStepIndex++ },
-                                    modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor =  LightYellow,
-                                        contentColor = Color.Black
-                                    )
-                                ) {
-                                    Text("Next")
-                                }
-                            } else {
-                                Button(
-                                    onClick = {
-                                        if (!cocinado) {
-                                            receta!!.image?.let {
-                                                recetasViewModel.añadirHistorial(
-                                                    receta!!.userId,
-                                                    idReceta,
-                                                    title = receta!!.title,
-                                                    image = it,
-                                                )
-                                            }
-                                            cocinado = true
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        //.padding(horizontal = 16.dp)
-                                        .weight(1f),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (!cocinado) LightYellow else Cherry
-                                    ),
-                                    //enabled = !cocinado
-                                ) {
-
-                                    val color = if (!cocinado) Color.DarkGray else Color.White
-                                    if (cocinado) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Check,
-                                            contentDescription = "Cooked",
-                                            tint = color
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                    }
-                                    Text(
-                                        text = if (cocinado) "Cooked!" else "Cook",
-                                        color = color
-                                    )
-                                }
-
-                            }
-                        }
+//                    // Si los pasos están visibles, mostramos el paso actual
+//                    if (isStepsVisible) {
+//                        // Barra de progreso
+//                        LinearProgressIndicator(
+//                            progress = { progress },
+//                            modifier = Modifier.fillMaxWidth(),
+//                            color = Cherry,
+//                        )
+//
+//                        Spacer(modifier = Modifier.height(16.dp))
+//
+//                        // Mostrar el paso actual
+//                        if (currentStepIndex < totalSteps) {
+//                            Text(
+//                                text = "${currentStepIndex + 1}. ${recetaDetalle.steps[currentStepIndex]}",
+//                                style = MaterialTheme.typography.bodyMedium,
+//                                modifier = Modifier.padding(vertical = 8.dp)
+//                            )
+//                        }
+//
+//                        Row(
+//                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(top = 16.dp)
+//                        ) {
+//                            // Botón para retroceder al paso anterior
+//                            if (currentStepIndex > 0 && !cocinado) {
+//                                Button(
+//                                    onClick = { currentStepIndex-- },
+//                                    modifier = if (currentStepIndex == totalSteps - 1) Modifier.weight(
+//                                        0.8f
+//                                    ) else Modifier.weight(1f),
+//                                    colors = ButtonDefaults.buttonColors(
+//                                        containerColor = LightYellow,
+//                                        contentColor = Color.Black
+//                                    )
+//                                ) {
+//                                    Text("Back")
+//                                }
+//                            }
+//
+//                            // Botón para adelantar al siguiente paso
+//                            if (currentStepIndex < totalSteps - 1) {
+//                                Button(
+//                                    onClick = { currentStepIndex++ },
+//                                    modifier = Modifier.weight(1f),
+//                                    colors = ButtonDefaults.buttonColors(
+//                                        containerColor = LightYellow,
+//                                        contentColor = Color.Black
+//                                    )
+//                                ) {
+//                                    Text("Next")
+//                                }
+//                            } else {
+//                                Button(
+//                                    onClick = {
+//                                        if (!cocinado) {
+//                                            receta!!.image?.let {
+//                                                recetasViewModel.añadirHistorial(
+//                                                    uid = uid.toString(),
+//                                                    userReceta = receta!!.userId,
+//                                                    recetaId = idReceta,
+//                                                    title = receta!!.title,
+//                                                    image = it,
+//                                                )
+//                                            }
+//                                            cocinado = true
+//                                        }
+//                                    },
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        //.padding(horizontal = 16.dp)
+//                                        .weight(1f),
+//                                    colors = ButtonDefaults.buttonColors(
+//                                        containerColor = if (!cocinado) LightYellow else Cherry
+//                                    ),
+//                                    //enabled = !cocinado
+//                                ) {
+//
+//                                    val color = if (!cocinado) Color.DarkGray else Color.White
+//                                    if (cocinado) {
+//                                        Icon(
+//                                            imageVector = Icons.Filled.Check,
+//                                            contentDescription = "Cooked",
+//                                            tint = color
+//                                        )
+//                                        Spacer(modifier = Modifier.width(8.dp))
+//                                    }
+//                                    Text(
+//                                        text = if (cocinado) "Cooked!" else "Cook",
+//                                        color = color
+//                                    )
+//                                }
+//
+//                            }
+//                        }
                     }
                 }
-
-                //TODO https://img.spoonacular.com/equipment_100x100/oven.jpg
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -339,7 +340,6 @@ fun DetailsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
-            }
         }
     }
 
@@ -390,82 +390,82 @@ fun DetailsScreen(
 }
 
 
-@Composable
-fun RecetaStepsWithButton(recetaDetalle: Receta) {
-    var currentStepIndex by remember { mutableStateOf(0) } // Índice del paso actual
-    var isStepsVisible by remember { mutableStateOf(false) } // Estado que controla si los pasos son visibles
-    val totalSteps = recetaDetalle.steps.size // Número total de pasos
-
-    // Barra de progreso que indica cuántos pasos faltan
-    val progress = if (totalSteps > 0) currentStepIndex / totalSteps.toFloat() else 0f
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        // Botón para mostrar los pasos
-        Button(
-            onClick = { isStepsVisible = true },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isStepsVisible // Habilitar solo si los pasos no están visibles
-        ) {
-            Text("Show steps")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Si los pasos están visibles, mostramos el paso actual
-        if (isStepsVisible) {
-            // Barra de progreso
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
-                color = LightYellow,
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Mostrar el paso actual
-            if (currentStepIndex < totalSteps) {
-                Text(
-                    text = "${currentStepIndex + 1}. ${recetaDetalle.steps[currentStepIndex]}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-
-            // Botón para retroceder al paso anterior
-            if (currentStepIndex > 0) {
-                Button(
-                    onClick = { currentStepIndex-- },
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text("Back")
-                }
-            }
-
-            // Botón para adelantar al siguiente paso
-            if (currentStepIndex < totalSteps - 1) {
-                Button(
-                    onClick = { currentStepIndex++ },
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text("Next")
-                }
-            } else {
-                // Si ya se han mostrado todos los pasos, botón de reiniciar
-                Button(
-                    onClick = {
-                        currentStepIndex = 0 // Resetear los pasos
-                        isStepsVisible = false // Ocultar los pasos
-                    },
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text("Empezar de nuevo")
-                }
-            }
-        }
-    }
-}
+//@Composable
+//fun RecetaStepsWithButton(recetaDetalle: Receta) {
+//    var currentStepIndex by remember { mutableStateOf(0) } // Índice del paso actual
+//    var isStepsVisible by remember { mutableStateOf(false) } // Estado que controla si los pasos son visibles
+//    val totalSteps = recetaDetalle.steps.size // Número total de pasos
+//
+//    // Barra de progreso que indica cuántos pasos faltan
+//    val progress = if (totalSteps > 0) currentStepIndex / totalSteps.toFloat() else 0f
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(16.dp)
+//    ) {
+//        // Botón para mostrar los pasos
+//        Button(
+//            onClick = { isStepsVisible = true },
+//            modifier = Modifier.fillMaxWidth(),
+//            enabled = !isStepsVisible // Habilitar solo si los pasos no están visibles
+//        ) {
+//            Text("Show steps")
+//        }
+//
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        // Si los pasos están visibles, mostramos el paso actual
+//        if (isStepsVisible) {
+//            // Barra de progreso
+//            LinearProgressIndicator(
+//                progress = { progress },
+//                modifier = Modifier.fillMaxWidth(),
+//                color = LightYellow,
+//            )
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // Mostrar el paso actual
+//            if (currentStepIndex < totalSteps) {
+//                Text(
+//                    text = "${currentStepIndex + 1}. ${recetaDetalle.steps[currentStepIndex]}",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    modifier = Modifier.padding(vertical = 8.dp)
+//                )
+//            }
+//
+//            // Botón para retroceder al paso anterior
+//            if (currentStepIndex > 0) {
+//                Button(
+//                    onClick = { currentStepIndex-- },
+//                    modifier = Modifier.padding(top = 16.dp)
+//                ) {
+//                    Text("Back")
+//                }
+//            }
+//
+//            // Botón para adelantar al siguiente paso
+//            if (currentStepIndex < totalSteps - 1) {
+//                Button(
+//                    onClick = { currentStepIndex++ },
+//                    modifier = Modifier.padding(top = 16.dp)
+//                ) {
+//                    Text("Next")
+//                }
+//            } else {
+//                // Si ya se han mostrado todos los pasos, botón de reiniciar
+//                Button(
+//                    onClick = {
+//                        currentStepIndex = 0 // Resetear los pasos
+//                        isStepsVisible = false // Ocultar los pasos
+//                    },
+//                    modifier = Modifier.padding(top = 16.dp)
+//                ) {
+//                    Text("Empezar de nuevo")
+//                }
+//            }
+//        }
+//    }
+//}
 

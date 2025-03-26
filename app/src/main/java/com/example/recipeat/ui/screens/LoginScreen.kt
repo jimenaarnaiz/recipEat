@@ -162,6 +162,7 @@ fun LoginForm(
                    // recetasViewModel.guardarRecetasBulk2()
                     recetasViewModel.logRecetasCount()
                     recetasViewModel.obtenerValoresAisleUnicos()
+                    recetasViewModel.saveAllEquipmentImages()
                     //recetasViewModel.actualizarAisleEnRecetas()
                 } else {
                     usersViewModel.login(localEmail, localPassword) { success ->

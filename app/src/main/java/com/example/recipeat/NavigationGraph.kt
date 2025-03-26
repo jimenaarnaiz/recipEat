@@ -23,6 +23,7 @@ import com.example.recipeat.ui.screens.ProfileScreen
 import com.example.recipeat.ui.screens.RegisterScreen
 import com.example.recipeat.ui.screens.ResNameScreen
 import com.example.recipeat.ui.screens.ResIngredientsScreen
+import com.example.recipeat.ui.screens.StepsScreen
 import com.example.recipeat.ui.screens.search.UnifiedSearchScreen
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
@@ -105,12 +106,17 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 EditProfileScreen(navController, usersViewModel)
                 onBottomBarVisibilityChanged(false)
             }
-            //TODO screen de editar mi receta
             composable("editRecipe/{idReceta}/{deUser}") { backStackEntry ->
                 val idReceta = backStackEntry.arguments?.getString("idReceta") ?: ""
                 val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
                 // Ahora pasamos 'deUser' a la pantalla
                 EditRecipeScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, ingredientesViewModel, deUser = deUser)
+                onBottomBarVisibilityChanged(false)
+            }
+            composable("steps/{idReceta}/{deUser}") { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("idReceta") ?: ""
+                val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
+                StepsScreen(idReceta = id, navController = navController, recetasViewModel, deUser = deUser)
                 onBottomBarVisibilityChanged(false)
             }
 

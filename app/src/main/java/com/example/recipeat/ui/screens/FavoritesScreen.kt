@@ -93,7 +93,7 @@ fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasV
 
 @Composable
 fun RecetaItem(receta: RecetaSimple, navController: NavHostController) {
-    val esDeUser = receta.uid.isNotEmpty()
+    val esDeUser = receta.userReceta.isNotEmpty()
     Log.d("RecetaItem", "es de user: $esDeUser id: ${receta.id}")
 
     // Este Composable es el que muestra cada receta en el Grid
