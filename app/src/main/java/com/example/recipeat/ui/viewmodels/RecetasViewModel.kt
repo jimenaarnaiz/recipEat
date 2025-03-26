@@ -1101,20 +1101,33 @@ class RecetasViewModel : ViewModel() {
             try {
                 client.newCall(request).execute().use { response ->
                     if (response.isSuccessful) {
-                        // Si la imagen existe, se guarda en Firebase
-                        val equipmentData = hashMapOf(
-                            "name" to equipmentName,
-                            "imageUrl" to imageUrl
-                        )
+                        // Si la imagen existe, comprobar si ya está guardada en Firestore
+                        val equipmentQuery = firestore.collection("equipment")
+                            .whereEqualTo("imageUrl", imageUrl) // Comprobamos si ya existe la imagen
 
-                        firestore.collection("equipment")
-                            .add(equipmentData)
-                            .addOnSuccessListener { documentReference ->
-                                println("Equipment saved successfully with ID: ${documentReference.id}")
+                        equipmentQuery.get().addOnSuccessListener { querySnapshot ->
+                            if (querySnapshot.isEmpty) {
+                                // Si no existe, guardar el equipo
+                                val equipmentData = hashMapOf(
+                                    "name" to equipmentName,
+                                    "imageUrl" to imageUrl
+                                )
+
+                                firestore.collection("equipment")
+                                    .add(equipmentData)
+                                    .addOnSuccessListener { documentReference ->
+                                        println("Equipment saved successfully with ID: ${documentReference.id}")
+                                    }
+                                    .addOnFailureListener { e ->
+                                        println("Error saving equipment: $e")
+                                    }
+                            } else {
+                                // Si ya existe, no hacer nada
+                                println("Equipment already exists in Firestore")
                             }
-                            .addOnFailureListener { e ->
-                                println("Error saving equipment: $e")
-                            }
+                        }.addOnFailureListener { e ->
+                            println("Error checking if equipment exists: $e")
+                        }
                     } else {
                         // Si la imagen no está disponible
                         println("No image found for $equipmentName")
@@ -1125,6 +1138,7 @@ class RecetasViewModel : ViewModel() {
             }
         }
     }
+
 
     // Llamar la función para cada equipo
     fun saveAllEquipmentImages() {
