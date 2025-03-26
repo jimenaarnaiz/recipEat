@@ -54,7 +54,7 @@ fun DetailsScreen(
     // Estado para mostrar el AlertDialog de confirmación de eliminación
     var showDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(navController) {
+    LaunchedEffect(receta) {
         if (uid != null) {
             Log.d("DetailsScreen", "Llamando a obtenerRecetaPorId con recetaId: $idReceta deUser: $deUser")
             recetasViewModel.obtenerRecetaPorId(
@@ -124,10 +124,12 @@ fun DetailsScreen(
                     IconButton(onClick = {
                         receta!!.image?.let {
                             recetasViewModel.toggleFavorito(
-                                uid, idReceta,
+                                uid,
+                                recetaId = idReceta,
                                 title = receta!!.title,
                                 image = it,
-                                )
+                                userReceta = receta!!.userId
+                            )
                         }
                     }) {
                         Icon(
@@ -235,7 +237,7 @@ fun DetailsScreen(
                         LinearProgressIndicator(
                             progress = { progress },
                             modifier = Modifier.fillMaxWidth(),
-                            color = LightYellow,
+                            color = Cherry,
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -287,7 +289,8 @@ fun DetailsScreen(
                                         if (!cocinado) {
                                             receta!!.image?.let {
                                                 recetasViewModel.añadirHistorial(
-                                                    uid, idReceta,
+                                                    receta!!.userId,
+                                                    idReceta,
                                                     title = receta!!.title,
                                                     image = it,
                                                 )
@@ -325,6 +328,7 @@ fun DetailsScreen(
                     }
                 }
 
+                //TODO https://img.spoonacular.com/equipment_100x100/oven.jpg
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -355,7 +359,9 @@ fun DetailsScreen(
                             if (esFavorito == true){
                                 receta!!.image?.let {
                                     recetasViewModel.toggleFavorito(
-                                        uid, idReceta,
+                                        uid,
+                                        userReceta = receta!!.userId,
+                                        recetaId = idReceta,
                                         title = receta!!.title,
                                         image = it,
                                     )

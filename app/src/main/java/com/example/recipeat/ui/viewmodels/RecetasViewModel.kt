@@ -887,7 +887,7 @@ class RecetasViewModel : ViewModel() {
 
 
     //
-    fun toggleFavorito(uid: String?, recetaId: String, title: String, image: String) {
+    fun toggleFavorito(uid: String?, userReceta: String, recetaId: String, title: String, image: String) {
         if (uid == null) return
 
         val favoritosRef = db.collection("favs_hist").document(uid).collection("favoritos")
@@ -907,7 +907,7 @@ class RecetasViewModel : ViewModel() {
                         "title" to title,
                         "image" to image,
                         "date" to Timestamp.now(),
-                        "user" to uid
+                        "user" to userReceta
                     )
 
                     favoritosRef.document(recetaId).set(favoritoData)
@@ -931,7 +931,7 @@ class RecetasViewModel : ViewModel() {
             }
     }
 
-    fun añadirHistorial(uid: String?, recetaId: String, title: String, image: String) {
+    fun añadirHistorial(uid: String, recetaId: String, title: String, image: String) {
         if (uid == null) return
 
         val historialRef = db.collection("favs_hist").document(uid).collection("historial")
@@ -1024,9 +1024,9 @@ class RecetasViewModel : ViewModel() {
                         val title = document.getString("title")
                         val image = document.getString("image") ?: ""
                         val date = document.getTimestamp("date")
-                        val userId = document.getString("user")
+                        val userId = document.getString("user") ?: ""
 
-                        if (recetaId != null && title != null && date != null && userId != null ) {
+                        if (recetaId != null && title != null && date != null) {
                             RecetaSimple(
                                 id = recetaId,
                                 title = title,
@@ -1069,6 +1069,10 @@ class RecetasViewModel : ViewModel() {
 //    sausage, scallion, chocolate, shrimp, soy sauce, spinach, onion, squash, sugar, sundried tomatoes, sweet potato, tomato, tomato paste, tomato sauce, tuna, vanilla, vanilla extract, vegetable broth, vegetable oil, vinegar, nuts, water, white wine, bell pepper, yogurt, lentils, corn, collard greens, olivas, zucchini, beef, apple, apples, hake
 
     val ingredients = "avocado,cayenne,cauliflower head,celery,carrots,celery stalk,cheddar,cherries,almond,cherry tomato,chickpea,chicken,chicken breast,chicken broth,chicken sausage,chicken thigh,chili pepper,chocolate,chocolate chips,baking powder,cilantro,cinnamon,cocoa powder,coconut,condensed milk,cooking oil,corn,corn oil,cornstarch,couscous,crab,cranberries,cream,cream cheese,bacon,cumin,soy sauce,vinegar,double cream,dulce de leche,egg,egg white,egg yolk,eggplant,chocolate chips,evaporated milk,extra virgin olive oil,feta cheese,firm brown sugar,fish sauce,flour,parsley,ginger,garlic,garlic powder,gelatin,goat cheese,gorgonzola,greek yogurt,green bean,ground beef,ground cinnamon,ground ginger,ground pepper,ground pork,ham,honey,jalapeño,rice,kidney beans,leek,lime,macaroni,mascarpone,goat cheese,milk,mint,mushroom,mustard,mutton,navy beans,oats,oat,olive oil,onion,orange,lettuce,oregano,breadcrumbs,parmesan cheese,peaches,pear,peas,pepper,pie crust,pineapple,banana,pork tenderloin,potato,powdered milk,prawns,bread,quinoa,radish,raisins,raspberry jam,red wine,salad oil,salmon,salt,sausage,scallion,chocolate,shrimp,soy sauce,spinach,onion,squash,sugar,sundried tomatoes,sweet potato,tomato,tomato paste,tomato sauce,tuna,vanilla,vanilla extract,vegetable broth,vegetable oil,vinegar,nuts,water,white wine,bell pepper,yogurt,lentils,corn,collard greens,olivas,zucchini,beef,apple,apples,hake"
+
+    // TODO buscar por nombre los ingredientes y añadir el id de la api
+    // TODO obtener info de cad aingrediente y añadir el campo aisle
+
 
     // 390 recetas (14 por cada 5 ingredientes)
     fun buscarRecetasPorIngredientes() {
