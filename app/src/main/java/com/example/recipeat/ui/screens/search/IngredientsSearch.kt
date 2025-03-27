@@ -34,7 +34,8 @@ import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 @Composable
 fun IngredientsSearch(
     navController: NavController,
-    ingredientesViewModel: IngredientesViewModel
+    ingredientesViewModel: IngredientesViewModel,
+    isConnected: Boolean
 ) {
 
     // Obtener los ingredientes desde el ViewModel
@@ -53,14 +54,15 @@ fun IngredientsSearch(
         }
     }
 
-
+    val txtSearch = if (isConnected) "E.g.: apple" else "Search unavailable, no internet"
    Column(modifier = Modifier
        .fillMaxSize()
        .padding(16.dp)) {
         TextField(
             value = ingredienteBusqueda,
             onValueChange = { ingredienteBusqueda = it.lowercase() },
-            label = { Text("E.g.: apple", style = MaterialTheme.typography.bodyMedium) },
+            label = { Text(txtSearch, style = MaterialTheme.typography.bodyMedium) },
+            enabled = isConnected,
             modifier = Modifier.fillMaxWidth(),
             textStyle = MaterialTheme.typography.bodyMedium,
             leadingIcon = {

@@ -79,7 +79,6 @@ class RecetasViewModel : ViewModel() {
     val equipmentSteps: LiveData<List<List<String>>> = _equipmentSteps
 
 
-
     fun verificarRecetasGuardadasApi() {
         // Verificar cuántas recetas hay actualmente en Firebase
         db.collection("recetas").get()
@@ -1286,19 +1285,8 @@ class RecetasViewModel : ViewModel() {
                 Log.d("RecetasViewModel", "Número de recetas en 'bulkRecetas': ${bulkRecetasIds.size}")
                 Log.d("RecetasViewModel", "Número de recetas en 'idsRecetas': ${idsRecetas.size}")
 
-                // Imprimir los IDs de las recetas en 'idsRecetas'
-
-                        val batchSize = 130
-                        val batches = idsRecetas.chunked(batchSize)
-
-                        // Imprimir cada batch con los IDs de recetas
-                        batches.forEachIndexed { index, batch ->
-                            Log.d("RecetasViewModel", "Batch $index: $batch")
-                        }
-
-                Log.d("RecetasViewModel", "IDs de recetas en 'idsRecetas': $idsRecetas")
                 // Encontrar los IDs que faltan en 'bulkRecetas'
-                val missingIds = idsRecetas.filterNot { bulkRecetasIds.contains(it) }
+                val missingIds = idsRecetas.filterNot { it in bulkRecetasIds }
 
                 // Imprimir los IDs que faltan
                 if (missingIds.isNotEmpty()) {
@@ -1307,11 +1295,16 @@ class RecetasViewModel : ViewModel() {
                     Log.d("RecetasViewModel", "No faltan recetas en 'bulkRecetas'.")
                 }
 
+                val missingInIdsRecetas = bulkRecetasIds.filterNot { idsRecetas.contains(it) }
+
+                Log.d("RecetasViewModel", "IDs de recetas en 'bulkRecetas' que no están en 'idsRecetas': $missingInIdsRecetas")
+
             } catch (e: Exception) {
                 Log.e("RecetasViewModel", "Error al obtener los conteos de recetas: ${e.message}")
             }
         }
     }
+
 
 
 

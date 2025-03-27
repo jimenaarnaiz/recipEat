@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -39,6 +40,7 @@ import com.example.recipeat.R
 import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -49,6 +51,13 @@ fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasV
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastFavs by rememberSaveable { mutableStateOf<List<RecetaSimple>>(emptyList()) }
 
+
+    LaunchedEffect(favoritas) {
+        if (favoritas != lastFavs) {
+            recetasViewModel.obtenerRecetasFavoritas(uid.toString())
+            lastFavs = favoritas.value
+        }
+    }
 
     LaunchedEffect(favoritas) {
         Log.d("FavoritesScreen", "recetas favs actuales $uid: ${favoritas.value}")

@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -50,6 +52,7 @@ import com.example.recipeat.R
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
@@ -72,6 +75,27 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
     var isActive by remember { mutableStateOf(false) }
 
     val isLoadingMore by recetasViewModel.isLoadingMore.observeAsState(false) // Estado de carga adicional
+
+    // Instanciar el NetworkConnectivityManager
+    val context = LocalContext.current
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
+
+    // Registrar el callback para el estado de la red
+    LaunchedEffect(true) {
+        networkConnectivityManager.registerNetworkCallback()
+    }
+
+    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
+    DisposableEffect(context) {
+        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
+        onDispose {
+            networkConnectivityManager.unregisterNetworkCallback()
+        }
+    }
+
+    // Verificar si hay conexión y ajustar el ícono de favoritos
+    val isConnected = networkConnectivityManager.isConnected.value
+
 
     LaunchedEffect(username) {
         uid?.let {
@@ -127,6 +151,8 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
                 .padding(16.dp)
         )
 
+         val txtSearch = if (isConnected) "Search for recipes..." else "Search unavailable, no internet"
+
         SearchBar(
             query = searchQuery,
             onQueryChange = { searchQuery = it },
@@ -134,8 +160,9 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
                 isActive = false
             },
             active = isActive,
+            enabled = isConnected,
             onActiveChange = { isActive = it; if (it) navController.navigate("search") },
-            placeholder = { Text("Search for recipes...") },
+            placeholder = { Text(txtSearch) },
             leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
             modifier = Modifier
                 .fillMaxWidth()

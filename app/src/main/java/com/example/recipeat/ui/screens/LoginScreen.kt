@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -20,6 +21,7 @@ import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 
 @Composable
 fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel, recetasViewModel: RecetasViewModel) {
@@ -31,6 +33,27 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
     var errorMessage by rememberSaveable { mutableStateOf("") }
 
     val fieldWidth = if (isLandscape) 0.5f else 0.8f  // Ajusta el ancho según orientación
+
+    // Instanciar el NetworkConnectivityManager
+    val context = LocalContext.current
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
+
+    // Registrar el callback para el estado de la red
+    LaunchedEffect(true) {
+        networkConnectivityManager.registerNetworkCallback()
+    }
+
+    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
+    DisposableEffect(context) {
+        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
+        onDispose {
+            networkConnectivityManager.unregisterNetworkCallback()
+        }
+    }
+
+    // Verificar si hay conexión y ajustar el ícono de favoritos
+    val isConnected = networkConnectivityManager.isConnected.value
+
 
     Box(
         modifier = Modifier
@@ -54,7 +77,7 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
 
                 Spacer(modifier = Modifier.width(35.dp))
 
-                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage) {
+                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage, isConnected) {
                     // para que se actualicen los cambios de una orientación a otra
                     email = it.first
                     password = it.second
@@ -81,7 +104,7 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage) {
+                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage, isConnected) {
                     email = it.first
                     password = it.second
                     errorMessage = it.third
@@ -100,6 +123,7 @@ fun LoginForm(
     email: String,
     password: String,
     errorMessage: String,
+    isConnected: Boolean,
     onInputChange: (Triple<String, String, String>) -> Unit
 ) {
     var localEmail by rememberSaveable { mutableStateOf(email) }
@@ -159,16 +183,18 @@ fun LoginForm(
                     localError = "Email and Password cannot be empty."
 
                     //recetasViewModel.buscarRecetasPorIngredientes() //TODO
-                   // recetasViewModel.guardarRecetasBulk2()
+                    //recetasViewModel.guardarRecetasBulk2()
                     recetasViewModel.logRecetasCount()
-                    recetasViewModel.obtenerValoresAisleUnicos()
-                    recetasViewModel.saveAllEquipmentImages()
+//                    recetasViewModel.obtenerValoresAisleUnicos()
+//                    recetasViewModel.saveAllEquipmentImages()
                     //recetasViewModel.actualizarAisleEnRecetas()
                 } else {
                     usersViewModel.login(localEmail, localPassword) { success ->
                         if (success) {
                             navController.navigate("home")
-                        } else {
+                        } else if (!isConnected){
+                            localError = "Connection error"
+                        }else{
                             localError = "Incorrect email or password"
                         }
                         onInputChange(Triple(localEmail, localPassword, localError))

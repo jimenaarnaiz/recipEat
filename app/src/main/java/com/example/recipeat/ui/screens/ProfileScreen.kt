@@ -1,7 +1,6 @@
 package com.example.recipeat.ui.screens
 
 import android.graphics.Bitmap
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -31,22 +30,39 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.example.recipeat.R
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
 fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid
-    var usernameState by remember { mutableStateOf<String?>(null) }
-    var profileImageState by remember { mutableStateOf<String?>(null) }
+    var usernameState by rememberSaveable { mutableStateOf<String?>(null) }
+    var profileImageState by rememberSaveable { mutableStateOf<String?>(null) }
 
-
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var bitmap by rememberSaveable { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
+
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
+
+    // Registrar el callback para el estado de la red
+    LaunchedEffect(true) {
+        networkConnectivityManager.registerNetworkCallback()
+    }
+
+    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
+    DisposableEffect(context) {
+        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
+        onDispose {
+            networkConnectivityManager.unregisterNetworkCallback()
+        }
+    }
+
+    // Verificar si hay conexión y ajustar el ícono de favoritos
+    val isConnected = networkConnectivityManager.isConnected.value
 
     // Obtener los datos desde Firestore
     LaunchedEffect(Unit) {
@@ -127,7 +143,8 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                             navController.navigate("editarPerfil")
                         },
                         backgroundColor = LightYellow,
-                        textColor = Color.Black
+                        textColor = Color.Black,
+                        isConnected
                     )
                 }
 
@@ -137,7 +154,8 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                         icon = Icons.Filled.History,
                         onClick = { navController.navigate("historial") },
                         backgroundColor = LightYellow,
-                        textColor = Color.Black
+                        textColor = Color.Black,
+                        isConnected
                     )
                 }
 
@@ -147,7 +165,8 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                         icon = Icons.Outlined.Favorite,
                         onClick = { navController.navigate("favoritos") },
                         backgroundColor = LightYellow,
-                        textColor = Color.Black
+                        textColor = Color.Black,
+                        true
                     )
                 }
 
@@ -162,7 +181,8 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                             }
                         },
                         backgroundColor = Color.Red,
-                        textColor = Color.White
+                        textColor = Color.White,
+                        true
                     )
                 }
             }
@@ -175,16 +195,17 @@ fun OptionCard(
     icon: ImageVector,
     onClick: () -> Unit,
     backgroundColor: Color,
-    textColor: Color
+    textColor: Color,
+    isConnected: Boolean
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp) // Alineación y espaciado de las tarjetas
-            .clickable { onClick() }
+            .clickable(enabled = isConnected) { onClick() } // Deshabilitar clic si no hay conexión
             .shadow(8.dp, RoundedCornerShape(12.dp)), // Sombra suave y borde redondeado
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        colors = CardDefaults.cardColors(containerColor = if (isConnected) backgroundColor else Color.LightGray)
     ) {
         Box(
             modifier = Modifier

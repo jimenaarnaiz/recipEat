@@ -77,6 +77,8 @@ dependencies {
     implementation(libs.logging.interceptor)
     //más icons
     implementation(libs.androidx.material.icons.extended)
-    //calendario
+    // Room
+    //val room_version = "2.6.1"
+    implementation(libs.androidx.room.runtime)
 
 }

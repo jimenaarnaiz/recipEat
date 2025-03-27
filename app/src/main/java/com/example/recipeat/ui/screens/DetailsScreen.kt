@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -26,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -36,6 +38,7 @@ import com.example.recipeat.ui.components.TopBarWithIcons
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -54,6 +57,26 @@ fun DetailsScreen(
     // Estado para mostrar el AlertDialog de confirmación de eliminación
     var showDialog by remember { mutableStateOf(false) }
 
+    // Instanciar el NetworkConnectivityManager
+    val context = LocalContext.current
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
+
+    // Registrar el callback para el estado de la red
+    LaunchedEffect(true) {
+        networkConnectivityManager.registerNetworkCallback()
+    }
+
+    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
+    DisposableEffect(context) {
+        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
+        onDispose {
+            networkConnectivityManager.unregisterNetworkCallback()
+        }
+    }
+
+    // Verificar si hay conexión y ajustar el ícono de favoritos
+    val isConnected = networkConnectivityManager.isConnected.value
+
     LaunchedEffect(receta) {
         if (uid != null) {
             Log.d("DetailsScreen", "Llamando a obtenerRecetaPorId con recetaId: $idReceta deUser: $deUser")
@@ -68,7 +91,7 @@ fun DetailsScreen(
 
     Scaffold(
         topBar = {
-            if (deUser) {
+            if (deUser && isConnected) {
                 TopBarWithIcons(
                     onBackPressed = { navController.popBackStack() },
                     onEditPressed = { navController.navigate("editRecipe/$idReceta/$deUser") },
@@ -121,23 +144,26 @@ fun DetailsScreen(
                         modifier = Modifier.weight(1f)
                     )
 
-                    IconButton(onClick = {
-                        receta!!.image?.let {
-                            recetasViewModel.toggleFavorito(
-                                uid,
-                                recetaId = idReceta,
-                                title = receta!!.title,
-                                image = it,
-                                userReceta = receta!!.userId
+                    if (isConnected){
+                        IconButton(
+                            onClick = {
+                                receta!!.image?.let {
+                                    recetasViewModel.toggleFavorito(
+                                        uid,
+                                        recetaId = idReceta,
+                                        title = receta!!.title,
+                                        image = it,
+                                        userReceta = receta!!.userId
+                                    )
+                                }
+                            }) {
+                            Icon(
+                                modifier = Modifier.size(35.dp),
+                                imageVector = if (esFavorito == true) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Toggle Favorite",
+                                tint = if (esFavorito == true) Cherry else Color.DarkGray
                             )
                         }
-                    }) {
-                        Icon(
-                            modifier = Modifier.size(35.dp),
-                            imageVector = if (esFavorito == true) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Toggle Favorite",
-                            tint = if (esFavorito == true) Cherry else Color.DarkGray
-                        )
                     }
                 }
 
