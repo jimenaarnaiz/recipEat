@@ -1,6 +1,8 @@
 package com.example.recipeat.data.api
 
 import com.example.recipeat.data.model.ApiReceta
+import com.example.recipeat.data.model.Ingrediente
+import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.RandomRecipesResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -45,6 +47,14 @@ interface SpoonacularApi {
         @Query("apiKey") apiKey: String = "ec231e7612fa4dd399b9e2f2c0f9bcc8"
     ): List<ApiReceta>
 
+
+//    //  Buscar ingredientes
+//    @GET("/food/ingredients/search")
+//    suspend fun obtenerIngrediente(
+//        @Query("ingredient") ingredient: String,
+//        @Query("number") results: Int = 1,
+//        @Query("apiKey") apiKey: String = "ec231e7612fa4dd399b9e2f2c0f9bcc8"
+//    ): IngredienteSimple
 
 
 }

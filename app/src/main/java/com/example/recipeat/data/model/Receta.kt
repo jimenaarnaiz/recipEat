@@ -1,6 +1,34 @@
 package com.example.recipeat.data.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import com.example.recipeat.data.model.converters.IngredienteListConverter
+import com.example.recipeat.data.model.converters.StepsTypeDishListConverter
 import com.google.firebase.Timestamp
+
+
+@Entity(tableName = "recetas")
+data class RecetaRoom(
+    @PrimaryKey val id: String,
+    val title: String,
+    val image: String,
+    val servings: Int,
+    @TypeConverters(IngredienteListConverter::class) val ingredients: List<Ingrediente>,
+    @TypeConverters(StepsTypeDishListConverter::class) val steps: List<String>,
+    val time: Int,
+    @TypeConverters(StepsTypeDishListConverter::class) val dishTypes: List<String>,
+    val userId: String,
+    val usedIngredientCount: Int = ingredients.size,
+    val glutenFree: Boolean,
+    val vegan: Boolean,
+    val vegetarian: Boolean,
+    val date: Long,
+    //@TypeConverters(IngredienteSimpleListConverter::class) val unusedIngredients: List<IngredienteSimple>,
+//    val missingIngredientCount: Int,
+//    val unusedIngredientCount: Int,
+    val esFavorita: Boolean //NEW
+)
 
 
 // Receta almacenada en Firebase

@@ -194,7 +194,7 @@ class UsersViewModel: ViewModel() {
     }
 
     /**
-     *
+     * TODO ELIMINAR LA OPCION DE CAMBIAR CORREO
      */
     fun actualizarUserProfile(
         newUsername: String?,

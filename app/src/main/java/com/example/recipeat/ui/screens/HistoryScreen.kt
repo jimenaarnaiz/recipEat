@@ -180,7 +180,13 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
                     modifier = Modifier.padding(16.dp)
                 ) {
                     items(filteredRecetas) { receta ->
-                        RecetaItem(receta = receta, navController = navController)
+                        RecetaCardItem(
+                            id = receta.id,
+                            title = receta.title,
+                            image = receta.image,
+                            navController = navController,
+                            esDeUser = receta.userReceta.isNotBlank()
+                        )
                     }
                 }
             }

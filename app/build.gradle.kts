@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -77,8 +78,12 @@ dependencies {
     implementation(libs.logging.interceptor)
     //más icons
     implementation(libs.androidx.material.icons.extended)
-    // Room
-    //val room_version = "2.6.1"
+    // Room - room_version = "2.6.1"
+    val room_version = "2.6.1"
     implementation(libs.androidx.room.runtime)
+    // Room compiler (para que Room genere las implementaciones necesarias)
+    ksp(libs.androidx.room.compiler)// Esto es necesario si usas Kotlin
+    // Si usas coroutines con Room
+    implementation(libs.androidx.room.ktx)  // Opcional, pero útil si usas coroutines
 
 }

@@ -14,14 +14,29 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
+import com.example.recipeat.data.database.AppDatabase
+import com.example.recipeat.data.repository.RecetaRepository
 import com.example.recipeat.ui.components.BottomNavBar
 import com.example.recipeat.ui.theme.RecipEatTheme
+import com.example.recipeat.ui.viewmodels.RoomViewModel
+import com.example.recipeat.ui.viewmodels.RoomViewModelFactory
 
 class MainActivity : ComponentActivity() {
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Inicializar Room Database
+        val database = AppDatabase.getDatabase(this)
+        val recetaRepository = RecetaRepository(database.recetaDao())
+
+        // Crear ViewModel usando un Factory para poder pasar por param el repository en el viewModel
+        val roomViewModel = ViewModelProvider(this, RoomViewModelFactory(recetaRepository))
+            .get(RoomViewModel::class.java)
+
         setContent {
             RecipEatTheme {
                 val navController = rememberNavController() // Un solo NavController
@@ -40,7 +55,7 @@ class MainActivity : ComponentActivity() {
                     }
                 ) { innerPadding ->
                     // Llamamos a NavigationGraph y pasamos la función para manejar la visibilidad de la barra
-                    NavigationGraph(navController) { visible ->
+                    NavigationGraph(navController, roomViewModel) { visible ->
                         showBottomNav.value = visible // Actualiza el estado de visibilidad
                     }
                     //Modifier.padding(top = innerPadding.calculateTopPadding())

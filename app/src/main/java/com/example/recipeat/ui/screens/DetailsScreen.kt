@@ -4,11 +4,9 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -23,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -32,12 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.R
-import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.TopBarWithIcons
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager
 import com.google.firebase.auth.FirebaseAuth
 
@@ -47,6 +44,7 @@ fun DetailsScreen(
     navController: NavHostController,
     recetasViewModel: RecetasViewModel,
     deUser: Boolean,
+    roomViewModel: RoomViewModel
 ) {
     val receta by recetasViewModel.recetaSeleccionada.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
@@ -73,6 +71,8 @@ fun DetailsScreen(
             networkConnectivityManager.unregisterNetworkCallback()
         }
     }
+
+
 
     // Verificar si hay conexión y ajustar el ícono de favoritos
     val isConnected = networkConnectivityManager.isConnected.value
@@ -156,6 +156,12 @@ fun DetailsScreen(
                                         userReceta = receta!!.userId
                                     )
                                 }
+
+                                val recetaRoom = roomViewModel.toRecetaRoom(recetaDetalle, true)
+                                roomViewModel.insertReceta(recetaRoom)
+
+
+
                             }) {
                             Icon(
                                 modifier = Modifier.size(35.dp),

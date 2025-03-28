@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -40,23 +41,41 @@ import com.example.recipeat.R
 import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasViewModel) {
+fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasViewModel, roomViewModel: RoomViewModel) {
     // Obtener las recetas favoritas del usuario desde el ViewModel
     val favoritas = recetasViewModel.recetasFavoritas.observeAsState(emptyList())
     val uid = FirebaseAuth.getInstance().currentUser?.uid
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastFavs by rememberSaveable { mutableStateOf<List<RecetaSimple>>(emptyList()) }
 
+    // Instanciar el NetworkConnectivityManager
+    val context = LocalContext.current
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
 
-    LaunchedEffect(favoritas) {
-        if (favoritas != lastFavs) {
-            recetasViewModel.obtenerRecetasFavoritas(uid.toString())
-            lastFavs = favoritas.value
+    val favoritasRoom = roomViewModel.favoriteRecipesRoom.observeAsState(emptyList())
+
+    // Registrar el callback para el estado de la red
+    LaunchedEffect(true) {
+        networkConnectivityManager.registerNetworkCallback()
+    }
+
+    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
+    DisposableEffect(context) {
+        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
+        onDispose {
+            networkConnectivityManager.unregisterNetworkCallback()
         }
+    }
+
+    // Verificar si hay conexión
+    val isConnected = networkConnectivityManager.isConnected.value
+    LaunchedEffect (navController) {
+       roomViewModel.getRecetasFavoritas()
     }
 
     LaunchedEffect(favoritas) {
@@ -85,34 +104,55 @@ fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasV
                     .fillMaxSize()
                     .wrapContentSize(Alignment.Center)
             )
-        } else {
+        } else
             // Mostrar las recetas favoritas en un Grid de 2 columnas
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2), // Define el número de columnas
                 contentPadding = PaddingValues(16.dp), // Añadir un margen alrededor del Grid
                 modifier = Modifier.padding(paddingValues)
             ) {
-                items(favoritas.value) { receta ->
-                    RecetaItem(receta = receta, navController = navController)
+
+                if (isConnected) {
+                    items(favoritas.value) { receta ->
+                        RecetaCardItem(
+                            id = receta.id,
+                            title = receta.title,
+                            image = receta.image,
+                            navController = navController,
+                            esDeUser = receta.userReceta.isNotBlank()
+                        )
+                    }
+                }else{
+                    items(favoritasRoom.value) { receta ->
+                        RecetaCardItem(
+                            id = receta.id,
+                            title = receta.title,
+                            image = receta.image,
+                            navController = navController,
+                            esDeUser = receta.userId.isNotBlank()
+                        )
+                    }
                 }
             }
-        }
     }
 }
 
-@Composable
-fun RecetaItem(receta: RecetaSimple, navController: NavHostController) {
-    val esDeUser = receta.userReceta.isNotEmpty()
-    Log.d("RecetaItem", "es de user: $esDeUser id: ${receta.id}")
 
-    // Este Composable es el que muestra cada receta en el Grid
+@Composable
+fun RecetaCardItem(
+    id: String,
+    title: String,
+    image: String,
+    navController: NavHostController,
+    esDeUser: Boolean
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .shadow(4.dp)
             .clickable {
-                navController.navigate("detalles/${receta.id}/$esDeUser")
+                navController.navigate("detalles/$id/$esDeUser")
             },
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -120,22 +160,23 @@ fun RecetaItem(receta: RecetaSimple, navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Cargar la imagen de la receta con esquinas redondeadas y sin padding
-            var imagen by remember { mutableStateOf("") }
-            imagen = receta.image.ifBlank {
+            val imageToShow = if (image.isBlank()) {
                 "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
+            } else {
+                image
             }
+
             Image(
-                painter = rememberAsyncImagePainter(imagen),
-                contentDescription = receta.title,
+                painter = rememberAsyncImagePainter(imageToShow),
+                contentDescription = title,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop // Asegurarse de que la imagen se recorte y llene el espacio
-
             )
             Text(
-                text = receta.title,
+                text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(8.dp),
                 maxLines = 1, // Limitar el texto a una sola línea
@@ -144,4 +185,5 @@ fun RecetaItem(receta: RecetaSimple, navController: NavHostController) {
         }
     }
 }
+
 

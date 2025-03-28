@@ -9,12 +9,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Room
 import com.example.recipeat.data.api.RetrofitClient.api
+import com.example.recipeat.data.database.AppDatabase
 import com.example.recipeat.data.model.ApiReceta
 import com.example.recipeat.data.model.Equipment
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
+import com.example.recipeat.data.model.RecetaRoom
 import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.data.model.SugerenciaReceta
 import com.google.firebase.Timestamp
@@ -77,6 +80,7 @@ class RecetasViewModel : ViewModel() {
     // MutableState para almacenar los pasos con las imágenes de los equipos
     private val _equipmentSteps =  MutableLiveData<List<List<String>>>(emptyList())
     val equipmentSteps: LiveData<List<List<String>>> = _equipmentSteps
+
 
 
     fun verificarRecetasGuardadasApi() {
@@ -1211,15 +1215,96 @@ class RecetasViewModel : ViewModel() {
 
     //API
 
-    val ingredients = "avocado,cayenne,cauliflower head,celery,carrots,celery stalk,cheddar,cherries,almond,cherry tomato,chickpea,chicken,chicken breast,chicken broth,chicken sausage,chicken thigh,chili pepper,chocolate,chocolate chips,baking powder,cilantro,cinnamon,cocoa powder,coconut,condensed milk,cooking oil,corn,corn oil,cornstarch,couscous,crab,cranberries,cream,cream cheese,bacon,cumin,soy sauce,vinegar,double cream,dulce de leche,egg,egg white,egg yolk,eggplant,chocolate chips,evaporated milk,extra virgin olive oil,feta cheese,firm brown sugar,fish sauce,flour,parsley,ginger,garlic,garlic powder,gelatin,goat cheese,gorgonzola,greek yogurt,green bean,ground beef,ground cinnamon,ground ginger,ground pepper,ground pork,ham,honey,jalapeño,rice,kidney beans,leek,lime,macaroni,mascarpone,goat cheese,milk,mint,mushroom,mustard,mutton,navy beans,oats,oat,olive oil,onion,orange,lettuce,oregano,breadcrumbs,parmesan cheese,peaches,pear,peas,pepper,pie crust,pineapple,banana,pork tenderloin,potato,powdered milk,prawns,bread,quinoa,radish,raisins,raspberry jam,red wine,salad oil,salmon,salt,sausage,scallion,chocolate,shrimp,soy sauce,spinach,onion,squash,sugar,sundried tomatoes,sweet potato,tomato,tomato paste,tomato sauce,tuna,vanilla,vanilla extract,vegetable broth,vegetable oil,vinegar,nuts,water,white wine,bell pepper,yogurt,lentils,corn,collard greens,olivas,zucchini,beef,apple,apples,hake"
+    //val ingredients = "avocado,cayenne,cauliflower head,celery,carrots,celery stalk,cheddar,cherries,almond,cherry tomato,chickpea,chicken,chicken breast,chicken broth,chicken sausage,chicken thigh,chili pepper,chocolate,chocolate chips,baking powder,cilantro,cinnamon,cocoa powder,coconut,condensed milk,cooking oil,corn,corn oil,cornstarch,couscous,crab,cranberries,cream,cream cheese,bacon,cumin,soy sauce,vinegar,double cream,dulce de leche,egg,egg white,egg yolk,eggplant,chocolate chips,evaporated milk,extra virgin olive oil,feta cheese,firm brown sugar,fish sauce,flour,parsley,ginger,garlic,garlic powder,gelatin,goat cheese,gorgonzola,greek yogurt,green bean,ground beef,ground cinnamon,ground ginger,ground pepper,ground pork,ham,honey,jalapeño,rice,kidney beans,leek,lime,macaroni,mascarpone,goat cheese,milk,mint,mushroom,mustard,mutton,navy beans,oats,oat,olive oil,onion,orange,lettuce,oregano,breadcrumbs,parmesan cheese,peaches,pear,peas,pepper,pie crust,pineapple,banana,pork tenderloin,potato,powdered milk,prawns,bread,quinoa,radish,raisins,raspberry jam,red wine,salad oil,salmon,salt,sausage,scallion,chocolate,shrimp,soy sauce,spinach,onion,squash,sugar,sundried tomatoes,sweet potato,tomato,tomato paste,tomato sauce,tuna,vanilla,vanilla extract,vegetable broth,vegetable oil,vinegar,nuts,water,white wine,bell pepper,yogurt,lentils,corn,collard greens,olivas,zucchini,beef,apple,apples,hake"
 
-    // TODO añadir mas ingredientes: anchovies,cucumber,mayonnaise,ketchup,chard,pumpkin,lemon,cabbage,octopus,strawberries,squid,cod,trout,sea bream,sardines,white fish,smoked salmon,surimi,clams,pork,lamb,turkey,quail,ground meat
+    val ingredients = "anchovies,cucumber,mayonnaise,ketchup,chard,pumpkin,lemon,cabbage,octopus,strawberries,squid,cod,trout,sea bream,sardines,white fish,smoked salmon,surimi,clams,pork,lamb,turkey,quail,ground meat"
+
+    // de 3 en 3 y con progreso en firebase en config/recetasIdsProgress
+    fun buscarRecetasPorIngredientes1() {
+        val ingredientList = ingredients.split(",") // Dividimos la cadena de ingredientes en una lista
+        val batchSize = 3 // Tamaño de cada batch
+        val totalBatches = ingredientList.size / batchSize + if (ingredientList.size % batchSize == 0) 0 else 1
+
+        viewModelScope.launch {
+            try {
+                val db = FirebaseFirestore.getInstance()
+                val recetasCollection = db.collection("idsRecetas")
+                val progressCollection = db.collection("config") // Guardaremos el progreso aquí
+
+                // Obtener el último progreso guardado
+                val progressSnapshot = progressCollection.document("recetasIdsProgress").get().await()
+                val lastProcessedBatchIndex = progressSnapshot.getLong("lastBatchIndex")?.toInt() ?: 0
+                val lastSavedRecipeId = progressSnapshot.getString("lastRecipeId") ?: ""
+                //val lastBatchProcessed = progressSnapshot.getString("lastBatchProcessed") ?: ""
+
+                Log.d("RecetasViewModel", "Último batch procesado: $lastProcessedBatchIndex, Última receta guardada: $lastSavedRecipeId")
+
+                // Iniciar desde el último batch procesado
+                for (i in lastProcessedBatchIndex until totalBatches) {
+                    val startIndex = i * batchSize
+                    val endIndex = minOf((i + 1) * batchSize, ingredientList.size)
+                    val ingredientBatch = ingredientList.subList(startIndex, endIndex).joinToString(",")
+
+                    Log.d("RecetasViewModel", "Procesando batch $i: $ingredientBatch")
+
+                    // Obtener recetas de la API (función suspendida)
+                    val response = api.buscarRecetasPorIngredientes(ingredientBatch)
+
+                    if (response.isNotEmpty()) {
+                        val filteredResponse = response
+                        val currentRecipeIds = _apiRecetasIds.value.map { it.id }.toSet()
+                        val uniqueRecipes = filteredResponse.filterNot { currentRecipeIds.contains(it.id) }
+
+                        // Actualizar la lista de recetas
+                        _apiRecetasIds.value = (_apiRecetasIds.value + uniqueRecipes).toList()
+
+                        // Guardar en Firebase en la colección "idsRecetas"
+                        uniqueRecipes.forEach { receta ->
+                            val recetaData = mapOf("id" to receta.id)
+                            recetasCollection.document(receta.id.toString())
+                                .set(recetaData)
+                                .addOnSuccessListener {
+                                    Log.d("RecetasViewModel", "ID de receta ${receta.id} guardado en Firebase correctamente.")
+                                }
+                                .addOnFailureListener { e ->
+                                    Log.e("RecetasViewModel", "Error al guardar el ID en Firebase: ${e.message}")
+                                }
+                        }
+
+                        // Guardar el progreso del batch y último ID procesado
+                        val lastRecipeIdSaved = uniqueRecipes.lastOrNull()?.id.toString()
+                        val progressData = mapOf(
+                            "lastBatchIndex" to i + 1, // Aumentamos el índice del batch procesado
+                            "lastRecipeId" to lastRecipeIdSaved,
+                            "lastBatchProcessed" to ingredientBatch
+                        )
+                        progressCollection.document("recetasIdsProgress")
+                            .set(progressData)
+                            .addOnSuccessListener {
+                                Log.d("RecetasViewModel", "Progreso guardado correctamente. Batch: $i, Última receta: $lastRecipeIdSaved")
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("RecetasViewModel", "Error al guardar el progreso: ${e.message}")
+                            }
+
+                        Log.d("RecetasViewModel", "Recetas después de agregar nuevas: ${_apiRecetasIds.value.size}")
+                    } else {
+                        Log.e("RecetasViewModel", "Respuesta vacía o nula de la API para ingredientes: $ingredientBatch")
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Log.e("RecetasViewModel", "Error al obtener las recetas: ${e.message}")
+            }
+        }
+    }
 
 
     // 390 recetas (14 por cada 5 ingredientes)
-    fun buscarRecetasPorIngredientes() {
+    fun buscarRecetasPorIngredientes0() {
         val ingredientList = ingredients.split(",") // Dividimos la cadena de ingredientes en una lista
-        val batchSize = 5
+        val batchSize = 3 // de 3 en 3
+        //val batchSize = 5
         val totalBatches = ingredientList.size / batchSize + if (ingredientList.size % batchSize == 0) 0 else 1
 
         viewModelScope.launch {
@@ -1308,7 +1393,7 @@ class RecetasViewModel : ViewModel() {
 
 
 
-    // TODO falta el batch 7, el 8 ya lo hice. 12 - 652225
+    // TODO
     fun guardarRecetasBulk() {
         viewModelScope.launch {
             try {
@@ -1737,6 +1822,8 @@ class RecetasViewModel : ViewModel() {
             }
         }
     }
+
+
 
 
 

@@ -28,17 +28,23 @@ import com.example.recipeat.ui.screens.search.UnifiedSearchScreen
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 
 
 // Función para definir el grafo de navegación
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChanged: (Boolean) -> Unit) {
+fun NavigationGraph(
+    navController: NavHostController,
+    roomViewModel: RoomViewModel,
+    onBottomBarVisibilityChanged: (Boolean) -> Unit
+) {
     val recetasViewModel: RecetasViewModel = viewModel()
     val usersViewModel: UsersViewModel = viewModel()
     val ingredientesViewModel: IngredientesViewModel = viewModel()
     val filtrosViewModel: FiltrosViewModel = viewModel()
+
 
     Scaffold { padding ->
         NavHost(
@@ -79,7 +85,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 Log.d("DetailsScreen", "Valor de deUser: $deUser")
 
                 // Ahora pasamos el parámetro 'deUser' a la pantalla de detalles
-                DetailsScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, deUser = deUser)
+                DetailsScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, deUser = deUser, roomViewModel)
                 onBottomBarVisibilityChanged(false)
             }
             composable("search") {
@@ -95,7 +101,7 @@ fun NavigationGraph(navController: NavHostController, onBottomBarVisibilityChang
                 onBottomBarVisibilityChanged(false)
             }
             composable("favoritos") {
-                FavoritesScreen(navController, recetasViewModel)   //
+                FavoritesScreen(navController, recetasViewModel, roomViewModel)   //
                 onBottomBarVisibilityChanged(false)
             }
             composable("historial") {
