@@ -16,6 +16,10 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
     private val _favoriteRecipesRoom = MutableLiveData<List<RecetaRoom>>()
     val favoriteRecipesRoom: LiveData<List<RecetaRoom>> get() = _favoriteRecipesRoom
 
+    private var _recipeRoom = MutableLiveData<RecetaRoom>()
+    val recipeRoom: LiveData<RecetaRoom> get() = _recipeRoom
+
+
 
     // Función para convertir Receta a RecetaRoom dentro del ViewModel
     fun toRecetaRoom(receta: Receta, esFavorita: Boolean = false): RecetaRoom {
@@ -42,7 +46,7 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
     // Obtener todas las recetas
     fun getAllRecetas() {
         viewModelScope.launch {
-            val recetas = recetaRepository.getAllRecetas() // Asumiendo que esta función retorna una lista
+            val recetas = recetaRepository.getAllRecetas()
             // Actualizamos el LiveData con los datos obtenidos
             _favoriteRecipesRoom.postValue(recetas)
         }
@@ -74,7 +78,7 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
     // Obtener recetas favoritas
     fun getRecetasFavoritas() {
         viewModelScope.launch {
-            val recetasFavoritas = recetaRepository.getRecetasFavoritas() // Asumiendo que esta función retorna una lista
+            val recetasFavoritas = recetaRepository.getRecetasFavoritas()
             _favoriteRecipesRoom.postValue(recetasFavoritas)
         }
     }
@@ -82,8 +86,8 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
     // Obtener receta por ID
     fun getRecetaById(recetaId: String) {
         viewModelScope.launch {
-            val receta = recetaRepository.getRecetaById(recetaId) // Asumiendo que esta función retorna una receta
-            // Aquí podrías hacer algo con la receta, por ejemplo, mostrarla en un LiveData específico
+            val receta = recetaRepository.getRecetaById(recetaId)
+            _recipeRoom.value = receta
         }
     }
 }

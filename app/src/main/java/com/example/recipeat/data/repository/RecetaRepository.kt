@@ -31,7 +31,7 @@ class RecetaRepository(private val recetaDao: RecetaDao) {
     }
 
     // Obtener receta por ID
-    suspend fun getRecetaById(recetaId: String): RecetaRoom? {
+    suspend fun getRecetaById(recetaId: String): RecetaRoom {
         return recetaDao.getRecetaById(recetaId)
     }
 }

@@ -27,7 +27,7 @@ interface RecetaDao {
 
     // Consultar una receta por ID (si es necesario)
     @Query("SELECT * FROM recetas WHERE id = :recetaId")
-    suspend fun getRecetaById(recetaId: String): RecetaRoom?
+    suspend fun getRecetaById(recetaId: String): RecetaRoom //antes era anullable
 
 
     @Query("SELECT * FROM recetas WHERE esFavorita = 1")
