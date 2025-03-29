@@ -279,7 +279,8 @@ fun EditRecipeScreen(
                             date = System.currentTimeMillis(),
                             unusedIngredients = emptyList(),
                             missingIngredientCount = 0,
-                            unusedIngredientCount = 0
+                            unusedIngredientCount = 0,
+                            esFavorita = null,
                         )
                         recetasViewModel.editMyRecipe(
                             uid.toString(), newReceta,

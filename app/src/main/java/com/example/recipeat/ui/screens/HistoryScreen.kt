@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.CalendarView
+import com.example.recipeat.ui.components.RecetaSimpleCardItem
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -180,7 +181,7 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
                     modifier = Modifier.padding(16.dp)
                 ) {
                     items(filteredRecetas) { receta ->
-                        RecetaCardItem(
+                        RecetaSimpleCardItem(
                             id = receta.id,
                             title = receta.title,
                             image = receta.image,

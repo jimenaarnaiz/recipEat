@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.recipeat.ui.components.RecetaCard
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager

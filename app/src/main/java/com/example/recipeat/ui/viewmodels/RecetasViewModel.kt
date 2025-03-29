@@ -3,21 +3,15 @@ package com.example.recipeat.ui.viewmodels
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Room
 import com.example.recipeat.data.api.RetrofitClient.api
-import com.example.recipeat.data.database.AppDatabase
 import com.example.recipeat.data.model.ApiReceta
-import com.example.recipeat.data.model.Equipment
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
-import com.example.recipeat.data.model.RecetaRoom
 import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.data.model.SugerenciaReceta
 import com.google.firebase.Timestamp
@@ -205,7 +199,7 @@ class RecetasViewModel : ViewModel() {
                                 id = it["id"] as String,
                                 title = it["title"] as String,
                                 image = it["image"] as? String,
-                                servings = (it["servings"] as Number).toInt() ,  // Convierte el valor a Int, o usa 0 si es nulo
+                                servings = (it["servings"] as Number).toInt(),  // Convierte el valor a Int, o usa 0 si es nulo
                                 ingredients = it["ingredients"] as List<Ingrediente>,
                                 steps = it["steps"] as List<String>,
                                 time = (it["time"] as Number).toInt(),
@@ -219,6 +213,7 @@ class RecetasViewModel : ViewModel() {
                                 unusedIngredients = emptyList(),
                                 missingIngredientCount = 0,
                                 unusedIngredientCount = 0,
+                                esFavorita = null,
                             )
                         }
                     } catch (e: Exception) {
@@ -316,7 +311,7 @@ class RecetasViewModel : ViewModel() {
                     id = recetaOriginalData["id"] as String,
                     title = recetaOriginalData["title"] as String,
                     image = recetaOriginalData["image"] as? String,
-                    servings = (recetaOriginalData["servings"] as Number).toInt() ,  // Convierte el valor a Int, o usa 0 si es nulo
+                    servings = (recetaOriginalData["servings"] as Number).toInt(),  // Convierte el valor a Int, o usa 0 si es nulo
                     ingredients = recetaOriginalData["ingredients"] as List<Ingrediente>,
                     steps = recetaOriginalData["steps"] as List<String>,
                     time = (recetaOriginalData["time"] as Number).toInt(),
@@ -330,6 +325,7 @@ class RecetasViewModel : ViewModel() {
                     unusedIngredients = emptyList(),
                     missingIngredientCount = 0,
                     unusedIngredientCount = 0,
+                    esFavorita = null,
                 )
 
                 // Crear un mapa vacío para los cambios
@@ -440,6 +436,7 @@ class RecetasViewModel : ViewModel() {
             unusedIngredients = emptyList(),
             missingIngredientCount = 0,
             unusedIngredientCount = 0,
+            esFavorita = null,
         )
     }
 
@@ -505,6 +502,7 @@ class RecetasViewModel : ViewModel() {
                                 unusedIngredients = emptyList(),
                                 missingIngredientCount = 0,
                                 unusedIngredientCount = 0,  // Obtener la fecha de creación o usar la fecha actual
+                                esFavorita = null,
                             )
                         } catch (e: Exception) {
                             Log.e("RecetasViewModel", "Error al mapear receta: ${e.message}")
@@ -577,6 +575,7 @@ class RecetasViewModel : ViewModel() {
                         unusedIngredients = emptyList(),
                         missingIngredientCount = 0,
                         unusedIngredientCount = 0,
+                        esFavorita = null,
                     )
 
                     // Actualizar el LiveData con la receta obtenida
@@ -718,7 +717,8 @@ class RecetasViewModel : ViewModel() {
                                 glutenFree = document.getBoolean("glutenFree") ?: false,
                                 vegan = document.getBoolean("vegan") ?: false,
                                 vegetarian = document.getBoolean("vegetarian") ?: false,
-                                date = document.getLong("date") ?: System.currentTimeMillis()
+                                date = document.getLong("date") ?: System.currentTimeMillis(),
+                                esFavorita = null,
                             )
                             recetasCoincidentesTotales.add(receta)
                         } else if (coincidencias > 0) {
@@ -740,7 +740,8 @@ class RecetasViewModel : ViewModel() {
                                 glutenFree = document.getBoolean("glutenFree") ?: false,
                                 vegan = document.getBoolean("vegan") ?: false,
                                 vegetarian = document.getBoolean("vegetarian") ?: false,
-                                date = document.getLong("date") ?: System.currentTimeMillis()
+                                date = document.getLong("date") ?: System.currentTimeMillis(),
+                                esFavorita = null,
                             )
                             recetasCoincidentesParciales.add(Pair(receta, coincidencias))
                         }
@@ -845,6 +846,7 @@ class RecetasViewModel : ViewModel() {
                                 unusedIngredients = emptyList(),
                                 missingIngredientCount = 0,
                                 unusedIngredientCount = 0,
+                                esFavorita = null,
                             )
 
                             resultados.add(receta)

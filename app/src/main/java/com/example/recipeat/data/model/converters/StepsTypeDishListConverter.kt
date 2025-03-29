@@ -5,9 +5,9 @@ import androidx.room.TypeConverter
 /**
  * Room necesita convertidores para manejar tipos complejos como List<Ingrediente> o List<String> (usado steps y dishTypes)
  */
-class StepsTypeDishListConverter {
+class StepsTypeDishListConverter { //list<string> converter
     @TypeConverter
-    fun fromStepsTypeDishListToString(value: List<String>): String { // Renamed method
+    fun fromStepsTypeDishListToString(value: List<String>): String {
         return value.joinToString(",")
     }
 

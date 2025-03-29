@@ -6,12 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.recipeat.data.dao.RecetaDao
-import com.example.recipeat.data.model.RecetaRoom
+import com.example.recipeat.data.model.Receta
+import com.example.recipeat.data.model.converters.IngSimpleListConverter
 import com.example.recipeat.data.model.converters.IngredienteListConverter
 import com.example.recipeat.data.model.converters.StepsTypeDishListConverter
 
-@Database(entities = [RecetaRoom::class], version = 2) //cambiar de vers si se cambia algo de la db
-@TypeConverters(IngredienteListConverter::class, StepsTypeDishListConverter::class)
+@Database(entities = [Receta::class], version = 3) //cambiar de vers si se cambia algo de la db
+@TypeConverters(IngredienteListConverter::class, StepsTypeDishListConverter::class, IngSimpleListConverter::class)
 
 abstract class AppDatabase : RoomDatabase() {
 

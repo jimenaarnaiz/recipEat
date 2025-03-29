@@ -7,40 +7,39 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.recipeat.data.model.Receta
-import com.example.recipeat.data.model.RecetaRoom
 import com.example.recipeat.data.repository.RecetaRepository
 import kotlinx.coroutines.launch
 
 class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel() {
 
-    private val _favoriteRecipesRoom = MutableLiveData<List<RecetaRoom>>()
-    val favoriteRecipesRoom: LiveData<List<RecetaRoom>> get() = _favoriteRecipesRoom
+    private val _favoriteRecipesRoom = MutableLiveData<List<Receta>>()
+    val favoriteRecipesRoom: LiveData<List<Receta>> get() = _favoriteRecipesRoom
 
-    private var _recipeRoom = MutableLiveData<RecetaRoom>()
-    val recipeRoom: LiveData<RecetaRoom> get() = _recipeRoom
+    private var _recipeRoom = MutableLiveData<Receta>()
+    val recipeRoom: LiveData<Receta> get() = _recipeRoom
 
 
 
-    // Función para convertir Receta a RecetaRoom dentro del ViewModel
-    fun toRecetaRoom(receta: Receta, esFavorita: Boolean = false): RecetaRoom {
-        return RecetaRoom(
-            id = receta.id,
-            title = receta.title,
-            image = receta.image ?: "",
-            servings = receta.servings,
-            ingredients = receta.ingredients,
-            steps = receta.steps,
-            time = receta.time,
-            dishTypes = receta.dishTypes,
-            userId = receta.userId,
-            usedIngredientCount = receta.usedIngredientCount,
-            glutenFree = receta.glutenFree,
-            vegan = receta.vegan,
-            vegetarian = receta.vegetarian,
-            date = receta.date,
-            esFavorita = esFavorita
-        )
-    }
+//    // Función para convertir Receta a RecetaRoom dentro del ViewModel
+//    fun toRecetaRoom(receta: Receta, esFavorita: Boolean = false): RecetaRoom {
+//        return RecetaRoom(
+//            id = receta.id,
+//            title = receta.title,
+//            image = receta.image ?: "",
+//            servings = receta.servings,
+//            ingredients = receta.ingredients,
+//            steps = receta.steps,
+//            time = receta.time,
+//            dishTypes = receta.dishTypes,
+//            userId = receta.userId,
+//            usedIngredientCount = receta.usedIngredientCount,
+//            glutenFree = receta.glutenFree,
+//            vegan = receta.vegan,
+//            vegetarian = receta.vegetarian,
+//            date = receta.date,
+//            esFavorita = esFavorita
+//        )
+//    }
 
 
     // Obtener todas las recetas
@@ -54,7 +53,7 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
 
 
     // Insertar receta
-    fun insertReceta(receta: RecetaRoom) {
+    fun insertReceta(receta: Receta) {
         viewModelScope.launch {
             try {
                 // Intentar insertar la receta
@@ -69,7 +68,7 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
 
 
     // Eliminar receta
-    fun deleteReceta(receta: RecetaRoom) {
+    fun deleteReceta(receta: Receta) {
         viewModelScope.launch {
             recetaRepository.deleteReceta(receta)
         }

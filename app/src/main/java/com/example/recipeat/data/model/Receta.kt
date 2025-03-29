@@ -8,39 +8,40 @@ import com.example.recipeat.data.model.converters.StepsTypeDishListConverter
 import com.google.firebase.Timestamp
 
 
+//@Entity(tableName = "recetas")
+//data class RecetaRoom(
+//    @PrimaryKey val id: String,
+//    val title: String,
+//    val image: String,
+//    val servings: Int,
+//    @TypeConverters(IngredienteListConverter::class) val ingredients: List<Ingrediente>,
+//    @TypeConverters(StepsTypeDishListConverter::class) val steps: List<String>,
+//    val time: Int,
+//    @TypeConverters(StepsTypeDishListConverter::class) val dishTypes: List<String>,
+//    val userId: String,
+//    val usedIngredientCount: Int = ingredients.size,
+//    val glutenFree: Boolean,
+//    val vegan: Boolean,
+//    val vegetarian: Boolean,
+//    val date: Long,
+//    //@TypeConverters(IngredienteSimpleListConverter::class) val unusedIngredients: List<IngredienteSimple>,
+////    val missingIngredientCount: Int,
+////    val unusedIngredientCount: Int,
+//    val esFavorita: Boolean //NEW
+//)
+
+
 @Entity(tableName = "recetas")
-data class RecetaRoom(
+// Receta almacenada en Firebase
+data class Receta(
     @PrimaryKey val id: String,
     val title: String,
-    val image: String,
+    val image: String?,
     val servings: Int,
     @TypeConverters(IngredienteListConverter::class) val ingredients: List<Ingrediente>,
     @TypeConverters(StepsTypeDishListConverter::class) val steps: List<String>,
     val time: Int,
-    @TypeConverters(StepsTypeDishListConverter::class) val dishTypes: List<String>,
-    val userId: String,
-    val usedIngredientCount: Int = ingredients.size,
-    val glutenFree: Boolean,
-    val vegan: Boolean,
-    val vegetarian: Boolean,
-    val date: Long,
-    //@TypeConverters(IngredienteSimpleListConverter::class) val unusedIngredients: List<IngredienteSimple>,
-//    val missingIngredientCount: Int,
-//    val unusedIngredientCount: Int,
-    val esFavorita: Boolean //NEW
-)
-
-
-// Receta almacenada en Firebase
-data class Receta(
-    val id: String,
-    val title: String,
-    val image: String?,
-    val servings: Int,
-    val ingredients: List<Ingrediente>,
-    val steps: List<String>,
-    val time: Int,
-    val dishTypes: List<String>, //Breakfast, Lunch, Snack, Dinner
+    @TypeConverters(StepsTypeDishListConverter::class) val dishTypes: List<String>, //Breakfast, Lunch, dessert, Dinner
     val userId: String, // ID del usuario que ha creado la receta
     val usedIngredientCount: Int = ingredients.size,
     val glutenFree: Boolean,
@@ -50,6 +51,7 @@ data class Receta(
     val unusedIngredients: List<IngredienteSimple>, // nombre e imagen
     val missingIngredientCount: Int, // Número de ingredientes faltantes
     val unusedIngredientCount: Int, // Número de ingredientes no usados
+    val esFavorita: Boolean?
 )
 
 data class SugerenciaReceta(val id: String, val titulo: String, val coincidencias: Int)

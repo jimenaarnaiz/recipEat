@@ -59,6 +59,8 @@ fun DetailsScreen(
     val context = LocalContext.current
     val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
 
+   // val recetaRoom by roomViewModel.recipeRoom.observeAsState()
+
     // Registrar el callback para el estado de la red
     LaunchedEffect(true) {
         networkConnectivityManager.registerNetworkCallback()
@@ -71,7 +73,6 @@ fun DetailsScreen(
             networkConnectivityManager.unregisterNetworkCallback()
         }
     }
-
 
 
     // Verificar si hay conexión y ajustar el ícono de favoritos
@@ -87,6 +88,8 @@ fun DetailsScreen(
             )
         }
         recetasViewModel.verificarSiEsFavorito(uid, idReceta)
+
+        roomViewModel.getRecetaById(recetaId = idReceta)
     }
 
     Scaffold(
@@ -157,8 +160,8 @@ fun DetailsScreen(
                                     )
                                 }
 
-                                val recetaRoom = roomViewModel.toRecetaRoom(recetaDetalle, true)
-                                roomViewModel.insertReceta(recetaRoom)
+                                //val recetaRoom = roomViewModel.toRecetaRoom(recetaDetalle, true)
+                                roomViewModel.insertReceta(receta!!)
 
 
 
@@ -205,7 +208,6 @@ fun DetailsScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-
 
                 Spacer(modifier = Modifier.height(16.dp))
 

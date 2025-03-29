@@ -4,18 +4,18 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import com.example.recipeat.data.model.RecetaRoom
+import com.example.recipeat.data.model.Receta
 
 @Dao
 interface RecetaDao {
 
     // Insertar una receta
     @Insert
-    suspend fun insertReceta(receta: RecetaRoom)
+    suspend fun insertReceta(receta: Receta)
 
     // Eliminar una receta por su ID
     @Delete
-    suspend fun deleteReceta(receta: RecetaRoom)
+    suspend fun deleteReceta(receta: Receta)
 
     // Eliminar receta por su ID, de manera más explícita
     @Query("DELETE FROM recetas WHERE id = :recetaId")
@@ -23,13 +23,13 @@ interface RecetaDao {
 
     // Consultar todas las recetas (si es necesario)
     @Query("SELECT * FROM recetas")
-    suspend fun getAllRecetas(): List<RecetaRoom>
+    suspend fun getAllRecetas(): List<Receta>
 
     // Consultar una receta por ID (si es necesario)
     @Query("SELECT * FROM recetas WHERE id = :recetaId")
-    suspend fun getRecetaById(recetaId: String): RecetaRoom //antes era anullable
+    suspend fun getRecetaById(recetaId: String): Receta //antes era anullable
 
 
     @Query("SELECT * FROM recetas WHERE esFavorita = 1")
-    suspend fun getRecetasFavoritas(): List<RecetaRoom>
+    suspend fun getRecetasFavoritas(): List<Receta>
 }

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.FiltroBottomSheet
+import com.example.recipeat.ui.components.RecetaCard
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
