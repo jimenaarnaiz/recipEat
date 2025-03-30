@@ -42,15 +42,16 @@ import com.example.recipeat.ui.components.CalendarView
 import com.example.recipeat.ui.components.RecetaSimpleCardItem
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasViewModel) {
+fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasViewModel, usersViewModel: UsersViewModel) {
     val recetasHistorial = recetasViewModel.recetasHistorial.observeAsState(emptyList())
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val uid = usersViewModel.uid.toString()
 
     // Estado para almacenar el mes seleccionado
     var selectedDate by rememberSaveable { mutableStateOf(LocalDate.now()) }
@@ -85,7 +86,7 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
     }
 
     LaunchedEffect(rango) {
-        recetasViewModel.obtenerRecetasPorRangoDeFecha(uid.toString(),
+        recetasViewModel.obtenerRecetasPorRangoDeFecha(uid,
             rango
         )
         Log.d("HistoryScreen", "El rango ha cambiado")

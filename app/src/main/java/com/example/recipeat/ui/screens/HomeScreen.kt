@@ -22,7 +22,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,89 +34,54 @@ import com.example.recipeat.ui.components.RecetaCard
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.firestore
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewModel) {
-    val usersViewModel = UsersViewModel()
-
-    // Observamos las recetas desde el ViewModel
+fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel, recetasViewModel: RecetasViewModel) {
     val recetasState by recetasViewModel.recetas.observeAsState(emptyList())
+    val isLoadingMore by recetasViewModel.isLoadingMore.observeAsState(false)
 
-    var username by remember { mutableStateOf<String?>(null) }
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
-    // Detectar si el usuario ha llegado cerca del final de la lista
+    var username by rememberSaveable { mutableStateOf<String?>(null) }
+    val uid = usersViewModel.uid.toString()
     val listState = rememberLazyListState()
-
     var searchQuery by remember { mutableStateOf("") }
     var isActive by remember { mutableStateOf(false) }
 
-    val isLoadingMore by recetasViewModel.isLoadingMore.observeAsState(false) // Estado de carga adicional
-
-    // Instanciar el NetworkConnectivityManager
     val context = LocalContext.current
     val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
 
-    // Registrar el callback para el estado de la red
-    LaunchedEffect(true) {
-        networkConnectivityManager.registerNetworkCallback()
-    }
+    // Registrar el callback de conexión
+    LaunchedEffect(true) { networkConnectivityManager.registerNetworkCallback() }
+    DisposableEffect(context) { onDispose { networkConnectivityManager.unregisterNetworkCallback() } }
 
-    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
-    DisposableEffect(context) {
-        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
-        onDispose {
-            networkConnectivityManager.unregisterNetworkCallback()
-        }
-    }
-
-    // Verificar si hay conexión y ajustar el ícono de favoritos
     val isConnected = networkConnectivityManager.isConnected.value
 
 
-    LaunchedEffect(username) {
-        uid?.let {
-            recetasViewModel.obtenerRecetasHome(it, limpiarLista = true) // Primera carga
+    // Cargar recetas al iniciar la pantalla
+    LaunchedEffect(uid) {
+        Log.d("HomeScreen", "Primer launched effect ejecutado")
+        usersViewModel.obtenerUsername { nombre -> username = nombre }
 
-            usersViewModel.obtenerUsername(it) { nombre ->
-                username = nombre
-            }
-
-            Log.d("HomeScreen", "Recetas inicial: ${recetasState.size}")
+        if (recetasState.isEmpty()) {
+            recetasViewModel.obtenerRecetasHome(uid, limpiarLista = true)
         }
-
-
-        //121 recetas de momento
-        val db = Firebase.firestore
-
-        db.collection("recetas")
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                val count = querySnapshot.size() // Número de documentos
-                Log.d("Firebase", "Número de recetas: $count")
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firebase", "Error obteniendo recetas", e)
-            }
     }
 
-    // TODO Detecta si el usuario está cerca del final de la lista
+
+    // Detectar cuando el usuario está cerca del final de la lista
     LaunchedEffect(listState) {
-//        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-//            .collect { index ->
-//                Log.d("HomeScreen", "Índice visible actual: $index")
-//                if (index == recetasState.size - 1 && !isLoadingMore) {
-//                    Log.d("HomeScreen", "Cargando más recetas")
-//                    uid?.let {
-//                        recetasViewModel.obtenerRecetasHome(it, limpiarLista = false)
-//                        Log.d("HomeScreen", "Num de recetas act: ${recetasState.size}")
-//                    }
-//                }
-//            }
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastVisibleItemIndex ->
+                val totalItemsCount = recetasState.size
+                if (lastVisibleItemIndex != null && totalItemsCount >= 15) { // Para evitar llamadas innecesarias
+                    val umbral = totalItemsCount - 5 // Cargar más cuando queden 5 recetas visibles
+                    if (lastVisibleItemIndex >= umbral && !isLoadingMore) {
+                        Log.d("HomeScreen", "Cargando más recetas...")
+                        recetasViewModel.obtenerRecetasHome(uid, limpiarLista = false)
+                    }
+                }
+            }
     }
 
 
@@ -124,20 +91,13 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
             .padding(16.dp)
             .padding(bottom = 80.dp)
     ) {
-        Text(
-            text = "Welcome, $username!",
-            modifier = Modifier
-                .padding(16.dp)
-        )
+        Text(text = "Welcome, $username!", modifier = Modifier.padding(16.dp))
 
-         val txtSearch = if (isConnected) "Search for recipes..." else "Search unavailable, no internet"
-
+        val txtSearch = if (isConnected) "Search for recipes..." else "Search unavailable, no internet"
         SearchBar(
             query = searchQuery,
             onQueryChange = { searchQuery = it },
-            onSearch = {
-                isActive = false
-            },
+            onSearch = { isActive = false },
             active = isActive,
             enabled = isConnected,
             onActiveChange = { isActive = it; if (it) navController.navigate("search") },
@@ -146,26 +106,21 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
-        ) {
-            //
-        }
+        ) {}
 
-        // Mostrar un indicador de carga si no se han cargado las recetas
         if (recetasState.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         } else {
-            // Carrusel de recetas
             LazyColumn(
-                state = listState, // Vincular el estado de la lista
+                state = listState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp), // Asegúrate de que no se solapen con el BottomBar
+                    .padding(bottom = 16.dp)
             ) {
                 items(recetasState) { receta ->
                     RecetaCard(receta = receta, navController)
                 }
 
-                // Indicador de carga al final de la lista
                 if (isLoadingMore) {
                     item {
                         CircularProgressIndicator(
@@ -180,4 +135,5 @@ fun HomeScreen(navController: NavHostController, recetasViewModel: RecetasViewMo
         }
     }
 }
+
 

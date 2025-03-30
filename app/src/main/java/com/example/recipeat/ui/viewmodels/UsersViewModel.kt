@@ -6,12 +6,15 @@ import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import coil.ImageLoader
 import coil.request.ImageRequest
 import com.example.recipeat.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 import java.io.FileOutputStream
 
@@ -19,6 +22,15 @@ class UsersViewModel: ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
+
+    private val _uid = MutableStateFlow<String?>(null)
+    val uid: StateFlow<String?> get() = _uid
+
+
+    fun logOut() {
+        FirebaseAuth.getInstance().signOut()
+        _uid.value = null // Limpiar el UID y cualquier otro dato dependiente de la sesión
+    }
 
 
     fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
@@ -33,6 +45,9 @@ class UsersViewModel: ViewModel() {
                                 val uid = user.uid
                                 val db = FirebaseFirestore.getInstance()
                                 val userRef = db.collection("users").document(uid)
+
+                                // Guardar el UID en el ViewModel
+                                _uid.value = uid // Aquí guardamos el UID
 
                                 userRef.get()
                                     .addOnSuccessListener { document ->
@@ -122,8 +137,8 @@ class UsersViewModel: ViewModel() {
 
 
     // Función para obtener el username de un usuario
-    fun obtenerUsername(uid: String, onResult: (String?) -> Unit) {
-        val userRef = db.collection("users").document(uid)
+    fun obtenerUsername(onResult: (String?) -> Unit) {
+        val userRef = db.collection("users").document(_uid.value.toString())
 
         userRef.get()
             .addOnSuccessListener { document ->
@@ -131,6 +146,7 @@ class UsersViewModel: ViewModel() {
                     val username = document.getString("username")
                     onResult(username) // Devuelve el username si existe
                 } else {
+                    Log.d("UsersViewModel", "Usuario con uid $uid no encontrado")
                     onResult(null) // Usuario no encontrado
                 }
             }

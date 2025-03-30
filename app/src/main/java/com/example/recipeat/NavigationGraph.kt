@@ -53,7 +53,7 @@ fun NavigationGraph(
             //modifier = Modifier.padding(padding) AÑADE PADDING INNECESARIO ARRIBA
         ) {
             composable("login") {
-                LoginScreen(navController, usersViewModel, recetasViewModel) // Login
+                LoginScreen(navController, usersViewModel, recetasViewModel, roomViewModel) // Login
                 onBottomBarVisibilityChanged(false)
             }
             composable("register") {
@@ -61,11 +61,11 @@ fun NavigationGraph(
                 onBottomBarVisibilityChanged(false)
             }
             composable(BottomNavItem.Home.route) {
-                HomeScreen(navController, recetasViewModel)   // Home
+                HomeScreen(navController, usersViewModel, recetasViewModel)   // Home
                 onBottomBarVisibilityChanged(true)
             }
             composable(BottomNavItem.MyRecipes.route) {
-                MyRecipesScreen(navController, recetasViewModel)   //
+                MyRecipesScreen(navController, recetasViewModel, roomViewModel)   //
                 onBottomBarVisibilityChanged(true)
             }
             composable(BottomNavItem.Profile.route) {
@@ -97,15 +97,15 @@ fun NavigationGraph(
                 onBottomBarVisibilityChanged(false)
             }
             composable("add_recipe") {
-                AddRecipe(navController, recetasViewModel, ingredientesViewModel)   //
+                AddRecipe(navController, recetasViewModel, ingredientesViewModel, roomViewModel)   //
                 onBottomBarVisibilityChanged(false)
             }
             composable("favoritos") {
-                FavoritesScreen(navController, recetasViewModel, roomViewModel)   //
+                FavoritesScreen(navController, recetasViewModel, roomViewModel, usersViewModel)   //
                 onBottomBarVisibilityChanged(false)
             }
             composable("historial") {
-                HistoryScreen(navController, recetasViewModel)   //
+                HistoryScreen(navController, recetasViewModel, usersViewModel)   //
                 onBottomBarVisibilityChanged(false)
             }
             composable("editarPerfil") {

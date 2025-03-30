@@ -29,14 +29,14 @@ import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.RecetaSimpleCardItem
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasViewModel, roomViewModel: RoomViewModel) {
+fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasViewModel, roomViewModel: RoomViewModel, usersViewModel: UsersViewModel) {
     // Obtener las recetas favoritas del usuario desde el ViewModel
     val favoritas = recetasViewModel.recetasFavoritas.observeAsState(emptyList())
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val uid = usersViewModel.uid.toString()
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastFavs by rememberSaveable { mutableStateOf<List<RecetaSimple>>(emptyList()) }
 
@@ -61,6 +61,7 @@ fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasV
 
     // Verificar si hay conexión
     val isConnected = networkConnectivityManager.isConnected.value
+
     LaunchedEffect (navController) {
        roomViewModel.getRecetasFavoritas()
     }

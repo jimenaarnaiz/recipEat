@@ -20,11 +20,17 @@ import com.example.recipeat.R
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager
 
 @Composable
-fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel, recetasViewModel: RecetasViewModel) {
+fun LoginScreen(
+    navController: NavHostController,
+    usersViewModel: UsersViewModel,
+    recetasViewModel: RecetasViewModel,
+    roomViewModel: RoomViewModel
+) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -77,7 +83,7 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
 
                 Spacer(modifier = Modifier.width(35.dp))
 
-                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage, isConnected) {
+                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage, isConnected, roomViewModel) {
                     // para que se actualicen los cambios de una orientación a otra
                     email = it.first
                     password = it.second
@@ -104,7 +110,7 @@ fun LoginScreen(navController: NavHostController, usersViewModel: UsersViewModel
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage, isConnected) {
+                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage, isConnected, roomViewModel) {
                     email = it.first
                     password = it.second
                     errorMessage = it.third
@@ -124,6 +130,7 @@ fun LoginForm(
     password: String,
     errorMessage: String,
     isConnected: Boolean,
+    roomViewModel: RoomViewModel,
     onInputChange: (Triple<String, String, String>) -> Unit
 ) {
     var localEmail by rememberSaveable { mutableStateOf(email) }
@@ -183,8 +190,12 @@ fun LoginForm(
                     localError = "Email and Password cannot be empty."
 
                     //recetasViewModel.buscarRecetasPorIngredientes1() //TODO
-                    //recetasViewModel.guardarRecetasBulk2() -esta es
-                    recetasViewModel.logRecetasCount()
+                    //recetasViewModel.guardarRecetasBulk2() //-esta es
+                    //recetasViewModel.fetchAndStoreIngredients()
+                    //recetasViewModel.buscarRecetasPorCadaIngrediente()
+                   // recetasViewModel.eliminarRecetasNoExistentesEnBulkRecetas()
+                    //recetasViewModel.logRecetasCount()
+                   // roomViewModel.deleteAllRecetas()
 //                    recetasViewModel.obtenerValoresAisleUnicos()
 //                    recetasViewModel.saveAllEquipmentImages()
                     //recetasViewModel.actualizarAisleEnRecetas()
