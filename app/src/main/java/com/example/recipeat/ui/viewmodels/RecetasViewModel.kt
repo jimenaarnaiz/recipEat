@@ -44,23 +44,26 @@ class RecetasViewModel : ViewModel() {
 
     private val _apiRecetasBulk = MutableStateFlow<List<ApiReceta>>(emptyList())
 
+    // para name search
     private val _recetasSugeridas = MutableStateFlow<List<SugerenciaReceta>>(emptyList())
     val recetasSugeridas: StateFlow<List<SugerenciaReceta>> = _recetasSugeridas
 
     private val _recetas = MutableLiveData<List<Receta>>(emptyList())
     val recetas: LiveData<List<Receta>> = _recetas
 
+    // para my recipes (user)
     private val _recetasUser = MutableLiveData<List<Receta>>(emptyList())
     val recetasUser: LiveData<List<Receta>> = _recetasUser
 
     private val _recetaSeleccionada = MutableLiveData<Receta>()
     val recetaSeleccionada: LiveData<Receta> = _recetaSeleccionada
 
-    private var lastDocument: DocumentSnapshot? = null // para paginacion
-
+    // para paginacion
+    private var lastDocument: DocumentSnapshot? = null
     private val _isLoadingMore = MutableLiveData(false)
     val isLoadingMore: LiveData<Boolean> get() = _isLoadingMore
 
+    //recetas resultados busqueda sin filtros ni orden aplicado
     private val _recetasOriginales = MutableLiveData<List<Receta>>(emptyList())
 
     private val _esFavorito = MutableLiveData<Boolean>()
@@ -184,53 +187,145 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-    // Función para obtener las recetas del usuario
-    // TODO PAGINACIÓN
-    fun getRecetasUser(uid: String) {
-        db.collection("my_recipes").document(uid)
+    // TODO CON PAGINACION:
+    // Variable para el último documento obtenido de las recetas del usuario
+    private var lastDocumentUser: DocumentSnapshot? = null
+
+    // Función para obtener las recetas del usuario con paginación
+    fun getRecetasUser(uid: String, limpiarLista: Boolean = true) {
+        if (_isLoadingMore.value == true) return // Evita cargar más si ya se está cargando
+
+        _isLoadingMore.value = true // Indica que está cargando
+
+        // Crea la consulta inicial con un límite de 15
+        var query = db.collection("my_recipes").document(uid)
             .collection("recipes")
-            .get()
-            .addOnSuccessListener { result ->
-                val recetasList = result.documents.mapNotNull { document ->
-                    try {
-                        // Si el documento tiene datos, intenta procesarlo
-                        val recetaMap = document.data // Recupera los datos del documento
-                        recetaMap?.let { // Si los datos no son nulos, los usamos
+            .orderBy("date", Query.Direction.DESCENDING) // Ordena por fecha de manera descendente
+            .limit(15)
+
+        // Si ya hay un documento anterior, usa startAfter para continuar desde ese punto
+        if (lastDocumentUser != null && !limpiarLista) {
+            Log.d("RecetasViewModel", "Recetas User: Paginar desde documento: ${lastDocumentUser?.id}")
+            query = query.startAfter(lastDocumentUser!!)
+        } else {
+            Log.d("RecetasViewModel", "Recetas User: No hay documento previo, iniciando desde el principio")
+        }
+
+        // Ejecutar la consulta en el ViewModelScope para obtener las recetas
+        viewModelScope.launch {
+            try {
+                val documents = query.get().await() // Obtener los documentos
+
+                if (!documents.isEmpty) {
+                    // Actualiza el último documento
+                    lastDocumentUser = documents.documents.last()
+
+                    // Mapea los documentos a una lista de recetas
+                    val nuevasRecetas = documents.documents.mapNotNull { document ->
+                        try {
                             Receta(
-                                id = it["id"] as String,
-                                title = it["title"] as String,
-                                image = it["image"] as? String,
-                                servings = (it["servings"] as Number).toInt(),  // Convierte el valor a Int, o usa 0 si es nulo
-                                ingredients = it["ingredients"] as List<Ingrediente>,
-                                steps = it["steps"] as List<String>,
-                                time = (it["time"] as Number).toInt(),
-                                userId = it["user"] as String,
-                                dishTypes = it["dishTypes"] as List<String>,
-                                //usedIngredientCount = it["usedIngredientCount"] as Int,
-                                glutenFree = it["glutenFree"] as Boolean,
-                                vegan = it["vegan"] as Boolean,
-                                vegetarian = it["vegetarian"] as Boolean,
-                                date = it["date"] as Long,
+                                id = document.getString("id") ?: "",
+                                title = document.getString("title") ?: "",
+                                image = document.getString("image") ?: "",
+                                servings = (document.get("servings") as? Number)?.toInt() ?: 0,
+                                ingredients = (document.get("ingredients") as? List<Map<String, Any>>)?.map { ing ->
+                                    Ingrediente(
+                                        name = ing["name"] as? String ?: "",
+                                        amount = (ing["amount"] as? Number)?.toDouble() ?: 0.0,
+                                        unit = ing["unit"] as? String ?: "",
+                                        image = ing["image"] as? String ?: "",
+                                        aisle = ing["aisle"] as? String ?: ""
+                                    )
+                                } ?: emptyList(),
+                                steps = document.get("steps") as? List<String> ?: emptyList(),
+                                time = (document.get("time") as? Number)?.toInt() ?: 0,
+                                dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
+                                userId = document.getString("userId") ?: "",
+                                glutenFree = document.getBoolean("glutenFree") ?: false,
+                                vegan = document.getBoolean("vegan") ?: false,
+                                vegetarian = document.getBoolean("vegetarian") ?: false,
+                                date = (document.get("date") as? Long) ?: System.currentTimeMillis(),
                                 unusedIngredients = emptyList(),
                                 missingIngredientCount = 0,
                                 unusedIngredientCount = 0,
-                                esFavorita = null,
+                                esFavorita = null
                             )
+                        } catch (e: Exception) {
+                            Log.e("RecetasViewModel", "Recetas User: Error al mapear receta: ${e.message}")
+                            null
                         }
-                    } catch (e: Exception) {
-                        Log.w("Firestore", "Error parsing recipe", e)
-                        null // Si ocurre un error, devolvemos null para que no se añada a la lista
                     }
-                }
 
-                // Asignar la lista filtrada a la variable que almacena las recetas
-                _recetasUser.value = recetasList
+                    // Si se debe limpiar la lista, se reemplaza, sino se agrega a la lista existente
+                    if (limpiarLista) {
+                        _recetasUser.value = nuevasRecetas
+                    } else {
+                        _recetasUser.value = _recetasUser.value.orEmpty() + nuevasRecetas
+                    }
+
+                    Log.d("RecetasViewModel", "Total recetas User: ${_recetasUser.value?.size}")
+                } else {
+                    Log.d("RecetasViewModel", "No hay más recetas User para cargar.")
+                }
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Recetas User: Error al obtener recetas: ${e.message}")
+            } finally {
+                _isLoadingMore.value = false // Indicar que terminó el proceso de carga
             }
-            .addOnFailureListener { e ->
-                Log.w("Firestore", "Error fetching recipes", e)
-                _recetasUser.value = emptyList() // En caso de error, retorna una lista vacía
-            }
+        }
     }
+
+
+
+
+
+    // Función para obtener las recetas del usuario
+    // SIN PAGINACIÓN
+//    fun getRecetasUser(uid: String) {
+//        db.collection("my_recipes").document(uid)
+//            .collection("recipes")
+//            .get()
+//            .addOnSuccessListener { result ->
+//                val recetasList = result.documents.mapNotNull { document ->
+//                    try {
+//                        // Si el documento tiene datos, intenta procesarlo
+//                        val recetaMap = document.data // Recupera los datos del documento
+//                        recetaMap?.let { // Si los datos no son nulos, los usamos
+//                            Receta(
+//                                id = it["id"] as String,
+//                                title = it["title"] as String,
+//                                image = it["image"] as? String,
+//                                servings = (it["servings"] as Number).toInt(),  // Convierte el valor a Int, o usa 0 si es nulo
+//                                ingredients = it["ingredients"] as List<Ingrediente>,
+//                                steps = it["steps"] as List<String>,
+//                                time = (it["time"] as Number).toInt(),
+//                                userId = it["user"] as String,
+//                                dishTypes = it["dishTypes"] as List<String>,
+//                                //usedIngredientCount = it["usedIngredientCount"] as Int,
+//                                glutenFree = it["glutenFree"] as Boolean,
+//                                vegan = it["vegan"] as Boolean,
+//                                vegetarian = it["vegetarian"] as Boolean,
+//                                date = it["date"] as Long,
+//                                unusedIngredients = emptyList(),
+//                                missingIngredientCount = 0,
+//                                unusedIngredientCount = 0,
+//                                esFavorita = null,
+//                            )
+//                        }
+//                    } catch (e: Exception) {
+//                        Log.w("Firestore", "Error parsing recipe", e)
+//                        null // Si ocurre un error, devolvemos null para que no se añada a la lista
+//                    }
+//                }
+//
+//                // Asignar la lista filtrada a la variable que almacena las recetas
+//                _recetasUser.value = recetasList
+//            }
+//            .addOnFailureListener { e ->
+//                Log.w("Firestore", "Error fetching recipes", e)
+//                _recetasUser.value = emptyList() // En caso de error, retorna una lista vacía
+//            }
+//    }
 
 
 
@@ -445,7 +540,7 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-    fun obtenerRecetasHome(uid: String, limpiarLista: Boolean = true) {
+    fun obtenerRecetasHome(limpiarLista: Boolean = true) {
         if (_isLoadingMore.value == true) return // Salir si ya se está cargando
 
         _isLoadingMore.value = true // Indicar que está cargando
@@ -905,6 +1000,22 @@ class RecetasViewModel : ViewModel() {
         _recetasSugeridas.value = emptyList()
     }
 
+    fun ordenarResultados(selectedOrder: String) {
+        val recetasOrdenar = _recetasOriginales.value ?: return
+        Log.d("RecetasViewModel", "Ordenar: $selectedOrder")
+
+        // sortedBy devuelve una lista
+        _recetas.value = when (selectedOrder) {
+            "Time" -> recetasOrdenar.sortedBy { it.time }
+            "Alphabetical" -> recetasOrdenar.sortedBy { it.title }
+            "Number of Ingredients" -> recetasOrdenar.sortedBy { it.ingredients.size }
+            "Recent Asc" -> recetasOrdenar.sortedBy { it.date }
+            "Recent Desc" -> recetasOrdenar.sortedByDescending { it.date }
+            else -> recetasOrdenar
+        }
+    }
+
+
 
     //
     fun toggleFavorito(uid: String?, userReceta: String, recetaId: String, title: String, image: String) {
@@ -999,11 +1110,11 @@ class RecetasViewModel : ViewModel() {
                         val title = document.getString("title")
                         val image = document.getString("image") ?: ""
                         val date = document.getTimestamp("date")
-                        val userId = document.getString("uid")
+                        val userId = document.getString("uid") ?: ""
 
-                        Log.d("RecetasViewModel", "Receta encontrada: id=$recetaId, title=$title, date=$date")
+                        Log.d("RecetasViewModel", "Receta encontrada: id=$recetaId, title=$title, date=$date, uid=$userId")
 
-                        if (recetaId != null && title != null && date != null && userId != null) {
+                        if (recetaId != null && title != null && date != null) {
                             RecetaSimple(id = recetaId, title = title, image = image, date = date, userReceta = userId )
                         } else null
                     }
@@ -1187,6 +1298,8 @@ class RecetasViewModel : ViewModel() {
                 Log.e("RecetasViewModel", "Error obteniendo los equipos: ", exception)
             }
     }
+
+
 
 
 
@@ -1984,60 +2097,6 @@ class RecetasViewModel : ViewModel() {
 //    }
 
 
-
-    //    // Obtener todas las recetas home de golpe
-//    fun obtenerRecetasHome(uid: String) {
-//        Log.d("RecetasViewModel", "Obteniendo recetas home para el usuario $uid")
-//
-//        // Usamos viewModelScope.launch para ejecutar la tarea en un hilo en segundo plano
-//        viewModelScope.launch {
-//            try {
-//                val docRef = db.collection("recetas").document(uid)
-//                    .collection("recetas_aleatorias")
-//
-//                // Usamos Firebase Firestore con una corrutina para obtener los datos
-//                val documents = docRef.get().await() // Usamos .await() para esperar el resultado de la operación asíncrona
-//
-//                // Mapeamos los documentos obtenidos a objetos Receta
-//                val recetasList = documents.mapNotNull { document ->
-//                    try {
-//                        Receta(
-//                            id = document.getString("id") ?: "",
-//                            title = document.getString("title") ?: "",
-//                            image = document.getString("image") ?: "",
-//                            ingredients = (document.get("ingredients") as? List<Map<String, Any>>)?.map { ing ->
-//                                Ingrediente(
-//                                    name = ing["name"] as? String ?: "",
-//                                    amount = (ing["amount"] as? Number)?.toDouble() ?: 0.0,
-//                                    unit = ing["unit"] as? String ?: "",
-//                                    image = ing["image"] as? String ?: ""
-//                                )
-//                            } ?: emptyList(),
-//                            steps = document.get("steps") as? List<String> ?: emptyList(),
-//                            time = (document.get("time") as? Number)?.toInt() ?: 0,
-//                            dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
-//                            user = document.getString("user") ?: "",
-//                            usedIngredientCount = (document.get("usedIngredientCount") as? Number)?.toInt()
-//                                ?: 0,
-//                            glutenFree = document.getBoolean("glutenFree") ?: false,
-//                            vegan = document.getBoolean("vegan") ?: false,
-//                            vegetarian = document.getBoolean("vegetarian") ?: false
-//                        )
-//                    } catch (e: Exception) {
-//                        Log.e("RecetasViewModel", "Error al mapear receta: ${e.message}")
-//                        null
-//                    }
-//                }
-//
-//                // Actualizamos el estado de recetas en el ViewModel
-//                _recetas.value = recetasList
-//                Log.d("RecetasViewModel", "_recetas: ${_recetas.value}")
-//
-//            } catch (e: Exception) {
-//                Log.e("RecetasViewModel", "Error al obtener recetas: ${e.message}")
-//            }
-//        }
-//    }
 
 
 

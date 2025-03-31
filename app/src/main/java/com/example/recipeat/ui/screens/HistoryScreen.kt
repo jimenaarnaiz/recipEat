@@ -1,5 +1,8 @@
 package com.example.recipeat.ui.screens
 
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -25,7 +28,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -35,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.ui.components.AppBar
@@ -47,11 +53,12 @@ import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@SuppressLint("ContextCastToActivity")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasViewModel, usersViewModel: UsersViewModel) {
     val recetasHistorial = recetasViewModel.recetasHistorial.observeAsState(emptyList())
-    val uid = usersViewModel.uid.toString()
+    val uid = usersViewModel.getUidValue()
 
     // Estado para almacenar el mes seleccionado
     var selectedDate by rememberSaveable { mutableStateOf(LocalDate.now()) }
@@ -85,10 +92,25 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
         }
     }
 
+    val activity = LocalContext.current as Activity
+    // Bloquear la rotación dentro de esta pantalla
+    LaunchedEffect(true) {
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+    }
+    DisposableEffect(true) {
+        onDispose {
+            // Restaurar la orientación cuando se abandona esta pantalla
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
     LaunchedEffect(rango) {
-        recetasViewModel.obtenerRecetasPorRangoDeFecha(uid,
-            rango
-        )
+        if (uid != null) {
+            recetasViewModel.obtenerRecetasPorRangoDeFecha(
+                uid.toString(),
+                rango
+            )
+        }
         Log.d("HistoryScreen", "El rango ha cambiado")
     }
 
@@ -173,7 +195,9 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
             if (filteredRecetas.isEmpty()) {
                 Text(
                     text = "You haven't cooked on this day!",
-                    modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
                 )
             } else {
                 LazyVerticalGrid(

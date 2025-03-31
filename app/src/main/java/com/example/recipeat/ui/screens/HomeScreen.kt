@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +44,7 @@ fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel,
     val isLoadingMore by recetasViewModel.isLoadingMore.observeAsState(false)
 
     var username by rememberSaveable { mutableStateOf<String?>(null) }
-    val uid = usersViewModel.uid.toString()
+    val uid = usersViewModel.getUidValue()
     val listState = rememberLazyListState()
     var searchQuery by remember { mutableStateOf("") }
     var isActive by remember { mutableStateOf(false) }
@@ -59,12 +60,14 @@ fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel,
 
 
     // Cargar recetas al iniciar la pantalla
-    LaunchedEffect(uid) {
-        Log.d("HomeScreen", "Primer launched effect ejecutado")
-        usersViewModel.obtenerUsername { nombre -> username = nombre }
+    LaunchedEffect(Unit) {
+        if (username.isNullOrBlank()) {
+            Log.d("HomeScreen", "launched effect uid ejecutado $uid")
+            usersViewModel.obtenerUsername { nombre -> username = nombre }
+        }
 
         if (recetasState.isEmpty()) {
-            recetasViewModel.obtenerRecetasHome(uid, limpiarLista = true)
+            recetasViewModel.obtenerRecetasHome(limpiarLista = true)
         }
     }
 
@@ -78,7 +81,7 @@ fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel,
                     val umbral = totalItemsCount - 5 // Cargar más cuando queden 5 recetas visibles
                     if (lastVisibleItemIndex >= umbral && !isLoadingMore) {
                         Log.d("HomeScreen", "Cargando más recetas...")
-                        recetasViewModel.obtenerRecetasHome(uid, limpiarLista = false)
+                        recetasViewModel.obtenerRecetasHome(limpiarLista = false)
                     }
                 }
             }

@@ -61,6 +61,8 @@ import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.RoomViewModel
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 
@@ -68,9 +70,11 @@ import com.google.firebase.auth.FirebaseAuth
 fun AddRecipe(
     navController: NavController,
     recetasViewModel: RecetasViewModel,
-    ingredientesViewModel: IngredientesViewModel
+    ingredientesViewModel: IngredientesViewModel,
+    roomViewModel: RoomViewModel,
+    usersViewModel: UsersViewModel
 ) {
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val uid = usersViewModel.getUidValue()
 
     var title by rememberSaveable { mutableStateOf("") }
     var imageUri by rememberSaveable { mutableStateOf("") }
@@ -224,7 +228,7 @@ fun AddRecipe(
 
             item {
                 CreateRecipeButton(
-                    "Create Recipe",
+                            "Create Recipe",
                     isValid,
                     onClick = {
                         // Verificar que todos los campos necesarios tengan valores
@@ -237,7 +241,7 @@ fun AddRecipe(
                             steps = instructions,
                             time = time.toInt(),
                             dishTypes = selectedOccasion,
-                            userId = uid.toString(),
+                            userId = uid.toString(), //TODO OJO COMPROBAR Q VA BIEN
                             usedIngredientCount = ingredients.size,
                             glutenFree = isGlutenFree,
                             vegan = isVegan,
@@ -248,17 +252,21 @@ fun AddRecipe(
                             unusedIngredientCount = 0,
                             esFavorita = null,
                         )
-                        recetasViewModel.addMyRecipe(
-                            uid.toString(), newReceta,
-                            onComplete = { success, error ->
-                                if (success) {
-                                    Log.d("AddRecipe", "Receta añadida correctamente")
-                                    navController.navigate(BottomNavItem.MyRecipes.route)
-                                } else {
-                                    Log.e("AddRecipe", "Error al añadir receta: $error")
+                        if (uid != null) {
+                            recetasViewModel.addMyRecipe(
+                                uid, newReceta,
+                                onComplete = { success, error ->
+                                    if (success) {
+                                        Log.d("AddRecipe", "Receta añadida correctamente")
+                                        navController.navigate(BottomNavItem.MyRecipes.route)
+                                    } else {
+                                        Log.e("AddRecipe", "Error al añadir receta: $error")
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
+                        //añadir a Room
+                        roomViewModel.insertReceta(receta = newReceta)
                     }
                 )
             }

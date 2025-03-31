@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -46,6 +48,7 @@ fun NameSearch(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState()) // Hacer scroll posible para tdo el contenido
             //.padding(paddingValues)
             .padding(16.dp)
     ) {
@@ -95,11 +98,11 @@ fun NameSearch(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Lista de recetas sugeridas
-        LazyColumn(
+        Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(recetasSugeridas) { recetaSug ->
+            recetasSugeridas.forEach { recetaSug ->
                 Row(
                     modifier = Modifier
                         .padding(8.dp)

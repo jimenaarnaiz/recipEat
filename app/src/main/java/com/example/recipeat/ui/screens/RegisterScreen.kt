@@ -282,8 +282,8 @@ fun Buttons(
                         if (success) {
                             val uid = FirebaseAuth.getInstance().currentUser?.uid
                             if (uid != null) {
-                                recetasViewModel.verificarRecetasGuardadasApi()
-                                ingredientesViewModel.extraerIngredientesYGuardar()
+                                //recetasViewModel.verificarRecetasGuardadasApi()
+                                //ingredientesViewModel.extraerIngredientesYGuardar()
                             }
                             onErrorMessageChange("")
                             Toast.makeText(

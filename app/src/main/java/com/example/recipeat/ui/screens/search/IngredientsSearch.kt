@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ButtonDefaults
@@ -58,6 +60,7 @@ fun IngredientsSearch(
    Column(modifier = Modifier
        .fillMaxSize()
        .padding(16.dp)) {
+
         TextField(
             value = ingredienteBusqueda,
             onValueChange = { ingredienteBusqueda = it.lowercase() },
@@ -151,8 +154,8 @@ fun IngredientsSearch(
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.surface)
                                 .clickable(
-                                    onClick = {
-                                        if (!ingredientesReceta.contains(ingrediente) && ingredientesReceta.size < 6) {
+                                    onClick = { //solo deja 5 ingredientes por búsqueda
+                                        if (!ingredientesReceta.contains(ingrediente) && ingredientesReceta.size < 5) {
                                             ingredientesViewModel.addIngredient(ingrediente)
                                             //resetear para no tener q borrar el ing tú mismo
                                             ingredienteBusqueda = ""
@@ -172,7 +175,7 @@ fun IngredientsSearch(
                                 .background(MaterialTheme.colorScheme.surface)
                                 .clickable(
                                     onClick = {
-                                        if (!ingredientesReceta.contains(ingrediente) && ingredientesReceta.size < 6) {
+                                        if (!ingredientesReceta.contains(ingrediente) && ingredientesReceta.size < 5) {
                                             //resetear para no tener q borrar el ing tú mismo
                                             ingredientesViewModel.addIngredient(ingrediente)
                                             ingredienteBusqueda = ""

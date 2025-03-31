@@ -51,7 +51,7 @@ data class Receta(
     val unusedIngredients: List<IngredienteSimple>, // nombre e imagen
     val missingIngredientCount: Int, // Número de ingredientes faltantes
     val unusedIngredientCount: Int, // Número de ingredientes no usados
-    val esFavorita: Boolean?
+    var esFavorita: Boolean?
 )
 
 data class SugerenciaReceta(val id: String, val titulo: String, val coincidencias: Int)

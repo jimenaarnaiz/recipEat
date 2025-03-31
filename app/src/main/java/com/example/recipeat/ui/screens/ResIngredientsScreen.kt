@@ -58,6 +58,7 @@ import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.FiltroBottomSheet
+import com.example.recipeat.ui.components.OrderBottomSheet
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
@@ -75,6 +76,7 @@ fun ResIngredientsScreen(
     val recetas by recetasViewModel.recetas.observeAsState(emptyList())
 
     var showBottomSheet by remember { mutableStateOf(false) }
+    var showOrderBottomSheet by remember { mutableStateOf(false) }
 
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastIngredientes by rememberSaveable { mutableStateOf<List<IngredienteSimple>>(emptyList()) }
@@ -141,7 +143,7 @@ fun ResIngredientsScreen(
 
                             // Botón de Ordenar
                             Button(
-                                onClick = { /* TODO: acción de ordenar */ },
+                                onClick = { showOrderBottomSheet = true },
                                 modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
                                 shape = RoundedCornerShape(12.dp), // Bordes redondeados
                                 colors = ButtonDefaults.buttonColors(containerColor = Cherry)
@@ -151,6 +153,14 @@ fun ResIngredientsScreen(
                             }
                         }
 
+                        // Mostrar el dialog de ordenar si es necesario
+                        if (showOrderBottomSheet) {
+                            OrderBottomSheet(
+                                recetasViewModel = recetasViewModel,
+                                busquedaPorNombre = false,
+                                onDismiss = { showOrderBottomSheet = false }
+                            )
+                        }
 
                         // Mostrar el dialog de filtros si es necesario
                         if (showBottomSheet) {

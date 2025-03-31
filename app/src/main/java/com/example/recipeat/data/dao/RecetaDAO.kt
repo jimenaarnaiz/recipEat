@@ -32,4 +32,16 @@ interface RecetaDao {
 
     @Query("SELECT * FROM recetas WHERE esFavorita = 1")
     suspend fun getRecetasFavoritas(): List<Receta>
+
+    // Cambiar el valor de esFavorita a 0 de la receta solicitada
+    @Query("UPDATE recetas SET esFavorita = 0 WHERE id = :recetaId")
+    suspend fun setEsFavoritaToZero(recetaId: String)
+
+    // Borrar todas las recetas (si es necesario)
+    @Query("DELETE FROM recetas")
+    suspend fun deleteAllRecetas()
+
+    @Query("SELECT * FROM recetas WHERE userId = :userId ORDER BY date DESC")
+    suspend fun getRecetasUser(userId: String): List<Receta>
 }
+

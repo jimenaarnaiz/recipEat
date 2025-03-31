@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +37,7 @@ import com.example.recipeat.utils.NetworkConnectivityManager
 fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasViewModel, roomViewModel: RoomViewModel, usersViewModel: UsersViewModel) {
     // Obtener las recetas favoritas del usuario desde el ViewModel
     val favoritas = recetasViewModel.recetasFavoritas.observeAsState(emptyList())
-    val uid = usersViewModel.uid.toString()
+    val uid = usersViewModel.getUidValue()
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastFavs by rememberSaveable { mutableStateOf<List<RecetaSimple>>(emptyList()) }
 
@@ -67,9 +68,13 @@ fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasV
     }
 
     LaunchedEffect(favoritas) {
-        Log.d("FavoritesScreen", "recetas favs actuales $uid: ${favoritas.value}")
+        Log.d("FavoritesScreen", "recetas favs actuales ${uid}: ${favoritas.value}")
         if (favoritas != lastFavs) {
-            recetasViewModel.obtenerRecetasFavoritas(uid.toString())
+            uid.let {
+                if (it != null) {
+                    recetasViewModel.obtenerRecetasFavoritas(it)
+                }
+            }
             lastFavs = favoritas.value
         }
     }

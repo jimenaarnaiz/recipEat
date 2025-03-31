@@ -7,7 +7,7 @@ import android.net.NetworkCapabilities
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 
-class NetworkConnectivityManager(private val context: Context) {
+class NetworkConnectivityManager(context: Context) {
 
     private val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

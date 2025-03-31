@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.recipeat.data.model.RecetaSimple
+import com.example.recipeat.ui.theme.CalendarGray
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import java.time.LocalDate
@@ -88,7 +89,7 @@ fun CalendarView(
                     style = MaterialTheme.typography.bodyMedium,
                     color = when {
                         isSelected -> MaterialTheme.colorScheme.onPrimary
-                        !isInLastDaysRange -> Color.Gray //si no está en el rango, sin fondo y text gris
+                        !isInLastDaysRange -> CalendarGray //si no está en el rango, sin fondo y text gris
                         else -> MaterialTheme.colorScheme.onSurface
                     }
                 )

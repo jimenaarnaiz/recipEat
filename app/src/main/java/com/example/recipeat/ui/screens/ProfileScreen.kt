@@ -6,8 +6,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Edit
@@ -39,7 +41,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) {
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val uid = usersViewModel.getUidValue()
     var usernameState by rememberSaveable { mutableStateOf<String?>(null) }
     var profileImageState by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -66,11 +68,13 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
 
     // Obtener los datos desde Firestore
     LaunchedEffect(Unit) {
-        if (uid != null) {
-            usersViewModel.obtenerUsuarioCompleto(uid) { username, profileImageUrl, email ->
+        Log.d("ProfileScreen", "uid = ${uid}")
+        if (usernameState.isNullOrBlank()) {
+            usersViewModel.obtenerUsuarioCompleto(uid.toString()) { username, profileImageUrl, email ->
                 usernameState = username
                 profileImageState = profileImageUrl
             }
+
             bitmap = usersViewModel.loadImageFromFile(context)
         }
     }
@@ -79,6 +83,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
             modifier = Modifier
                 .fillMaxSize()
                 //.padding(paddingValues),
+                .verticalScroll(rememberScrollState())
                 .padding(8.dp), // Más espaciado general
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -114,7 +119,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Nombre de usuario estilizado
+            // Nombre de usuario
             usernameState?.let {
                 Text(
                     text = it,
@@ -125,18 +130,16 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                 )
             }
 
-
-
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Lista de opciones (Historial y Favoritos) con tarjetas elegantes
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+            // Lista de opciones (Editar, Historial, Favoritos y Logout) con tarjetas
+            Column(
+                modifier = Modifier
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                item {
-                    OptionCard(
+                    ProfileCard(
                         title = "Edit profile",
                         icon = Icons.Default.Edit,
                         onClick = {
@@ -146,10 +149,8 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                         textColor = Color.Black,
                         isConnected
                     )
-                }
 
-                item {
-                    OptionCard(
+                    ProfileCard(
                         title = "History",
                         icon = Icons.Filled.History,
                         onClick = { navController.navigate("historial") },
@@ -157,10 +158,8 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                         textColor = Color.Black,
                         isConnected
                     )
-                }
 
-                item {
-                    OptionCard(
+                    ProfileCard(
                         title = "Favorites",
                         icon = Icons.Outlined.Favorite,
                         onClick = { navController.navigate("favoritos") },
@@ -168,14 +167,14 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                         textColor = Color.Black,
                         true
                     )
-                }
 
-                item {
-                    OptionCard(
+                    ProfileCard(
                         title = "Log Out",
                         icon = Icons.AutoMirrored.Filled.Logout,
                         onClick = {
                             FirebaseAuth.getInstance().signOut()
+                            usersViewModel.logOut()
+
                             navController.navigate("login") {
                                 popUpTo("profile") { inclusive = true } // para eliminar de la pila las anteriores screens
                             }
@@ -184,13 +183,14 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                         textColor = Color.White,
                         true
                     )
-                }
+
+                Spacer(modifier = Modifier.height(72.dp)) // Espacio inferior para q no lo opaque el bttom bar
             }
         }
     }
 
 @Composable
-fun OptionCard(
+fun ProfileCard(
     title: String,
     icon: ImageVector,
     onClick: () -> Unit,
@@ -215,7 +215,9 @@ fun OptionCard(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxSize().padding(start = 16.dp) // El texto alineado a la izquierda
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp) // El texto alineado a la izquierda
             ) {
                 Icon(
                     imageVector = icon,

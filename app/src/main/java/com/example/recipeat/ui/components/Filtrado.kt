@@ -29,7 +29,7 @@ fun FiltroBottomSheet(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
 
-    val opcionesTiempo = listOf(5, 10, 20, 30, 45, 60)  // Opciones de tiempo en minutos
+    val opcionesTiempo = listOf(10, 20, 30, 45, 60)  // Opciones de tiempo en minutos
     val opcionesIngredientes = listOf(5, 7, 10, 15 )
     val opcionesFaltantes = listOf(0, 2, 5, 10)
     val opcionesPasos = listOf(3, 5, 10, 15)
@@ -43,30 +43,31 @@ fun FiltroBottomSheet(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text("Aplicar Filtros", style = MaterialTheme.typography.headlineSmall)
+            Text("Apply filters", style = MaterialTheme.typography.headlineSmall)
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Filtro de tiempo
-            Text("⏳ Tiempo máximo")
+            Text("⏳ Max. time")
             SegmentedButtonRow(opcionesTiempo, maxTiempo) { maxTiempo = it }
 
             // Filtro de ingredientes
-            Text("🍽️ Máximo de ingredientes")
+            Text("🍽️ Max. used ingredients")
             SegmentedButtonRow(opcionesIngredientes, maxIngredientesFiltro) { maxIngredientesFiltro = it }
 
             // Filtro de ingredientes faltantes
             if (!busquedaPorNombre) {
-                Text("🚫 Máximo de ingredientes faltantes")
+                Text("🚫 Max. missing ingredients")
                 SegmentedButtonRow(opcionesFaltantes, maxFaltantesFiltro) { maxFaltantesFiltro = it }
             }
 
             // Filtro de pasos
-            Text("📋 Máximo de pasos")
+            Text("📋 Max steps")
             SegmentedButtonRow(opcionesPasos, maxPasosFiltro) { maxPasosFiltro = it }
 
             // Filtro de tipo de plato
-            Text("🍛 Tipo de plato")
+            Text("🍛 Dish Type")
+
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -94,11 +95,11 @@ fun FiltroBottomSheet(
                     recetasViewModel.restablecerRecetas()
                     onDismiss()
                 }) {
-                    Text("Restablecer filtros")
+                    Text("Reset filters")
                 }
 
                 TextButton(onClick = { onDismiss() }) {
-                    Text("Cancelar")
+                    Text("Cancel")
                 }
 
                 Button(onClick = {
@@ -109,7 +110,7 @@ fun FiltroBottomSheet(
                     onApplyFilters(maxTiempo, maxIngredientesFiltro, maxFaltantesFiltro, maxPasosFiltro, tipoPlatoFiltro)
                     scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
                 }) {
-                    Text("Aplicar filtros")
+                    Text("Apply filters")
                 }
             }
 

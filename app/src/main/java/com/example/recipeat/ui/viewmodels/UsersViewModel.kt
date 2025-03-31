@@ -27,6 +27,11 @@ class UsersViewModel: ViewModel() {
     val uid: StateFlow<String?> get() = _uid
 
 
+    // Función para obtener el valor del uid, ya que este solo cambia en login y logout
+    fun getUidValue(): String? {
+        return _uid.value
+    }
+
     fun logOut() {
         FirebaseAuth.getInstance().signOut()
         _uid.value = null // Limpiar el UID y cualquier otro dato dependiente de la sesión

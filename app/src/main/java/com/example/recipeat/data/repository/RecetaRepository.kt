@@ -34,5 +34,18 @@ class RecetaRepository(private val recetaDao: RecetaDao) {
     suspend fun getRecetaById(recetaId: String): Receta {
         return recetaDao.getRecetaById(recetaId)
     }
+
+    suspend fun setEsFavoritaToZero(recetaId: String){
+        return recetaDao.setEsFavoritaToZero(recetaId)
+    }
+
+    suspend fun deleteAllRecetas(){
+        return recetaDao.deleteAllRecetas()
+    }
+
+    suspend fun getRecetasUser(userId: String): List<Receta>{
+        return recetaDao.getRecetasUser(userId = userId)
+    }
+
 }
 

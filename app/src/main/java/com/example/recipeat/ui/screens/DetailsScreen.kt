@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -35,8 +36,8 @@ import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun DetailsScreen(
@@ -44,10 +45,11 @@ fun DetailsScreen(
     navController: NavHostController,
     recetasViewModel: RecetasViewModel,
     deUser: Boolean,
-    roomViewModel: RoomViewModel
+    roomViewModel: RoomViewModel,
+    usersViewModel: UsersViewModel
 ) {
     val receta by recetasViewModel.recetaSeleccionada.observeAsState()
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val uid = usersViewModel.getUidValue()
     val esFavorito by recetasViewModel.esFavorito.observeAsState()
 
     var cocinado by remember { mutableStateOf(false) }
@@ -59,7 +61,7 @@ fun DetailsScreen(
     val context = LocalContext.current
     val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
 
-   // val recetaRoom by roomViewModel.recipeRoom.observeAsState()
+   val recetaRoom by roomViewModel.recipeRoom.observeAsState()
 
     // Registrar el callback para el estado de la red
     LaunchedEffect(true) {
@@ -82,19 +84,19 @@ fun DetailsScreen(
         if (uid != null) {
             Log.d("DetailsScreen", "Llamando a obtenerRecetaPorId con recetaId: $idReceta deUser: $deUser")
             recetasViewModel.obtenerRecetaPorId(
-                uid = uid,
+                uid = uid.toString(),
                 recetaId = idReceta,
                 deUser = deUser
             )
         }
-        recetasViewModel.verificarSiEsFavorito(uid, idReceta)
+        recetasViewModel.verificarSiEsFavorito(uid.toString(), idReceta)
 
         roomViewModel.getRecetaById(recetaId = idReceta)
     }
 
     Scaffold(
         topBar = {
-            if (deUser && isConnected) {
+            if (deUser && isConnected) { //si hay conexion y es de la api se puede eliminar y editar
                 TopBarWithIcons(
                     onBackPressed = { navController.popBackStack() },
                     onEditPressed = { navController.navigate("editRecipe/$idReceta/$deUser") },
@@ -108,7 +110,10 @@ fun DetailsScreen(
             }
         }
     ) { paddingValues ->
-        receta?.let { recetaDetalle ->
+        // Usamos receta si está conectados, si no, usamos recetaRoom
+        val recetaShowed = if (isConnected && receta != null) receta else recetaRoom
+
+        recetaShowed?.let { recetaDetalle ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -142,7 +147,7 @@ fun DetailsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = recetaDetalle.title,
+                        text = "${recetaDetalle.title} ${recetaDetalle.esFavorita}",
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.weight(1f)
                     )
@@ -152,18 +157,23 @@ fun DetailsScreen(
                             onClick = {
                                 receta!!.image?.let {
                                     recetasViewModel.toggleFavorito(
-                                        uid,
+                                        uid.toString(),
                                         recetaId = idReceta,
                                         title = receta!!.title,
                                         image = it,
                                         userReceta = receta!!.userId
                                     )
                                 }
-
-                                //val recetaRoom = roomViewModel.toRecetaRoom(recetaDetalle, true)
-                                roomViewModel.insertReceta(receta!!)
-
-
+                                if (esFavorito == false) { // si no es fav, se añade al Room con true
+                                    receta!!.esFavorita = true
+                                    roomViewModel.insertReceta(receta!!)
+                                }else{
+                                    if (deUser) { //si es creada por el user, solo pone a false favs
+                                        roomViewModel.setEsFavoritaToZero(idReceta)
+                                    }else{ // si es de la api, se elimina
+                                        roomViewModel.deleteReceta(receta!!)
+                                    }
+                                }
 
                             }) {
                             Icon(
@@ -229,21 +239,21 @@ fun DetailsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "Steps:",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
+//                Text(
+//                    text = "Steps:",
+//                    style = MaterialTheme.typography.headlineSmall,
+//                    modifier = Modifier.padding(horizontal = 16.dp)
+//                )
+//
+//                Spacer(modifier = Modifier.height(8.dp))
 
                 //RecetaStepsWithButton(recetaDetalle)
-                var currentStepIndex by remember { mutableStateOf(0) } // Índice del paso actual
-                var isStepsVisible by remember { mutableStateOf(false) } // Estado que controla si los pasos son visibles
-                val totalSteps = recetaDetalle.steps.size // Número total de pasos
-
-                // Barra de progreso que indica cuántos pasos faltan
-                val progress = if (totalSteps > 0) currentStepIndex / totalSteps.toFloat() else 0f
+//                var currentStepIndex by remember { mutableStateOf(0) } // Índice del paso actual
+//                var isStepsVisible by remember { mutableStateOf(false) } // Estado que controla si los pasos son visibles
+//                val totalSteps = recetaDetalle.steps.size // Número total de pasos
+//
+//                // Barra de progreso que indica cuántos pasos faltan
+//                val progress = if (totalSteps > 0) currentStepIndex / totalSteps.toFloat() else 0f
 
                 Column(
                     modifier = Modifier
@@ -388,12 +398,12 @@ fun DetailsScreen(
                     onClick = {
                         if (uid != null) {
                             // Eliminar la receta
-                            recetasViewModel.eliminarReceta(uid, idReceta)
+                            recetasViewModel.eliminarReceta(uid.toString(), idReceta)
                             // eliminar de favoritos
                             if (esFavorito == true){
                                 receta!!.image?.let {
                                     recetasViewModel.toggleFavorito(
-                                        uid,
+                                        uid.toString(),
                                         userReceta = receta!!.userId,
                                         recetaId = idReceta,
                                         title = receta!!.title,
@@ -402,7 +412,9 @@ fun DetailsScreen(
                                 }
                             }
                             // eliminar de historial
-                            recetasViewModel.eliminarRecetaDelHistorial(uid, recetaId = idReceta)
+                            recetasViewModel.eliminarRecetaDelHistorial(uid.toString(), recetaId = idReceta)
+                            //eliminar tb de Room
+                            roomViewModel.deleteRecetaById(idReceta)
 
                             // Cerrar el dialogo
                             showDialog = false

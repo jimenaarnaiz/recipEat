@@ -19,6 +19,9 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
     val recipeRoom: LiveData<Receta> get() = _recipeRoom
 
 
+    private val _userRecipesRoom = MutableLiveData<List<Receta>>()
+    val userRecipesRoom: LiveData<List<Receta>> get() = _userRecipesRoom
+
 
 //    // Función para convertir Receta a RecetaRoom dentro del ViewModel
 //    fun toRecetaRoom(receta: Receta, esFavorita: Boolean = false): RecetaRoom {
@@ -50,6 +53,38 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
             _favoriteRecipesRoom.postValue(recetas)
         }
     }
+
+    // Obtener todas las recetas
+    fun deleteAllRecetas() {
+        viewModelScope.launch {
+            try {
+                Log.d("RoomViewModel", "Iniciando la eliminación de todas las recetas")
+
+                recetaRepository.deleteAllRecetas()
+
+                Log.d("RoomViewModel", "Todas las recetas han sido eliminadas exitosamente")
+            } catch (e: Exception) {
+                Log.e("RoomViewModel", "Error al eliminar todas las recetas: ${e.message}")
+            }
+        }
+    }
+
+    // Obtener todas las recetas
+    fun getRoomRecetasUser(userId: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("RecetasViewModel", "Obteniendo recetas para el usario $userId...")
+
+                val recetasUser = recetaRepository.getRecetasUser(userId)
+                _userRecipesRoom.value = recetasUser
+
+                Log.d("RoomViewModel", "Todas las recetas han sido obtenidas exitosamente")
+            } catch (e: Exception) {
+                Log.e("RoomViewModel", "Error al obtener las recetas para el user $userId: ${e.message}")
+            }
+        }
+    }
+
 
 
     // Insertar receta
@@ -89,4 +124,26 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
             _recipeRoom.value = receta
         }
     }
+
+    // Obtener receta por ID
+    fun deleteRecetaById(recetaId: String) {
+        viewModelScope.launch {
+            try {
+                recetaRepository.deleteRecetaById(recetaId)
+
+                Log.d("RoomViewModel", "Receta $recetaId eliminada correctamente")
+            } catch (e: Exception) {
+                Log.e("RoomViewModel", "Error al eliminar la receta $recetaId: ${e.message}")
+            }
+        }
+    }
+
+
+    fun setEsFavoritaToZero(recetaId: String) {
+        viewModelScope.launch {
+            recetaRepository.setEsFavoritaToZero(recetaId)
+
+        }
+    }
+
 }

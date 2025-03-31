@@ -116,7 +116,7 @@ class IngredientesViewModel : ViewModel() {
 
     // Métdo para buscar los ingredientes en Firebase
     fun buscarIngredientes(terminoBusqueda: String) {
-        val ingredientesCollection = db.collection("ingredientes")
+        val ingredientesCollection = db.collection("bulkIngredients")
 
         // Filtrar ingredientes que contienen el término de búsqueda en su nombre
         ingredientesCollection
@@ -150,7 +150,7 @@ class IngredientesViewModel : ViewModel() {
 
 
     fun loadIngredientsFromFirebase() {
-        db.collection("ingredientes") // Suponiendo que la colección se llama 'ingredients'
+        db.collection("bulkIngredients") // Suponiendo que la colección se llama 'ingredients'
             .get()
             .addOnSuccessListener { result ->
                 // Mapear cada documento de Firebase a un objeto IngredienteSimple

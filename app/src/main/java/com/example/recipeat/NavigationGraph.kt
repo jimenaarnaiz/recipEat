@@ -65,7 +65,7 @@ fun NavigationGraph(
                 onBottomBarVisibilityChanged(true)
             }
             composable(BottomNavItem.MyRecipes.route) {
-                MyRecipesScreen(navController, recetasViewModel, roomViewModel)   //
+                MyRecipesScreen(navController, recetasViewModel, roomViewModel, usersViewModel)   //
                 onBottomBarVisibilityChanged(true)
             }
             composable(BottomNavItem.Profile.route) {
@@ -85,7 +85,7 @@ fun NavigationGraph(
                 Log.d("DetailsScreen", "Valor de deUser: $deUser")
 
                 // Ahora pasamos el parámetro 'deUser' a la pantalla de detalles
-                DetailsScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, deUser = deUser, roomViewModel)
+                DetailsScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, deUser = deUser, roomViewModel, usersViewModel)
                 onBottomBarVisibilityChanged(false)
             }
             composable("search") {
@@ -97,7 +97,7 @@ fun NavigationGraph(
                 onBottomBarVisibilityChanged(false)
             }
             composable("add_recipe") {
-                AddRecipe(navController, recetasViewModel, ingredientesViewModel, roomViewModel)   //
+                AddRecipe(navController, recetasViewModel, ingredientesViewModel, roomViewModel, usersViewModel)   //
                 onBottomBarVisibilityChanged(false)
             }
             composable("favoritos") {

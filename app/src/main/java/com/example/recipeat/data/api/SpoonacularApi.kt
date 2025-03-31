@@ -35,7 +35,7 @@ interface SpoonacularApi {
     @GET("recipes/findByIngredients")
     suspend fun buscarRecetasPorIngredientes(
         @Query("ingredients") ingredientes: String,
-        @Query("number") number: Int = 14,
+        @Query("number") number: Int = 12,
         @Query("apiKey") apiKey: String = "ec231e7612fa4dd399b9e2f2c0f9bcc8"
     ): List<ApiReceta>
 
