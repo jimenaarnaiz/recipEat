@@ -164,7 +164,8 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
                 value = newEmail,
                 onValueChange = { newEmail = it },
                 label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = false
             )
 
             Spacer(modifier = Modifier.height(8.dp))

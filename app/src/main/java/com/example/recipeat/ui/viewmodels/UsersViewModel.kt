@@ -312,6 +312,7 @@ class UsersViewModel: ViewModel() {
     /**
      * Guarda la imagen de perfil en el almacenamiento local del dispositivo
      * (en el directorio de archivos internos de la aplicación) bajo el nombre profile_image.jpg
+     * o el id de la receta a crear o editar.
      */
     fun saveImageLocally(context: Context, imageUri: Uri, recetaId: String?) {
         try {

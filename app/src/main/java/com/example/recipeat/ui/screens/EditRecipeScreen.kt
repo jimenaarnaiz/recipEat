@@ -1,6 +1,10 @@
 package com.example.recipeat.ui.screens
 
+import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -15,10 +19,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.Receta
@@ -26,6 +33,7 @@ import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 
@@ -33,8 +41,11 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun EditRecipeScreen(
-    idReceta: String, navController: NavHostController, recetasViewModel: RecetasViewModel,
-    ingredientesViewModel: IngredientesViewModel, deUser: Boolean
+    idReceta: String,
+    navController: NavHostController,
+    recetasViewModel: RecetasViewModel,
+    ingredientesViewModel: IngredientesViewModel, deUser: Boolean,
+    usersViewModel: UsersViewModel
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -65,11 +76,29 @@ fun EditRecipeScreen(
     // Estado mutable para la validación
     var isValid by rememberSaveable { mutableStateOf(false) }
 
+    //para guardar imagen
+    var imageUri2 by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val context = LocalContext.current
 
     // Comprobar si el ingrediente ingresado es válido
     fun validateIngredient(input: String) {
         val nombresIngredientes = ingredientesValidos.value.map { it.name }
         isIngredientValid = nombresIngredientes.contains(input)
+    }
+
+    // Photo picker (1 pic)
+    val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            Log.d("PhotoPicker", "Selected URI: $uri")
+            imageUri2 = uri
+            imageUri = imageUri2.toString()
+            usersViewModel.saveImageLocally(context, uri, recetaId = idReceta )
+            bitmap = usersViewModel.loadImageFromFile(context, idReceta)
+            //newImage = uri.toString()
+        } else {
+            Log.d("PhotoPicker", "No media selected")
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -125,7 +154,7 @@ fun EditRecipeScreen(
         ) {
 
             item {
-                //ImageSection()  //TODO
+                ImageSection(imageUri.toUri(), pickMedia)  //TODO
             }
             item {
                 SectionHeader("Recipe Details")
@@ -235,7 +264,7 @@ fun EditRecipeScreen(
                         val newReceta = Receta(
                             id = idReceta,
                             title = title,
-                            image = imageUri,
+                            image = if (imageUri2 == null) imageUri else imageUri2.toString(), //imageUri2 es la nueva
                             servings = servings.toInt(),
                             ingredients = ingredients,
                             steps = instructions,
@@ -263,6 +292,12 @@ fun EditRecipeScreen(
                                 }
                             }
                         )
+
+                        // Guardar la imagen localmente si hay una seleccionada
+                        imageUri2?.let { uri ->
+                            usersViewModel.saveImageLocally(context, uri, recetaId = idReceta)
+                        }
+
                     }
                 )
             }

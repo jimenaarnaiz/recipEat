@@ -192,6 +192,7 @@ class RecetasViewModel : ViewModel() {
     private var lastDocumentUser: DocumentSnapshot? = null
 
     // Función para obtener las recetas del usuario con paginación
+    //OJO porq no es userId es user !!!!
     fun getRecetasUser(uid: String, limpiarLista: Boolean = true) {
         if (_isLoadingMore.value == true) return // Evita cargar más si ya se está cargando
 
@@ -240,7 +241,7 @@ class RecetasViewModel : ViewModel() {
                                 steps = document.get("steps") as? List<String> ?: emptyList(),
                                 time = (document.get("time") as? Number)?.toInt() ?: 0,
                                 dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
-                                userId = document.getString("userId") ?: "",
+                                userId = document.getString("user") ?: "",
                                 glutenFree = document.getBoolean("glutenFree") ?: false,
                                 vegan = document.getBoolean("vegan") ?: false,
                                 vegetarian = document.getBoolean("vegetarian") ?: false,

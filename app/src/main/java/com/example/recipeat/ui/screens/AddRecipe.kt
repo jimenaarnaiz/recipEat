@@ -269,7 +269,7 @@ fun AddRecipe(
                         val newReceta = Receta(
                             id = recetaId,
                             title = title,
-                            image = imageUri2.toString(),
+                            image = if (imageUri2 != null) imageUri2.toString() else imageUri,
                             servings = servings.toInt(),
                             ingredients = ingredients,
                             steps = instructions,
@@ -335,7 +335,7 @@ fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<Pick
 
         Image(
             painter =
-                if (imageUri2 == null) {
+                if (imageUri2 == null || imageUri2.toString().isBlank()) {
                     painterResource(id = R.drawable.food_placeholder)
                 }else{
                     rememberAsyncImagePainter(imageUri2)

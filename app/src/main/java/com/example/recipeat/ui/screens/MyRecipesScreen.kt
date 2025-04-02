@@ -139,6 +139,7 @@ fun MyRecipesScreen(navController: NavHostController, recetasViewModel: RecetasV
                     contentPadding = PaddingValues(bottom = 90.dp) // Respetar espacio FloatingButton
                 ) {
                     items(recetas) { receta ->
+                        Log.d("MyRecipesScreen", "deUser: ${receta.userId}")
                         RecetaCard(receta, navController)
                     }
                     //estado de carga

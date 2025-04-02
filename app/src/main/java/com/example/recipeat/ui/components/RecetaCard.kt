@@ -38,9 +38,9 @@ import com.example.recipeat.data.model.Receta
 @Composable
 fun RecetaCard(receta: Receta, navController: NavController) {
 
-    val esDeUser = receta.userId.isNotEmpty()
+    val esDeUser = receta.userId.isNotBlank()
 
-    Log.d("RecetaCard", "idReceta: ${receta.id} esDeUser: $esDeUser  ")
+    Log.d("RecetaCard", "idReceta: ${receta.id} esDeUser: $esDeUser userID: ${receta.userId} ")
 
     Card(
         modifier = Modifier
@@ -126,7 +126,7 @@ fun RecetaCard(receta: Receta, navController: NavController) {
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Log.d("HOME", "steps: ${receta.steps.size}")
+                    Log.d("RecetaCard", "home steps: ${receta.steps.size}")
                 }
             }
         }
