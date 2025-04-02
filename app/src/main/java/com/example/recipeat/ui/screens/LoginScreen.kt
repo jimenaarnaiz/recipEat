@@ -190,11 +190,15 @@ fun LoginForm(
                     localError = "Email and Password cannot be empty."
 
                     //recetasViewModel.buscarRecetasPorIngredientes1() //TODO
-                    //recetasViewModel.guardarRecetasBulk2() //-esta es
+                   // recetasViewModel.guardarRecetasBulk2() //-esta es!
                     //recetasViewModel.fetchAndStoreIngredients()
                     //recetasViewModel.buscarRecetasPorCadaIngrediente()
                    // recetasViewModel.eliminarRecetasNoExistentesEnBulkRecetas()
-                    //recetasViewModel.logRecetasCount()
+                    recetasViewModel.logRecetasCount()
+                    // 1759 recetas en recetasIds y 140 ingredientes
+
+
+                    //recetasViewModel.procesarIngrediente()
                    // roomViewModel.deleteAllRecetas()
 //                    recetasViewModel.obtenerValoresAisleUnicos()
 //                    recetasViewModel.saveAllEquipmentImages()

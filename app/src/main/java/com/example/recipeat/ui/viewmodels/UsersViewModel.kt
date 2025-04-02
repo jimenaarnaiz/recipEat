@@ -313,12 +313,12 @@ class UsersViewModel: ViewModel() {
      * Guarda la imagen de perfil en el almacenamiento local del dispositivo
      * (en el directorio de archivos internos de la aplicación) bajo el nombre profile_image.jpg
      */
-    fun saveImageLocally(context: Context, imageUri: Uri) {
+    fun saveImageLocally(context: Context, imageUri: Uri, recetaId: String?) {
         try {
             val contentResolver = context.contentResolver
             val inputStream = contentResolver.openInputStream(imageUri)
             val bitmap = BitmapFactory.decodeStream(inputStream)
-            val fileName = "profile_image.jpg"
+            val fileName = if (recetaId.isNullOrBlank()) "profile_image.jpg" else "$recetaId.jpg"
             val file = File(context.filesDir, fileName)
             FileOutputStream(file).use {
                 // guarda el Bitmap en el archivo como un archivo JPEG con la máxima calidad (100).
@@ -335,9 +335,10 @@ class UsersViewModel: ViewModel() {
      * Busca el archivo, lo lee y lo convierte nuevamente en un Bitmap.
      * Si el archivo no existe o hay un error, se devuelve null.
      */
-    fun loadImageFromFile(context: Context): Bitmap? {
+    fun loadImageFromFile(context: Context, recetaId: String?): Bitmap? {
         try {
-            val file = File(context.filesDir, "profile_image.jpg")
+            val imagen = if (recetaId.isNullOrBlank()) "profile_image.jpg" else "$recetaId.jpg"
+            val file = File(context.filesDir, imagen)
             if (file.exists()) {
                 return BitmapFactory.decodeFile(file.absolutePath)
             }
@@ -345,6 +346,16 @@ class UsersViewModel: ViewModel() {
             Log.e("ImageLoad", "Error al cargar la imagen", e)
         }
         return null
+    }
+
+
+    // Eliminar la imagen de la receta si borra la receta
+    fun deleteImage(context: Context, recetaId: String) {
+        val file = File(context.filesDir, "$recetaId.jpg")
+        if (file.exists()) {
+            file.delete()
+            Log.d("ImageDelete", "Imagen de receta eliminada: ${file.absolutePath}")
+        }
     }
 
 

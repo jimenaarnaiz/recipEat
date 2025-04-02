@@ -157,7 +157,7 @@ fun ResIngredientsScreen(
                         if (showOrderBottomSheet) {
                             OrderBottomSheet(
                                 recetasViewModel = recetasViewModel,
-                                busquedaPorNombre = false,
+                                busquedaMisRecetas = false,
                                 onDismiss = { showOrderBottomSheet = false }
                             )
                         }
@@ -166,14 +166,15 @@ fun ResIngredientsScreen(
                         if (showBottomSheet) {
                             FiltroBottomSheet(
                                 onDismiss = { showBottomSheet = false },
-                                onApplyFilters = { maxTiempo, maxIngredientes, maxFaltantes, maxPasos, tipoPlato ->
+                                onApplyFilters = { maxTiempo, maxIngredientes, maxFaltantes, maxPasos, tipoPlato, tipoDieta ->
                                     // Aplicar los filtros seleccionados
                                     filtrosViewModel.aplicarFiltros(
                                         tiempo = maxTiempo,
                                         ingredientes = maxIngredientes,
                                         faltantes = maxFaltantes,
                                         pasos = maxPasos,
-                                        plato = tipoPlato
+                                        plato = tipoPlato,
+                                        dietas = tipoDieta
                                     )
                                     // Aplica los filtros a las recetas
                                     recetasViewModel.filtrarRecetas(
@@ -181,7 +182,8 @@ fun ResIngredientsScreen(
                                         maxIngredientesFiltro = maxIngredientes,
                                         maxFaltantesFiltro = maxFaltantes,
                                         maxPasosFiltro = maxPasos,
-                                        tipoPlatoFiltro = tipoPlato
+                                        tipoPlatoFiltro = tipoPlato,
+                                        tipoDietaFiltro = tipoDieta
                                     )
 
                                     showBottomSheet = false

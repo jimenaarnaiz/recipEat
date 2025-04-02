@@ -207,7 +207,7 @@ fun IngredientsSearch(
                 containerColor = LightYellow,
                 contentColor = Color.Black
             ),
-            enabled = ingredientesReceta.isNotEmpty()
+            enabled = ingredientesReceta.isNotEmpty() && isConnected
         ) {
             Text(
                 text = "Cook!",

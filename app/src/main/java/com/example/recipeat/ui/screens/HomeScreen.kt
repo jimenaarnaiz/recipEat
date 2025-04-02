@@ -92,7 +92,7 @@ fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel,
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-            .padding(bottom = 80.dp)
+            .padding(bottom = 65.dp) //para
     ) {
         Text(text = "Welcome, $username!", modifier = Modifier.padding(16.dp))
 

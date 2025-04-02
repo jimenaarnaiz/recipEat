@@ -107,7 +107,7 @@ fun NameSearch(
                     modifier = Modifier
                         .padding(8.dp)
                         .clickable {
-                            navController.navigate("detalles/${recetaSug.id}")
+                            if (isConnected) navController.navigate("detalles/${recetaSug.id}")
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -115,7 +115,8 @@ fun NameSearch(
                     Text(
                         text = recetaSug.titulo,
                         style = MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Start
+                        textAlign = TextAlign.Start,
+                        color = if (!isConnected) Color.LightGray else Color.DarkGray
                     )
                 }
             }

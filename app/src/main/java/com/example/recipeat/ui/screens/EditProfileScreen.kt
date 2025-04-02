@@ -65,7 +65,7 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
                 newUsername = user?.username ?: ""
                 newEmail = user?.email ?: ""
                 //newImage = user?.image ?: ""
-                bitmap = usersViewModel.loadImageFromFile(context)
+                bitmap = usersViewModel.loadImageFromFile(context, null)
             }
         }
 
@@ -76,8 +76,8 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
         if (uri != null) {
             Log.d("PhotoPicker", "Selected URI: $uri")
             imageUri = uri
-            usersViewModel.saveImageLocally(context, uri)
-            bitmap = usersViewModel.loadImageFromFile(context)
+            usersViewModel.saveImageLocally(context, uri, null)
+            bitmap = usersViewModel.loadImageFromFile(context, null)
             //newImage = uri.toString()
         } else {
             Log.d("PhotoPicker", "No media selected")

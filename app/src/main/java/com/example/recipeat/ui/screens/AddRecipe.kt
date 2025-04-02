@@ -1,7 +1,13 @@
 package com.example.recipeat.ui.screens
 
+import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import com.example.recipeat.data.model.DishTypes
 import com.example.recipeat.data.model.Ingrediente
@@ -23,10 +29,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,8 +54,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -55,6 +65,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.example.recipeat.R
 import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
@@ -100,13 +112,35 @@ fun AddRecipe(
     // Estado mutable para la validación
     var isValid by rememberSaveable { mutableStateOf(false) }
 
+    //para guardar imagen
+    var imageUri2 by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val context = LocalContext.current
+
+    val recetaId = recetasViewModel.generateRecipeId()
+
     // Comprobar si el ingrediente ingresado es válido
     fun validateIngredient(input: String) {
         val nombresIngredientes = ingredientesValidos.value.map { it.name }
         isIngredientValid = nombresIngredientes.contains(input)
     }
 
+    // Photo picker (1 pic)
+    val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            Log.d("PhotoPicker", "Selected URI: $uri")
+            imageUri2 = uri
+            usersViewModel.saveImageLocally(context, uri, recetaId = recetaId )
+            bitmap = usersViewModel.loadImageFromFile(context, recetaId)
+            //newImage = uri.toString()
+        } else {
+            Log.d("PhotoPicker", "No media selected")
+        }
+    }
+
+
     LaunchedEffect(navController) {
+        Log.d("AddRecipe", "pueba; launched de cargar ingredientes")
         ingredientesViewModel.loadIngredientsFromFirebase()
     }
 
@@ -136,7 +170,7 @@ fun AddRecipe(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                ImageSection()
+                ImageSection(imageUri2 ,pickMedia)
             }
             item {
                 SectionHeader("Recipe Details")
@@ -233,9 +267,9 @@ fun AddRecipe(
                     onClick = {
                         // Verificar que todos los campos necesarios tengan valores
                         val newReceta = Receta(
-                            id = recetasViewModel.generateRecipeId(),
+                            id = recetaId,
                             title = title,
-                            image = imageUri,
+                            image = imageUri2.toString(),
                             servings = servings.toInt(),
                             ingredients = ingredients,
                             steps = instructions,
@@ -267,6 +301,11 @@ fun AddRecipe(
                         }
                         //añadir a Room
                         roomViewModel.insertReceta(receta = newReceta)
+
+                        // Guardar la imagen localmente si hay una seleccionada
+                        imageUri2?.let { uri ->
+                            usersViewModel.saveImageLocally(context, uri, recetaId = recetaId)
+                        }
                     }
                 )
             }
@@ -286,25 +325,21 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun ImageSection() {
+fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        //                if (receta.image.isNullOrBlank()){
-//                    AsyncImage(
-//                        model = receta.image,
-//                        contentDescription = "Recipe Image",
-//                        modifier = Modifier
-//                            .size(120.dp)
-//                            .clip(RoundedCornerShape(8.dp)),
-//                        contentScale = ContentScale.Crop
-//                    )
-//                }else{
+
         Image(
-            painter = painterResource(id = R.drawable.food_placeholder),
+            painter =
+                if (imageUri2 == null) {
+                    painterResource(id = R.drawable.food_placeholder)
+                }else{
+                    rememberAsyncImagePainter(imageUri2)
+                },
             contentDescription = "Recipe picture",
             modifier = Modifier
                 .padding(16.dp)
@@ -313,7 +348,10 @@ fun ImageSection() {
             contentScale = ContentScale.Crop
         )
         Button(
-            onClick = { /*TODO: Acción al hacer clic*/ },
+            onClick = {
+                pickMedia.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            ) },
             modifier = Modifier.align(Alignment.CenterVertically),
             colors = buttonColors(containerColor = LightYellow, contentColor = Color.Black)
         ) {

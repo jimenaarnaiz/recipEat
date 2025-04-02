@@ -125,7 +125,7 @@ fun EditRecipeScreen(
         ) {
 
             item {
-                ImageSection()
+                //ImageSection()  //TODO
             }
             item {
                 SectionHeader("Recipe Details")

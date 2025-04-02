@@ -12,6 +12,9 @@ class FiltrosViewModel : ViewModel() {
     var maxFaltantes = mutableStateOf<Int?>(null)
     var maxPasos = mutableStateOf<Int?>(null)
     var tipoPlato = mutableStateOf<String?>(null)
+    // Set para almacenar múltiples opciones
+    var tipoDieta = mutableStateOf<Set<String>?>(emptySet())
+
 
     // Función para aplicar los filtros
     fun aplicarFiltros(
@@ -19,13 +22,15 @@ class FiltrosViewModel : ViewModel() {
         ingredientes: Int?,
         faltantes: Int?,
         pasos: Int?,
-        plato: String?
+        plato: String?,
+        dietas: Set<String>?
     ) {
         maxTiempo.value = tiempo
         maxIngredientes.value = ingredientes
         maxFaltantes.value = faltantes
         maxPasos.value = pasos
         tipoPlato.value = plato
+        tipoDieta.value = dietas
     }
 
     // Función para restablecer los filtros
@@ -35,8 +40,8 @@ class FiltrosViewModel : ViewModel() {
         maxFaltantes.value = null
         maxPasos.value = null
         tipoPlato.value = null
+        tipoDieta.value = emptySet()
 
         Log.d("FiltrosViewModel", "Restableciendo filtros...")
     }
-    
 }

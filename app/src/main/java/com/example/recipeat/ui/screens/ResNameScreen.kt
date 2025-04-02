@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.FiltroBottomSheet
+import com.example.recipeat.ui.components.OrderBottomSheet
 import com.example.recipeat.ui.components.RecetaCard
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
@@ -51,6 +52,7 @@ fun ResNameScreen(
     val recetas by recetasViewModel.recetas.observeAsState(emptyList())
 
     var showBottomSheet by remember { mutableStateOf(false) }
+    var showOrderBottomSheet by remember { mutableStateOf(false) }
 
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastName by rememberSaveable { mutableStateOf("") }
@@ -114,7 +116,7 @@ fun ResNameScreen(
 
                             // Botón de Ordenar
                             Button(
-                                onClick = { /* TODO: acción de ordenar */ },
+                                onClick = { showOrderBottomSheet = true },
                                 modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
                                 shape = RoundedCornerShape(12.dp), // Bordes redondeados
                                 colors = ButtonDefaults.buttonColors(containerColor = Cherry)
@@ -125,18 +127,29 @@ fun ResNameScreen(
                         }
 
 
+                        // Mostrar el dialog de ordenar si es necesario
+                        if (showOrderBottomSheet) {
+                            OrderBottomSheet(
+                                recetasViewModel = recetasViewModel,
+                                busquedaMisRecetas = false,
+                                onDismiss = { showOrderBottomSheet = false }
+                            )
+                        }
+
                         // Mostrar el dialog de filtros si es necesario
                         if (showBottomSheet) {
                             FiltroBottomSheet(
                                 onDismiss = { showBottomSheet = false },
-                                onApplyFilters = { maxTiempo, maxIngredientes, maxFaltantes, maxPasos, tipoPlato ->
+                                onApplyFilters = { maxTiempo, maxIngredientes, maxFaltantes, maxPasos, tipoPlato, tipoDieta ->
                                     // Aplicar los filtros seleccionados
                                     filtrosViewModel.aplicarFiltros(
                                         tiempo = maxTiempo,
                                         ingredientes = maxIngredientes,
                                         faltantes = maxFaltantes,
                                         pasos = maxPasos,
-                                        plato = tipoPlato
+                                        plato = tipoPlato,
+                                        dietas = tipoDieta
+
                                     )
                                     // Aplica los filtros a las recetas
                                     recetasViewModel.filtrarRecetas(
@@ -144,7 +157,8 @@ fun ResNameScreen(
                                         maxIngredientesFiltro = maxIngredientes,
                                         maxFaltantesFiltro = maxFaltantes,
                                         maxPasosFiltro = maxPasos,
-                                        tipoPlatoFiltro = tipoPlato
+                                        tipoPlatoFiltro = tipoPlato,
+                                        tipoDietaFiltro = tipoDieta
                                     )
 
                                     showBottomSheet = false

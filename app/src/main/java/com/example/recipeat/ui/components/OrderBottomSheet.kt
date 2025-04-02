@@ -41,7 +41,7 @@ import com.example.recipeat.ui.viewmodels.RecetasViewModel
 fun OrderBottomSheet(
     onDismiss: () -> Unit,
     recetasViewModel: RecetasViewModel,
-    busquedaPorNombre: Boolean //Para controlar la visibilidad del filtro
+    busquedaMisRecetas: Boolean //Para controlar la visibilidad del filtro
 ) {
     val sheetState = rememberModalBottomSheetState()
     val selectedOrder = rememberSaveable { mutableStateOf("Default") }
@@ -70,7 +70,7 @@ fun OrderBottomSheet(
                 selectedOrder.value = "Alphabetical"
             }
 
-            if (busquedaPorNombre) {
+            if (busquedaMisRecetas) {
                 // Agregar nuevas opciones
                 OrderButton("Recent (Asc)", Icons.Filled.Timer, selectedOrder.value == "Recent Asc") {
                     selectedOrder.value = "Recent Asc"
@@ -91,6 +91,8 @@ fun OrderBottomSheet(
             ) {
                 TextButton(onClick = {
                     selectedOrder.value = "Default" // Restablecer al valor predeterminado
+                    recetasViewModel.ordenarResultados(selectedOrder.value)
+                    onDismiss()
                 }) {
                     Text("Reset order")
                 }
@@ -102,8 +104,12 @@ fun OrderBottomSheet(
                 Button(
                     onClick = {
                     // Aplicar el orden al ViewModel
-                    recetasViewModel.ordenarResultados(selectedOrder.value)
-                    onDismiss()
+                        if (busquedaMisRecetas){
+                            //TODO
+                        } else {
+                            recetasViewModel.ordenarResultados(selectedOrder.value)
+                        }
+                        onDismiss()
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Cherry,

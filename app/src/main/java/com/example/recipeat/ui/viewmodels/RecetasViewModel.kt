@@ -963,8 +963,8 @@ class RecetasViewModel : ViewModel() {
         maxIngredientesFiltro: Int?,
         maxFaltantesFiltro: Int?,
         maxPasosFiltro: Int?,
-        //tipoDietaFiltro: String?,
-        tipoPlatoFiltro: String?
+        tipoPlatoFiltro: String?,
+        tipoDietaFiltro: Set<String>? // Cambio: ahora es un Set<String>
     ) {
         val recetasFiltro = _recetasOriginales.value!!.filter { receta ->
             // Validación por tiempo, solo se aplica si tiempoFiltro no es null
@@ -974,22 +974,35 @@ class RecetasViewModel : ViewModel() {
             val ingredientesValidos = maxIngredientesFiltro?.let { receta.ingredients.size <= it } ?: true
 
             // Validación por ingredientes faltantes, solo se aplica si maxFaltantesFiltro no es null
-            val faltantesValidos = maxFaltantesFiltro?.let { receta.missingIngredientCount <= it } ?: true
+            val faltantesValidados = maxFaltantesFiltro?.let { receta.missingIngredientCount <= it } ?: true
 
             // Validación por número de pasos, solo se aplica si maxPasosFiltro no es null
-            val pasosValidos = maxPasosFiltro?.let { receta.steps.size <= it } ?: true
+            val pasosValidados = maxPasosFiltro?.let { receta.steps.size <= it } ?: true
 
             // Validación por tipo de plato, solo se aplica si tipoPlatoFiltro no es null
             val platoValido = tipoPlatoFiltro?.let { receta.dishTypes.contains(it) } ?: true
 
-            /* val tipoDieta =  */
+            // Validación de dietas: la receta debe cumplir con TODAS las dietas seleccionadas
+            val dietaValida = if (tipoDietaFiltro?.isNotEmpty() == true) {
+                tipoDietaFiltro.all { dieta ->
+                    when (dieta) {
+                        "Gluten-Free" -> receta.glutenFree
+                        "Vegan" -> receta.vegan
+                        "Vegetarian" -> receta.vegetarian
+                        else -> true
+                    }
+                }
+            } else {
+                true // Si no hay dietas seleccionadas, no filtrar por dieta
+            }
 
             // Aplicar todos los filtros
-            tiempoValido && ingredientesValidos && faltantesValidos && pasosValidos /* && dietaValida*/ && platoValido
+            tiempoValido && ingredientesValidos && faltantesValidados && pasosValidados && dietaValida && platoValido
         }
 
         _recetas.value = recetasFiltro
     }
+
 
     fun restablecerRecetas(){
         _recetas.value = _recetasOriginales.value
@@ -1325,7 +1338,23 @@ class RecetasViewModel : ViewModel() {
 
     //API
 
-    val ingredients = "avocado,cayenne,cauliflower head,celery,carrots,celery stalk,cheddar,cherries,almond,cherry tomato,chickpea,chicken,chicken breast,chicken broth,chicken sausage,chicken thigh,chili pepper,chocolate,chocolate chips,baking powder,cilantro,cinnamon,cocoa powder,coconut,condensed milk,cooking oil,corn,corn oil,cornstarch,couscous,crab,cranberries,cream,cream cheese,bacon,cumin,soy sauce,vinegar,double cream,dulce de leche,egg,egg white,egg yolk,eggplant,chocolate chips,evaporated milk,extra virgin olive oil,feta cheese,firm brown sugar,fish sauce,flour,parsley,ginger,garlic,garlic powder,gelatin,goat cheese,gorgonzola,greek yogurt,green bean,ground beef,ground cinnamon,ground ginger,ground pepper,ground pork,ham,honey,jalapeño,rice,kidney beans,leek,lime,macaroni,mascarpone,goat cheese,milk,mint,mushroom,mustard,mutton,navy beans,oats,oat,olive oil,onion,orange,lettuce,oregano,breadcrumbs,parmesan cheese,peaches,pear,peas,pepper,pie crust,pineapple,banana,pork tenderloin,potato,powdered milk,prawns,bread,quinoa,radish,raisins,raspberry jam,red wine,salad oil,salmon,salt,sausage,scallion,chocolate,shrimp,soy sauce,spinach,onion,squash,sugar,sundried tomatoes,sweet potato,tomato,tomato paste,tomato sauce,tuna,vanilla,vanilla extract,vegetable broth,vegetable oil,vinegar,nuts,water,white wine,bell pepper,yogurt,lentils,corn,collard greens,olivas,zucchini,beef,apple,apples,hake,anchovies,cucumber,mayonnaise,ketchup,chard,pumpkin,lemon,cabbage,octopus,strawberries,squid,cod,trout,sea bream,sardines,white fish,smoked salmon,surimi,clams,pork,lamb,turkey,quail,ground meat"
+    //borrar: olivas, mutton, surimi porq no hay recetas cone sos ingredientes
+    val ingredients = "avocado,cayenne,cauliflower head,celery,carrots,celery stalk,cheddar,cherries," +
+            "almond,cherry tomato,chickpea,chicken,chicken breast,chicken broth,chicken " +
+            "sausage,chicken thigh,chili pepper,chocolate,baking powder,cilantro,cinnamon,cocoa powder," +
+            "coconut,condensed milk,cooking oil,corn,corn oil,cornstarch,couscous,crab,cranberries," +
+            "cream,cream cheese,bacon,cumin,soy sauce,vinegar,double cream,dulce de leche,egg,egg white,egg yolk," +
+            "eggplant,chocolate chips,evaporated milk,extra virgin olive oil,feta cheese,firm brown sugar,fish sauce," +
+            "flour,parsley,ginger,garlic,garlic powder,gelatin,goat cheese,gorgonzola,greek yogurt,green bean,ground beef," +
+            "ground cinnamon,ground ginger,ground pepper,ground pork,ham,honey,jalapeño,rice,kidney beans,leek,lime,macaroni," +
+            "mascarpone,milk,mint,mushroom,mustard,mutton,navy beans,oats,oat,olive oil,onion,orange,lettuce," +
+            "oregano,breadcrumbs,parmesan cheese,peaches,pear,peas,pepper,pie crust,pineapple,banana,pork tenderloin,potato," +
+            "powdered milk,prawns,bread,quinoa,radish,raisins,raspberry jam,red wine,salad oil,salmon,salt,sausage,scallion," +
+            "shrimp,soy sauce,spinach,onion,squash,sugar,sundried tomatoes,sweet potato,tomato,tomato paste,tomato sauce," +
+            "tuna,vanilla,vanilla extract,vegetable broth,vegetable oil,vinegar,nuts,water,white wine,bell pepper,yogurt," +
+            "lentils,corn,collard greens,olivas,zucchini,beef,apple,apples,hake,anchovies,cucumber,mayonnaise,ketchup," +
+            "chard,pumpkin,lemon,cabbage,octopus,strawberries,squid,cod,trout,sea bream,sardines,white fish,smoked salmon," +
+            "surimi,clams,pork,lamb,turkey,quail,ground meat"
 
     fun eliminarRecetasNoExistentesEnBulkRecetas() {
         viewModelScope.launch {
@@ -1438,7 +1467,7 @@ class RecetasViewModel : ViewModel() {
         }
     }
 
-    // obtiene 14 recetas/ingrediente y las añade a recetasIDs
+    // obtiene 11 recetas/ingrediente y las añade a recetasIDs
     fun buscarRecetasPorCadaIngrediente() {
         val ingredientList = ingredients.split(",") // Dividimos la cadena de ingredientes en una lista
         val db = FirebaseFirestore.getInstance()
@@ -1538,6 +1567,121 @@ class RecetasViewModel : ViewModel() {
         }
     }
 
+
+    // 1 ing por llamada para no pasarme con los points de spoonacular solo coge 12 de las 22 que obtiene de la llamda
+    fun buscarRecetasPorIngrediente(ingredient: String) {
+        val db = FirebaseFirestore.getInstance()
+
+        viewModelScope.launch {
+            try {
+                // Llamar a la función con el ingrediente actual
+                val response = api.buscarRecetasPorIngredientes(ingredient)
+
+                if (response.isNotEmpty()) {
+                    val filteredResponse = response
+                    val currentRecipeIds = _apiRecetasIds.value.map { it.id }.toSet()
+                    val uniqueRecipes = filteredResponse.filterNot { currentRecipeIds.contains(it.id) }
+
+                    // Limitar a un máximo de 12 recetas
+                    val maxRecipes = 12
+                    val recipesToSave = uniqueRecipes.take(maxRecipes)
+
+                    // Actualizar la lista de recetas
+                    _apiRecetasIds.value = (_apiRecetasIds.value + recipesToSave).toList()
+
+                    // Guardar en Firebase en la colección "idsRecetas"
+                    val recetasCollection = db.collection("idsRecetas")
+                    recipesToSave.forEach { receta ->
+                        // Verificar si el ID de la receta ya existe en la colección "idsRecetas"
+                        val recetaDoc = recetasCollection.document(receta.id.toString())
+
+                        recetaDoc.get().addOnSuccessListener { document ->
+                            if (!document.exists()) {
+                                // Si el documento no existe, agregarlo a Firebase
+                                val recetaData = mapOf("id" to receta.id)
+                                recetaDoc.set(recetaData)
+                                    .addOnSuccessListener {
+                                        Log.d("RecetasViewModel", "ID de receta ${receta.id} guardado en Firebase correctamente.")
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e("RecetasViewModel", "Error al guardar el ID en Firebase: ${e.message}")
+                                    }
+                            } else {
+                                Log.d("RecetasViewModel", "ID de receta ${receta.id} ya existe en Firebase.")
+                            }
+                        }.addOnFailureListener { e ->
+                            Log.e("RecetasViewModel", "Error al comprobar si el ID de receta ${receta.id} existe: ${e.message}")
+                        }
+                    }
+
+                    Log.d("RecetasViewModel", "Recetas después de agregar nuevas: ${_apiRecetasIds.value.size}")
+                } else {
+                    Log.e("RecetasViewModel", "Respuesta vacía o nula de la API para ingrediente: $ingredient")
+                }
+
+                // Guardar el último ingrediente procesado en Firestore
+                try {
+                    db.collection("config")
+                        .document("lastProcessedIngredient")
+                        .set(mapOf("ingredient" to ingredient))
+                        .addOnSuccessListener {
+                            Log.d("RecetasViewModel", "Último ingrediente procesado guardado en config: $ingredient")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("RecetasViewModel", "Error al guardar el último ingrediente procesado en config: ${e.message}")
+                        }
+                } catch (e: Exception) {
+                    Log.e("RecetasViewModel", "Error al guardar el último ingrediente procesado: ${e.message}")
+                }
+
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Error al obtener las recetas para $ingredient: ${e.message}")
+            }
+        }
+    }
+
+
+    // Llamar a esta función para procesar un ingrediente de la lista dada la lista de ingredientes que tengo aqui
+    fun procesarIngrediente() {
+        val ingredientList = ingredients.split(",") // Dividimos la cadena de ingredientes en una lista
+            .distinct() // Elimina los ingredientes repetidos
+
+        val db = FirebaseFirestore.getInstance()
+
+        viewModelScope.launch {
+            try {
+                // Obtener el último ingrediente procesado desde Firestore (si existe)
+                val lastProcessedIngredientDoc = db.collection("config")
+                    .document("lastProcessedIngredient")
+                    .get()
+                    .await()
+
+                if (lastProcessedIngredientDoc.exists()) {
+                    val lastProcessedIngredient = lastProcessedIngredientDoc.getString("ingredient")
+                    val startIndex = if (lastProcessedIngredient != null) {
+                        ingredientList.indexOf(lastProcessedIngredient) + 1
+                    } else {
+                        0
+                    }
+
+                    if (startIndex < ingredientList.size) {
+                        val nextIngredient = ingredientList[startIndex]
+                        buscarRecetasPorIngrediente(nextIngredient) // Llamamos a la función con el ingrediente actual
+                    } else {
+                        Log.d("RecetasViewModel", "No quedan más ingredientes por procesar.")
+                    }
+                } else {
+                    Log.d("RecetasViewModel", "No se encontró documento de ingrediente procesado. Comenzando desde el principio.")
+                    // Si no hay registro previo, comenzamos desde el primer ingrediente
+                    val nextIngredient = ingredientList[0]
+                    buscarRecetasPorIngrediente(nextIngredient)
+                }
+
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Error al procesar ingredientes: ${e.message}")
+            }
+        }
+    }
 
 
 
@@ -1763,7 +1907,7 @@ class RecetasViewModel : ViewModel() {
 
                 // Cargar batchIndex desde Firebase antes de iniciar
                 loadBatchIndexFromFirebase { loadedBatchIndex ->
-                    var batchIndex = loadedBatchIndex // Usar el valor cargado
+                    var batchIndex = loadedBatchIndex // Índice desde el que continuar
 
                     db.collection("idsRecetas").get()
                         .addOnSuccessListener { documents ->
@@ -1787,12 +1931,22 @@ class RecetasViewModel : ViewModel() {
                                         return@addOnSuccessListener
                                     }
 
-                                    // Crear la cadena de IDs separados por comas
-                                    val recetaIdsString = missingRecetaIds.joinToString(",") { it.toString() }
+                                    // Tomar solo 200 recetas desde el batchIndex
+                                    val batchSize = 200
+                                    val startIndex = batchIndex * batchSize
+                                    val batch = missingRecetaIds.drop(startIndex).take(batchSize)
 
-                                    // Procesar las recetas faltantes
+                                    if (batch.isEmpty()) {
+                                        Log.d("RecetasViewModel", "No hay más recetas pendientes en este lote.")
+                                        return@addOnSuccessListener
+                                    }
+
+                                    val recetaIdsString = batch.joinToString(",")
+
                                     viewModelScope.launch {
                                         try {
+                                            Log.d("RecetasViewModel", "Procesando lote desde índice $startIndex con ${batch.size} recetas")
+
                                             val response = api.obtenerRecetasBulk(recetas_ids = recetaIdsString)
 
                                             if (response.isNotEmpty()) {
@@ -1832,20 +1986,20 @@ class RecetasViewModel : ViewModel() {
 
                                                         Log.d("RecetasViewModel", "Receta guardada en Firebase con ID: $recetaId")
 
-                                                        // Guardar este ID como el último procesado
+                                                        // Guardar el ID como último procesado
                                                         saveLastProcessedRecipeId(recetaId.toInt())
                                                     } else {
                                                         Log.d("RecetasViewModel", "Receta con ID $recetaId ya existe en Firebase, no se guarda.")
                                                     }
                                                 }
 
-                                                // Si se completó la operación sin errores, guardar el batchIndex
+                                                // Incrementar el batchIndex solo si se procesaron recetas
                                                 saveBatchIndexToFirebase(batchIndex + 1)
                                             } else {
                                                 Log.e("RecetasViewModel", "No se encontraron recetas con los IDs: $recetaIdsString")
                                             }
                                         } catch (e: Exception) {
-                                            Log.e("RecetasViewModel", "Error al procesar recetas con los IDs: $recetaIdsString: ${e.message}")
+                                            Log.e("RecetasViewModel", "Error al procesar recetas: ${e.message}")
                                         }
                                     }
                                 }
@@ -1858,7 +2012,6 @@ class RecetasViewModel : ViewModel() {
                         }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
                 Log.e("RecetasViewModel", "Error al guardar recetas bulk: ${e.message}")
             }
         }

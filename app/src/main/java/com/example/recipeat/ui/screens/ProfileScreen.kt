@@ -75,7 +75,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                 profileImageState = profileImageUrl
             }
 
-            bitmap = usersViewModel.loadImageFromFile(context)
+            bitmap = usersViewModel.loadImageFromFile(context, null)
         }
     }
 
