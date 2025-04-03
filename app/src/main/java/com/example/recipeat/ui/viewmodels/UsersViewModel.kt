@@ -341,6 +341,7 @@ class UsersViewModel: ViewModel() {
             val imagen = if (recetaId.isNullOrBlank()) "profile_image.jpg" else "$recetaId.jpg"
             val file = File(context.filesDir, imagen)
             if (file.exists()) {
+                Log.d("ImageLoad", "Cargando Imagen de receta : ${file.absolutePath}")
                 return BitmapFactory.decodeFile(file.absolutePath)
             }
         } catch (e: Exception) {

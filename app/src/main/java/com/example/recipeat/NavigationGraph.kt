@@ -85,7 +85,7 @@ fun NavigationGraph(
                 Log.d("DetailsScreen", "Valor de deUser: $deUser")
 
                 // Ahora pasamos el parámetro 'deUser' a la pantalla de detalles
-                DetailsScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, deUser = deUser, roomViewModel, usersViewModel)
+                DetailsScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, esDeUser = deUser, roomViewModel, usersViewModel)
                 onBottomBarVisibilityChanged(false)
             }
             composable("search") {

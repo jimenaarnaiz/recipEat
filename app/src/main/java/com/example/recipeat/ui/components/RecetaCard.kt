@@ -73,7 +73,7 @@ fun RecetaCard(receta: Receta, navController: NavController, usersViewModel: Use
                 "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
             }
 
-// Determinamos el painter según esDeUser
+            // Determinamos el painter según esDeUser
             val painter = if (esDeUser) {
                 if (receta.image.toString().isBlank() || bitmap == null) {
                     painterResource(id = R.drawable.food_placeholder)

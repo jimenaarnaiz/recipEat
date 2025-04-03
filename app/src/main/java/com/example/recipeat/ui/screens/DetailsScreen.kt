@@ -1,5 +1,6 @@
 package com.example.recipeat.ui.screens
 
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -14,18 +15,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -44,15 +48,13 @@ fun DetailsScreen(
     idReceta: String,
     navController: NavHostController,
     recetasViewModel: RecetasViewModel,
-    deUser: Boolean,
+    esDeUser: Boolean,
     roomViewModel: RoomViewModel,
     usersViewModel: UsersViewModel
 ) {
     val receta by recetasViewModel.recetaSeleccionada.observeAsState()
     val uid = usersViewModel.getUidValue()
     val esFavorito by recetasViewModel.esFavorito.observeAsState()
-
-    var cocinado by remember { mutableStateOf(false) }
 
     // Estado para mostrar el AlertDialog de confirmación de eliminación
     var showDialog by remember { mutableStateOf(false) }
@@ -63,7 +65,9 @@ fun DetailsScreen(
 
    val recetaRoom by roomViewModel.recipeRoom.observeAsState()
 
-    // Registrar el callback para el estado de la red
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+        // Registrar el callback para el estado de la red
     LaunchedEffect(true) {
         networkConnectivityManager.registerNetworkCallback()
     }
@@ -76,30 +80,28 @@ fun DetailsScreen(
         }
     }
 
-
     // Verificar si hay conexión y ajustar el ícono de favoritos
     val isConnected = networkConnectivityManager.isConnected.value
 
-    LaunchedEffect(receta) {
-        if (uid != null) {
-            Log.d("DetailsScreen", "Llamando a obtenerRecetaPorId con recetaId: $idReceta deUser: $deUser")
-            recetasViewModel.obtenerRecetaPorId(
-                uid = uid.toString(),
-                recetaId = idReceta,
-                deUser = deUser
-            )
-        }
-        recetasViewModel.verificarSiEsFavorito(uid.toString(), idReceta)
+    LaunchedEffect(receta?.id) {
+        Log.d("DetailsScreen","Llamando a obtenerRecetaPorId con recetaId: $idReceta deUser: $esDeUser")
+        recetasViewModel.obtenerRecetaPorId(
+            uid = uid.toString(),
+            recetaId = idReceta,
+            deUser = esDeUser
+        )
 
+        recetasViewModel.verificarSiEsFavorito(uid.toString(), idReceta)
         roomViewModel.getRecetaById(recetaId = idReceta)
+        bitmap = usersViewModel.loadImageFromFile(context, idReceta)
     }
 
     Scaffold(
         topBar = {
-            if (deUser && isConnected) { //si hay conexion y es de la api se puede eliminar y editar
+            if (esDeUser && isConnected) { //si hay conexion y es de la api se puede eliminar y editar
                 TopBarWithIcons(
                     onBackPressed = { navController.popBackStack() },
-                    onEditPressed = { navController.navigate("editRecipe/$idReceta/$deUser") },
+                    onEditPressed = { navController.navigate("editRecipe/$idReceta/$esDeUser") },
                     onDeletePressed = { showDialog = true }
                 )
             } else {
@@ -121,15 +123,29 @@ fun DetailsScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(bottom = 16.dp)
             ) {
+
                 // Cargar la imagen de la receta con esquinas redondeadas y sin padding
-                val image = if (recetaDetalle.image.isNullOrEmpty()) {
-                    "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
-                } else {
+                // Para el caso de carga remota
+                var imagen by remember { mutableStateOf("") }
+                imagen = if (recetaDetalle.image?.isNotBlank() == true) {
                     recetaDetalle.image
+                } else {
+                    "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
+                }
+
+                // Determinamos el painter según esDeUser
+                val painter = if (esDeUser) {
+                    if (recetaDetalle.image.toString().isBlank() || bitmap == null) {
+                        painterResource(id = R.drawable.food_placeholder)
+                    } else {
+                        BitmapPainter(bitmap!!.asImageBitmap())
+                    }
+                } else {
+                    rememberAsyncImagePainter(imagen)
                 }
 
                 Image(
-                    painter = rememberAsyncImagePainter(image),
+                    painter = painter,
                     contentDescription = "Recipe Image",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -168,7 +184,7 @@ fun DetailsScreen(
                                     receta!!.esFavorita = true
                                     roomViewModel.insertReceta(receta!!)
                                 }else{
-                                    if (deUser) { //si es creada por el user, solo pone a false favs
+                                    if (esDeUser) { //si es creada por el user, solo pone a false favs
                                         roomViewModel.setEsFavoritaToZero(idReceta)
                                     }else{ // si es de la api, se elimina
                                         roomViewModel.deleteReceta(receta!!)
@@ -262,7 +278,7 @@ fun DetailsScreen(
                 ) {
                     // Botón para mostrar los pasos
                     Button(
-                        onClick = { navController.navigate("steps/${idReceta}/${deUser}") },
+                        onClick = { navController.navigate("steps/${idReceta}/${esDeUser}") },
                         modifier = Modifier.fillMaxWidth(),
                         //enabled = !isStepsVisible, // Habilitar solo si los pasos no están visibles
                         colors = ButtonDefaults.buttonColors(
@@ -415,6 +431,8 @@ fun DetailsScreen(
                             recetasViewModel.eliminarRecetaDelHistorial(uid.toString(), recetaId = idReceta)
                             //eliminar tb de Room
                             roomViewModel.deleteRecetaById(idReceta)
+                            //eliminar imagen de local
+                            usersViewModel.deleteImage(context, idReceta)
 
                             // Cerrar el dialogo
                             showDialog = false
