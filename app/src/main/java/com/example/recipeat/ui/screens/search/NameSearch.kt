@@ -107,7 +107,8 @@ fun NameSearch(
                     modifier = Modifier
                         .padding(8.dp)
                         .clickable {
-                            if (isConnected) navController.navigate("detalles/${recetaSug.id}")
+                            val esDeUser = false //porque es de nameSearch
+                            if (isConnected) navController.navigate("detalles/${recetaSug.id}/$esDeUser")
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {

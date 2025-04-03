@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -34,17 +35,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun OrderBottomSheet(
     onDismiss: () -> Unit,
     recetasViewModel: RecetasViewModel,
-    busquedaMisRecetas: Boolean //Para controlar la visibilidad del filtro
+    busquedaMisRecetas: Boolean, // Para controlar la visibilidad del filtro
+    filtrosViewModel: FiltrosViewModel
 ) {
     val sheetState = rememberModalBottomSheetState()
-    val selectedOrder = rememberSaveable { mutableStateOf("Default") }
+    // Inicializa selectedOrder con el valor actual del ViewModel
+    var selectedOrder by rememberSaveable { mutableStateOf(filtrosViewModel.orden.value) }
+    // Captura el valor inicial cada vez que se abre el sheet
+    val initialOrder = filtrosViewModel.orden.value
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
@@ -60,26 +67,24 @@ fun OrderBottomSheet(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Botones de selección
-            OrderButton("Time", Icons.Filled.Timer,selectedOrder.value == "Time") {
-                selectedOrder.value = "Time"
+            OrderButton("Time", Icons.Filled.Timer, selectedOrder == "Time") {
+                selectedOrder = "Time"
             }
-            OrderButton("Number of Ingredients", Icons.Filled.RestaurantMenu,selectedOrder.value == "Number of Ingredients") {
-                selectedOrder.value = "Number of Ingredients"
+            OrderButton("Number of Ingredients", Icons.Filled.RestaurantMenu, selectedOrder == "Number of Ingredients") {
+                selectedOrder = "Number of Ingredients"
             }
-            OrderButton("Alphabetical", Icons.Filled.SortByAlpha,selectedOrder.value == "Alphabetical") {
-                selectedOrder.value = "Alphabetical"
+            OrderButton("Alphabetical", Icons.Filled.SortByAlpha, selectedOrder == "Alphabetical") {
+                selectedOrder = "Alphabetical"
             }
 
             if (busquedaMisRecetas) {
                 // Agregar nuevas opciones
-                OrderButton("Recent (Asc)", Icons.Filled.Timer, selectedOrder.value == "Recent Asc") {
-                    selectedOrder.value = "Recent Asc"
+                OrderButton("Recent (Asc)", Icons.Filled.Timer, selectedOrder == "Recent Asc") {
+                    selectedOrder = "Recent Asc"
                 }
-
-                OrderButton("Recent (Desc)", Icons.Filled.Timer, selectedOrder.value == "Recent Desc") {
-                    selectedOrder.value = "Recent Desc"
+                OrderButton("Recent (Desc)", Icons.Filled.Timer, selectedOrder == "Recent Desc") {
+                    selectedOrder = "Recent Desc"
                 }
-
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -90,24 +95,31 @@ fun OrderBottomSheet(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 TextButton(onClick = {
-                    selectedOrder.value = "Default" // Restablecer al valor predeterminado
-                    recetasViewModel.ordenarResultados(selectedOrder.value)
+                    filtrosViewModel.restablecerOrden() // Restablecer al valor predeterminado
+                    recetasViewModel.ordenarResultados(selectedOrder)
                     onDismiss()
                 }) {
                     Text("Reset order")
                 }
 
-                TextButton(onClick = { onDismiss() }) {
+                TextButton(
+                    onClick = {
+                        // Al cancelar, restauramos el valor actual del ViewModel
+                        selectedOrder = initialOrder
+                        onDismiss()
+                    }
+                ) {
                     Text("Cancel")
                 }
 
                 Button(
                     onClick = {
-                    // Aplicar el orden al ViewModel
-                        if (busquedaMisRecetas){
+                        // Aplicar el orden al ViewModel
+                        if (busquedaMisRecetas) {
                             //TODO
                         } else {
-                            recetasViewModel.ordenarResultados(selectedOrder.value)
+                            recetasViewModel.ordenarResultados(selectedOrder)
+                            filtrosViewModel.setOrden(selectedOrder)
                         }
                         onDismiss()
                     },
@@ -125,9 +137,12 @@ fun OrderBottomSheet(
     }
 }
 
+
 // Composable para los botones de selección
 @Composable
 fun OrderButton(text: String, icon: ImageVector, isSelected: Boolean, onClick: () -> Unit) {
+    Log.d("OrdenBottomSheet", "text $text valor isSelected ${isSelected} ")
+
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(

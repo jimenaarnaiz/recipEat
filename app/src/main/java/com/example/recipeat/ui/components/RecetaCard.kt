@@ -27,16 +27,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.R
 import com.example.recipeat.data.model.Receta
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 
 @Composable
-fun RecetaCard(receta: Receta, navController: NavController) {
+fun RecetaCard(receta: Receta, navController: NavController, usersViewModel: UsersViewModel) {
 
     val esDeUser = receta.userId.isNotBlank()
 
@@ -55,19 +60,35 @@ fun RecetaCard(receta: Receta, navController: NavController) {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally // Alinear el contenido en el centro
         ) {
+
+            val context = LocalContext.current
+            val bitmap = usersViewModel.loadImageFromFile(context, recetaId = receta.id)
+
             // Cargar la imagen de la receta con esquinas redondeadas y sin padding
+            // Para el caso de carga remota
             var imagen by remember { mutableStateOf("") }
             imagen = if (receta.image?.isNotBlank() == true) {
                 receta.image
             } else {
                 "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
             }
-            // Cargar la imagen de la receta con esquinas redondeadas y sin padding
+
+// Determinamos el painter según esDeUser
+            val painter = if (esDeUser) {
+                if (receta.image.toString().isBlank() || bitmap == null) {
+                    painterResource(id = R.drawable.food_placeholder)
+                } else {
+                    BitmapPainter(bitmap.asImageBitmap())
+                }
+            } else {
+                rememberAsyncImagePainter(imagen)
+            }
+
             Image(
-                painter = rememberAsyncImagePainter(imagen),
+                painter = painter,
                 contentDescription = receta.title,
                 modifier = Modifier
-                    .fillMaxWidth() // La imagen ocupa tdo el ancho de la Card
+                    .fillMaxWidth() // La imagen ocupa todo el ancho de la Card
                     .height(220.dp) // Mantener la altura fija
                     .clip(
                         RoundedCornerShape(
@@ -75,7 +96,7 @@ fun RecetaCard(receta: Receta, navController: NavController) {
                             topEnd = 16.dp
                         )
                     ),
-                contentScale = ContentScale.Crop // Asegurarse de que la imagen se recorte y llene el espacio
+                contentScale = ContentScale.Crop // La imagen se recorta para llenar el espacio
             )
 
             // Título de la receta

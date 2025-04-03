@@ -15,6 +15,8 @@ class FiltrosViewModel : ViewModel() {
     // Set para almacenar múltiples opciones
     var tipoDieta = mutableStateOf<Set<String>?>(emptySet())
 
+    var orden = mutableStateOf("Default")
+
 
     // Función para aplicar los filtros
     fun aplicarFiltros(
@@ -43,5 +45,16 @@ class FiltrosViewModel : ViewModel() {
         tipoDieta.value = emptySet()
 
         Log.d("FiltrosViewModel", "Restableciendo filtros...")
+    }
+
+
+    fun setOrden(nuevoOrden: String) {
+        orden.value = nuevoOrden
+        Log.d("FiltrosViewModel", "Estableciendo orden a $nuevoOrden...")
+    }
+
+    fun restablecerOrden() {
+        orden.value = "Default"
+        Log.d("FiltrosViewModel", "Restableciendo orden a Default...")
     }
 }

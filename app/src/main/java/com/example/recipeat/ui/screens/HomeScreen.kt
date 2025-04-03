@@ -121,7 +121,7 @@ fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel,
                     .padding(bottom = 16.dp)
             ) {
                 items(recetasState) { receta ->
-                    RecetaCard(receta = receta, navController)
+                    RecetaCard(receta = receta, navController, usersViewModel)
                 }
 
                 if (isLoadingMore) {

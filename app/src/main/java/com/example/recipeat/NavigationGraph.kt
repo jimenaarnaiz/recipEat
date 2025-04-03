@@ -74,7 +74,7 @@ fun NavigationGraph(
             }
             composable("resultados/{query}") { backStackEntry ->
                 val query = backStackEntry.arguments?.getString("query") ?: ""
-                ResNameScreen(nombreReceta = query, navController = navController, recetasViewModel, filtrosViewModel)
+                ResNameScreen(nombreReceta = query, navController = navController, recetasViewModel, filtrosViewModel, usersViewModel)
                 onBottomBarVisibilityChanged(false)
             }
             composable("detalles/{idReceta}/{deUser}") { backStackEntry ->

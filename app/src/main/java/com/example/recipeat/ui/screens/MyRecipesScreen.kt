@@ -140,7 +140,7 @@ fun MyRecipesScreen(navController: NavHostController, recetasViewModel: RecetasV
                 ) {
                     items(recetas) { receta ->
                         Log.d("MyRecipesScreen", "deUser: ${receta.userId}")
-                        RecetaCard(receta, navController)
+                        RecetaCard(receta, navController, usersViewModel)
                     }
                     //estado de carga
                     if (isLoadingMore) {

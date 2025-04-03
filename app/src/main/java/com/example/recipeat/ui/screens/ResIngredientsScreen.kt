@@ -158,7 +158,8 @@ fun ResIngredientsScreen(
                             OrderBottomSheet(
                                 recetasViewModel = recetasViewModel,
                                 busquedaMisRecetas = false,
-                                onDismiss = { showOrderBottomSheet = false }
+                                onDismiss = { showOrderBottomSheet = false },
+                                filtrosViewModel = filtrosViewModel
                             )
                         }
 

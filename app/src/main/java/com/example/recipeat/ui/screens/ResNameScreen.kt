@@ -40,13 +40,15 @@ import com.example.recipeat.ui.components.RecetaCard
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 
 @Composable
 fun ResNameScreen(
     nombreReceta: String,
     navController: NavController,
     recetasViewModel: RecetasViewModel,
-    filtrosViewModel: FiltrosViewModel
+    filtrosViewModel: FiltrosViewModel,
+    usersViewModel: UsersViewModel
 ) {
 
     val recetas by recetasViewModel.recetas.observeAsState(emptyList())
@@ -132,7 +134,8 @@ fun ResNameScreen(
                             OrderBottomSheet(
                                 recetasViewModel = recetasViewModel,
                                 busquedaMisRecetas = false,
-                                onDismiss = { showOrderBottomSheet = false }
+                                onDismiss = { showOrderBottomSheet = false },
+                                filtrosViewModel = filtrosViewModel
                             )
                         }
 
@@ -172,7 +175,7 @@ fun ResNameScreen(
                     }
 
                     items(recetas) { receta ->
-                        RecetaCard(receta, navController)
+                        RecetaCard(receta, navController, usersViewModel)
                     }
 
                     // Cargar más recetas si el usuario está cerca del final

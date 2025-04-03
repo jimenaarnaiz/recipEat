@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -342,8 +343,11 @@ fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<Pick
                 },
             contentDescription = "Recipe picture",
             modifier = Modifier
+                .fillMaxWidth(0.5f) // 50% del ancho
+                .height(100.dp) // Más compacta aún
+                .clip(RoundedCornerShape(8.dp))
                 .padding(16.dp)
-                .size(150.dp)
+//                .size(150.dp)
                 .shadow(4.dp),
             contentScale = ContentScale.Crop
         )
