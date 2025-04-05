@@ -64,13 +64,12 @@ fun RecetaCard(receta: Receta, navController: NavController, usersViewModel: Use
             val context = LocalContext.current
             val bitmap = usersViewModel.loadImageFromFile(context, recetaId = receta.id)
 
-            // Cargar la imagen de la receta con esquinas redondeadas y sin padding
             // Para el caso de carga remota
             var imagen by remember { mutableStateOf("") }
             imagen = if (receta.image?.isNotBlank() == true) {
                 receta.image
             } else {
-                "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
+                "${R.drawable.food_placeholder}"
             }
 
             // Determinamos el painter según esDeUser
@@ -81,14 +80,14 @@ fun RecetaCard(receta: Receta, navController: NavController, usersViewModel: Use
                     BitmapPainter(bitmap.asImageBitmap())
                 }
             } else {
-                rememberAsyncImagePainter(imagen)
+                rememberAsyncImagePainter(imagen, error = painterResource(id = R.drawable.food_placeholder))
             }
 
             Image(
                 painter = painter,
                 contentDescription = receta.title,
                 modifier = Modifier
-                    .fillMaxWidth() // La imagen ocupa todo el ancho de la Card
+                    .fillMaxWidth() // La imagen ocupa tdo el ancho de la Card
                     .height(220.dp) // Mantener la altura fija
                     .clip(
                         RoundedCornerShape(

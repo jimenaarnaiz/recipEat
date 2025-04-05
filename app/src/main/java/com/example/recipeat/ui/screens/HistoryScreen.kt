@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -49,7 +48,6 @@ import com.example.recipeat.ui.components.RecetaSimpleCardItem
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -105,14 +103,21 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
     }
 
     LaunchedEffect(rango) {
-        if (uid != null) {
-            recetasViewModel.obtenerRecetasPorRangoDeFecha(
-                uid.toString(),
-                rango
-            )
-        }
+        recetasViewModel.obtenerRecetasPorRangoDeFecha(
+            uid.toString(),
+            rango
+        )
         Log.d("HistoryScreen", "El rango ha cambiado")
     }
+
+    LaunchedEffect(recetasHistorial) {
+        recetasViewModel.obtenerRecetasPorRangoDeFecha(
+            uid.toString(),
+            rango
+        )
+        Log.d("HistoryScreen", "Las recetas historial han cambiado")
+    }
+
 
 
     Scaffold(
@@ -207,11 +212,12 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
                 ) {
                     items(filteredRecetas) { receta ->
                         RecetaSimpleCardItem(
-                            id = receta.id,
+                            recetaId = receta.id,
                             title = receta.title,
                             image = receta.image,
                             navController = navController,
-                            esDeUser = receta.userReceta.isNotBlank()
+                            esDeUser = receta.userReceta.isNotBlank(),
+                            usersViewModel = usersViewModel
                         )
                     }
                 }

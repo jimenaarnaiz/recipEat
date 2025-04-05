@@ -24,9 +24,11 @@ import com.example.recipeat.ui.screens.RegisterScreen
 import com.example.recipeat.ui.screens.ResNameScreen
 import com.example.recipeat.ui.screens.ResIngredientsScreen
 import com.example.recipeat.ui.screens.StepsScreen
+import com.example.recipeat.ui.screens.WeeklyPlanScreen
 import com.example.recipeat.ui.screens.search.UnifiedSearchScreen
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
+import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
@@ -44,6 +46,7 @@ fun NavigationGraph(
     val usersViewModel: UsersViewModel = viewModel()
     val ingredientesViewModel: IngredientesViewModel = viewModel()
     val filtrosViewModel: FiltrosViewModel = viewModel()
+    val planViewModel: PlanViewModel = viewModel()
 
 
     Scaffold { padding ->
@@ -53,7 +56,7 @@ fun NavigationGraph(
             //modifier = Modifier.padding(padding) AÑADE PADDING INNECESARIO ARRIBA
         ) {
             composable("login") {
-                LoginScreen(navController, usersViewModel, recetasViewModel, roomViewModel) // Login
+                LoginScreen(navController, usersViewModel, recetasViewModel, roomViewModel, planViewModel) // Login
                 onBottomBarVisibilityChanged(false)
             }
             composable("register") {
@@ -125,7 +128,10 @@ fun NavigationGraph(
                 StepsScreen(idReceta = id, navController = navController, recetasViewModel, deUser = deUser)
                 onBottomBarVisibilityChanged(false)
             }
-
+            composable(BottomNavItem.Plan.route) {
+                WeeklyPlanScreen(navController, planViewModel)
+                onBottomBarVisibilityChanged(true)
+            }
 
         }
     }

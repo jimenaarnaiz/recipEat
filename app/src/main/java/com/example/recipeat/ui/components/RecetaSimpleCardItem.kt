@@ -15,43 +15,58 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.R
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 
+// Para Favs e Historial
 @Composable
 fun RecetaSimpleCardItem(
-    id: String,
+    recetaId: String,
     title: String,
     image: String,
     navController: NavHostController,
-    esDeUser: Boolean
+    esDeUser: Boolean,
+    usersViewModel: UsersViewModel
 ) {
+
+    val context = LocalContext.current
+    val bitmap = usersViewModel.loadImageFromFile(context, recetaId = recetaId)
+
+    // Determinamos el painter según esDeUser
+    val painter = if (esDeUser) {
+        if (image.isBlank() || bitmap == null) {
+            painterResource(id = R.drawable.food_placeholder)
+        } else {
+            BitmapPainter(bitmap.asImageBitmap())
+        }
+    } else {
+        rememberAsyncImagePainter(image, error = painterResource(id = R.drawable.food_placeholder))
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .shadow(4.dp)
             .clickable {
-                navController.navigate("detalles/$id/$esDeUser")
+                navController.navigate("detalles/$recetaId/$esDeUser")
             },
         shape = MaterialTheme.shapes.medium,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Cargar la imagen de la receta con esquinas redondeadas y sin padding
-            val imageToShow = if (image.isBlank()) {
-                "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
-            } else {
-                image
-            }
-
             Image(
-                painter = rememberAsyncImagePainter(imageToShow),
+                painter = painter,
                 contentDescription = title,
                 modifier = Modifier
                     .fillMaxWidth()

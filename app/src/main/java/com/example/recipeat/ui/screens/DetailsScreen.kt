@@ -126,12 +126,12 @@ fun DetailsScreen(
 
                 // Cargar la imagen de la receta con esquinas redondeadas y sin padding
                 // Para el caso de carga remota
-                var imagen by remember { mutableStateOf("") }
-                imagen = if (recetaDetalle.image?.isNotBlank() == true) {
-                    recetaDetalle.image
-                } else {
-                    "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
-                }
+//                var imagen by remember { mutableStateOf("") }
+//                imagen = if (recetaDetalle.image?.isNotBlank() == true) {
+//                    recetaDetalle.image
+//                } else {
+//                    "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
+//                }
 
                 // Determinamos el painter según esDeUser
                 val painter = if (esDeUser) {
@@ -141,7 +141,7 @@ fun DetailsScreen(
                         BitmapPainter(bitmap!!.asImageBitmap())
                     }
                 } else {
-                    rememberAsyncImagePainter(imagen)
+                    rememberAsyncImagePainter(recetaDetalle.image, error = painterResource(id = R.drawable.food_placeholder))
                 }
 
                 Image(

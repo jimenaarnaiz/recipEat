@@ -8,6 +8,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.recipeat.ui.theme.LightYellow
@@ -20,7 +21,9 @@ fun BottomNavBar(navController: NavController, visible: Boolean) {
         val items = listOf(
             BottomNavItem.Home, // Añadimos el item Home
             BottomNavItem.MyRecipes, // Añadimos el item MyRecipes
-            BottomNavItem.Profile // Añadimos el item Profile
+            BottomNavItem.Plan,
+            BottomNavItem.Profile// Añadimos el item Profile
+
         )
 
         NavigationBar {
@@ -45,7 +48,7 @@ fun RowScope.AddItem(
     val isSelected = currentDestination == screen.route
 
     NavigationBarItem(
-        icon = { Icon(screen.icon, contentDescription = screen.title) }, // Muestra el icono del item
+        icon = { Icon(screen.icon, contentDescription = screen.title, tint = Color.DarkGray)}, // Muestra el icono del item
         label = { Text(screen.title) }, // Muestra el título del item
         selected = isSelected, // Esto puede ajustarse para manejar el estado seleccionado
         alwaysShowLabel = true, // Siempre muestra la etiqueta debajo del icono

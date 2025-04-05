@@ -3,6 +3,7 @@ package com.example.recipeat.ui.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.FoodBank
+import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -13,7 +14,7 @@ sealed class BottomNavItem(
     val icon: ImageVector
 ) {
     object Home : BottomNavItem("home", "Home", Icons.Default.FoodBank)
-    //object Favourites : BottomNavItem("favs", "Favourites", Icons.Default.FavoriteBorder)
+    object Plan : BottomNavItem("plan", "Meal Plan", Icons.Default.LocalDining)
     object MyRecipes : BottomNavItem("myrecipes", "My Recipes", Icons.AutoMirrored.Filled.MenuBook)
     object Profile : BottomNavItem("profile", "Profile", Icons.Default.Person)
 }
