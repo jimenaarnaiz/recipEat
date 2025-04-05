@@ -129,7 +129,7 @@ fun NavigationGraph(
                 onBottomBarVisibilityChanged(false)
             }
             composable(BottomNavItem.Plan.route) {
-                WeeklyPlanScreen(navController, planViewModel)
+                WeeklyPlanScreen(navController, planViewModel, usersViewModel)
                 onBottomBarVisibilityChanged(true)
             }
 

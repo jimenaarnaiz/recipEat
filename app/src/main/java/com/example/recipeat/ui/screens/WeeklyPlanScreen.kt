@@ -3,6 +3,7 @@ package com.example.recipeat.ui.screens
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,21 +52,25 @@ import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.PlanViewModel
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewModel) {
+fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewModel, usersViewModel: UsersViewModel) {
     // Definir un estado para el día seleccionado
     var selectedDay by remember { mutableStateOf(LocalDate.now().dayOfWeek) }
 
+    val uid = usersViewModel.getUidValue()
+
     // Llamar al iniciar
     LaunchedEffect(Unit) {
-        planViewModel.iniciarGeneracionPlanSemanal()
-        if (!planViewModel.esPrimeraVez()) planViewModel.obtenerPlanSemanal()
+        planViewModel.iniciarGeneracionPlanSemanal(uid.toString())
+        if (!planViewModel.esPrimeraVez()) planViewModel.obtenerPlanSemanal(uid.toString())
     }
 
     val planSemanal by planViewModel.planSemanal.observeAsState()
@@ -93,6 +99,7 @@ fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewMo
                 DayButton(day = day, selectedDay = selectedDay, onClick = { selectedDay = day })
             }
         }
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Mostrar recetas del día seleccionado
         DayDetailsContent(weeklyPlan = weeklyPlan, selectedDay = selectedDay, navController)
@@ -105,12 +112,16 @@ fun DayButton(day: DayOfWeek, selectedDay: DayOfWeek, onClick: (DayOfWeek) -> Un
     val dateFormatter = DateTimeFormatter.ofPattern("dd")
     val date = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).plusDays(day.ordinal.toLong())
     val formattedDate = date.format(dateFormatter)
+    val isToday = day == DayOfWeek.from(LocalDate.now())
 
     // Usamos un Surface en lugar de un Button para que no haya scroll y se ajusten todos los días en la pantalla
     Surface(
         modifier = Modifier
-            .padding(2.dp)
-            .width(50.dp),
+            .padding(1.5.dp)
+            .width(48.dp)
+            .then(
+                if (isToday) Modifier.border(2.dp, Color.DarkGray, RoundedCornerShape(8.dp)) else Modifier
+            ),
         color = if (day == selectedDay) Cherry else LightYellow,
         shape = RoundedCornerShape(8.dp),
         onClick = { onClick(day) } // El onClick aún es funcional
@@ -122,7 +133,7 @@ fun DayButton(day: DayOfWeek, selectedDay: DayOfWeek, onClick: (DayOfWeek) -> Un
         ) {
             Text(
                 text = day.name.take(3), // Primeras 3 letras del nombre del día
-                fontSize = 15.sp,
+                fontSize = 13.5.sp,
                 fontWeight = FontWeight.Bold, // Aplica la negrita
                 color = if (day == selectedDay) Color.White else Color.Black
             )
@@ -157,8 +168,9 @@ fun MealDetailCard(dishType: String, receta: Receta, navController: NavHostContr
 
     Column(modifier = Modifier.padding(bottom = 16.dp)) {
         Text(
-            text = dishType,
+            text = dishType.replaceFirstChar { it.uppercase() },
             style = MaterialTheme.typography.bodyLarge,
+            //fontWeight = FontWeight.Bold, // Aplica la negrita
             modifier = Modifier.padding(bottom = 8.dp)
         )
 

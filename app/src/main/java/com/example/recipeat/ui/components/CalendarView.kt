@@ -3,6 +3,7 @@ package com.example.recipeat.ui.components
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -54,6 +55,7 @@ fun CalendarView(
         selectedDate
     }
 
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(7), // 7 días por fila
         contentPadding = PaddingValues(8.dp),
@@ -79,6 +81,10 @@ fun CalendarView(
                             !isInLastDaysRange -> Color.Transparent
                             else -> Color.White // Gris para días fuera de los últimos x días
                         }
+                    )
+                    .border(
+                        if (day == LocalDate.now()) 2.dp else 0.dp,
+                        if (day == LocalDate.now()) Color.DarkGray else Color.Transparent
                     )
                     .clickable { if (isInLastDaysRange) onDaySelected(day) }
                     .padding(8.dp),

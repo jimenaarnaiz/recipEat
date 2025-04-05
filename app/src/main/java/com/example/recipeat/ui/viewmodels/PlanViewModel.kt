@@ -87,7 +87,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun iniciarGeneracionPlanSemanal() {
+    fun iniciarGeneracionPlanSemanal(userId: String) {
             // Lógica de verificación con es primera vez o es lunes
             if (esPrimeraVez()) {
                 Log.d("PlanSemanal", "Primera vez que el usuario entra, generando el plan semanal.")
@@ -96,8 +96,8 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                         // Llamamos a la función suspendida dentro de la coroutine
                         // Usamos launch para llamar la función suspendida correctamente
                         viewModelScope.launch {
-                            val planSemanal = generarPlanSemanal(recetas)
-                            actualizarYGuardarPlanSemanal(planSemanal)
+                            val planSemanal = generarPlanSemanal(recetas, userId)
+                            actualizarYGuardarPlanSemanal(userId, planSemanal)
                             marcarNoEsPrimeraVez()  // Marca que ya no es primera vez
                         }
                     } else {
@@ -110,8 +110,8 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                     if (recetas.isNotEmpty()) {
                         // Llamamos a la función suspendida dentro de la coroutine
                         viewModelScope.launch {
-                            val planSemanal = generarPlanSemanal(recetas)
-                            actualizarYGuardarPlanSemanal(planSemanal)
+                            val planSemanal = generarPlanSemanal(recetas, userId)
+                            actualizarYGuardarPlanSemanal(userId, planSemanal)
                         }
                     } else {
                         Log.e("PlanSemanal", "No se encontraron recetas para generar el plan")
@@ -202,8 +202,8 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun generarPlanSemanal(recetas: List<Receta>): PlanSemanal {
-        val idsRecetasSemanaAnterior = obtenerRecetasSemanaAnterior()
+    suspend fun generarPlanSemanal(recetas: List<Receta>, userId: String): PlanSemanal {
+        val idsRecetasSemanaAnterior = obtenerRecetasSemanaAnterior(userId = userId)
         val recetasBarajeadas = recetas.shuffled() //las recetas de FB se desordenan para q haya menos probabilidad de q se cojan las mismas
 
         val candidatosDesayuno = filtrarParaDesayuno(recetasBarajeadas)
@@ -284,7 +284,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun obtenerRecetasSemanaAnterior(): List<String> {
+    suspend fun obtenerRecetasSemanaAnterior(userId: String): List<String> {
         // Calculamos el identificador de la semana anterior
         val semanaAnteriorId = obtenerSemanaAnteriorId()
         // Lista para almacenar los IDs de las recetas
@@ -293,9 +293,11 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
         // Hacemos la consulta a Firebase de forma asincrónica
         try {
             val documentSnapshot = withContext(Dispatchers.IO) {
-                // Consulta de Firebase de manera asincrónica
+                // Consulta de Firebase de manera asincrónica con la nueva estructura de Firestore
                 db.collection("planSemanal")
-                    .document(semanaAnteriorId)
+                    .document(userId) // Usamos el userId para identificar al usuario
+                    .collection("semanas") // Subcolección para las semanas del usuario
+                    .document(semanaAnteriorId) // El documento que contiene el plan de la semana anterior
                     .get()
                     .await()  // Usamos `await` para esperar el resultado asincrónicamente
             }
@@ -320,19 +322,23 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
+
     /**
      * Obtenemos el plan de la semana actual desde Firestore.
      * Guardamos ese plan como plan de la semana anterior.
      * Guardamos el nuevo plan como plan de la semana actual.
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    fun actualizarYGuardarPlanSemanal(planSemanal: PlanSemanal) {
+    fun actualizarYGuardarPlanSemanal(userId: String, planSemanal: PlanSemanal) {
         // Semana actual
-        val semanaActualId = obtenerSemanaAnteriorId()
+        val semanaActualId = obtenerSemanaActualId()
         // Semana anterior
         val semanaAnteriorId = obtenerSemanaAnteriorId()
+
         // Primero, obtenemos el plan actual de Firestore
         db.collection("planSemanal")
+            .document(userId) // Usamos el userId para identificar al usuario
+            .collection("semanas") // Subcolección para almacenar los planes semanales
             .document(semanaActualId) // El documento que contiene el plan de la semana actual
             .get()
             .addOnSuccessListener { document ->
@@ -342,6 +348,8 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
                     // Guardamos este plan como el plan de la semana anterior
                     db.collection("planSemanal")
+                        .document(userId) // Usamos el userId para identificar al usuario
+                        .collection("semanas") // Subcolección para almacenar los planes semanales
                         .document(semanaAnteriorId) // Usamos el ID de la semana anterior
                         .set(planActualData)
                         .addOnSuccessListener {
@@ -362,6 +370,8 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 db.collection("planSemanal")
+                    .document(userId) // Usamos el userId para identificar al usuario
+                    .collection("semanas") // Subcolección para almacenar los planes semanales
                     .document(semanaActualId) // Usamos el ID de la semana actual
                     .set(data)
                     .addOnSuccessListener {
@@ -378,13 +388,15 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun obtenerPlanSemanal() {
+    fun obtenerPlanSemanal(userId: String) {
         //semana actual
         val semanaActualId = obtenerSemanaActualId()
         Log.d("PlanViewModel", "semanaActualId: $semanaActualId")
 
         db.collection("planSemanal")
-            .document(semanaActualId)
+            .document(userId) // Usamos el userId para identificar al usuario
+            .collection("semanas") // Subcolección para almacenar los planes semanales
+            .document(semanaActualId) // El documento que contiene el plan de la semana actual
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
@@ -436,7 +448,6 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                 Log.e("Firestore", "Error al obtener el plan semanal", e)
             }
     }
-
 
 
     fun obtenerRecetaPorId(id: String, callback: (Receta?) -> Unit) {
