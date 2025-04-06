@@ -1,7 +1,9 @@
 package com.example.recipeat.ui.screens
 
 import android.content.res.Configuration
+import android.os.Build
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -45,17 +47,20 @@ import com.example.recipeat.ui.theme.Cherry
 
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
+import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RegisterScreen(
     navController: NavHostController,
     usersViewModel: UsersViewModel,
     recetasViewModel: RecetasViewModel,
-    ingredientesViewModel: IngredientesViewModel
+    ingredientesViewModel: IngredientesViewModel,
+    planViewModel: PlanViewModel
 ) {
     var username by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -114,6 +119,7 @@ fun RegisterScreen(
                     usersViewModel = usersViewModel,
                     recetasViewModel = recetasViewModel,
                     ingredientesViewModel = ingredientesViewModel,
+                    planViewModel,
                     email = email,
                     password = password,
                     username = username,
@@ -164,12 +170,13 @@ fun RegisterScreen(
                         usersViewModel = usersViewModel,
                         recetasViewModel = recetasViewModel,
                         ingredientesViewModel = ingredientesViewModel,
+                        planViewModel,
                         email = email,
                         password = password,
                         username = username,
                         errorMessage = errorMessage,
                         onErrorMessageChange = { errorMessage = it },
-                        size = size,
+                        size = size
                     )
 
                     Spacer(modifier = Modifier.width(30.dp))
@@ -257,12 +264,14 @@ fun InputFields(
 }
 
 // Composable para los botones de registro y de regreso
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Buttons(
     navController: NavHostController,
     usersViewModel: UsersViewModel,
     recetasViewModel: RecetasViewModel,
     ingredientesViewModel: IngredientesViewModel,
+    planViewModel: PlanViewModel,
     email: String,
     password: String,
     username: String,
@@ -284,6 +293,7 @@ fun Buttons(
                             if (uid != null) {
                                 //recetasViewModel.verificarRecetasGuardadasApi()
                                 //ingredientesViewModel.extraerIngredientesYGuardar()
+                                planViewModel.iniciarGeneracionPlanSemanalIncial(uid.toString())
                             }
                             onErrorMessageChange("")
                             Toast.makeText(

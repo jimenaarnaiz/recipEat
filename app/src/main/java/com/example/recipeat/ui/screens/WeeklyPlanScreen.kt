@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.ShoppingBasket
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,7 +40,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,23 +58,22 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
-import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewModel, usersViewModel: UsersViewModel) {
     // Definir un estado para el día seleccionado
     var selectedDay by remember { mutableStateOf(LocalDate.now().dayOfWeek) }
-
     val uid = usersViewModel.getUidValue()
 
     // Llamar al iniciar
     LaunchedEffect(Unit) {
-        planViewModel.iniciarGeneracionPlanSemanal(uid.toString())
-        if (!planViewModel.esPrimeraVez()) planViewModel.obtenerPlanSemanal(uid.toString())
+        planViewModel.obtenerPlanSemanal(uid.toString())
+//        planViewModel.iniciarGeneracionPlanSemanal(uid.toString())
+//        if (!planViewModel.esPrimeraVez()) planViewModel.obtenerPlanSemanal(uid.toString())
     }
 
-    val planSemanal by planViewModel.planSemanal.observeAsState()
+    val planSemanal by planViewModel.planSemanal.observeAsState() //debe ir después del launched, si no, no mostrará nada
     // Verifica que el plan semanal no sea nulo antes de usarlo
     val weeklyPlan = planSemanal?.weekMeals ?: return
 
@@ -91,8 +91,7 @@ fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewMo
 
         // Días de la semana
         Row(
-            //horizontalArrangement = Arrangement.SpaceEvenly, // Para distribuir los días uniformemente
-            modifier = Modifier.fillMaxWidth()
+           modifier = Modifier.fillMaxWidth()
         ) {
             // Llamamos a DayButton para cada día de la semana
             DayOfWeek.entries.forEach { day ->
@@ -103,6 +102,22 @@ fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewMo
 
         // Mostrar recetas del día seleccionado
         DayDetailsContent(weeklyPlan = weeklyPlan, selectedDay = selectedDay, navController)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón para ver la lista de la compra
+        Button(
+            onClick = {
+                // Acción para ver la lista de la compra
+                navController.navigate("listaCompra") // Esto puede ir a una pantalla de la lista de la compra
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = buttonColors(containerColor = Cherry, contentColor = Color.White),
+
+            ) {
+            Text(text = "See shopping list")
+        }
     }
 }
 

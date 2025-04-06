@@ -26,7 +26,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
     private val db = FirebaseFirestore.getInstance()
 
     private val _planSemanal = MutableLiveData<PlanSemanal>()
-    val planSemanal: LiveData<PlanSemanal> get() = _planSemanal
+    val planSemanal: LiveData<PlanSemanal> = _planSemanal
 
     private val sharedPreferences =
         application.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
@@ -60,7 +60,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
     // Función para verificar si es lunes para actualizar el plan
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun esLunes(): Boolean {
+    fun esLunes(): Boolean {
         val hoy = LocalDate.now()
         return hoy.dayOfWeek == DayOfWeek.MONDAY
     }
@@ -86,25 +86,26 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
+    // Función que ejecuta el Worker cada lunes que genera el plan semanal
     @RequiresApi(Build.VERSION_CODES.O)
     fun iniciarGeneracionPlanSemanal(userId: String) {
-            // Lógica de verificación con es primera vez o es lunes
-            if (esPrimeraVez()) {
-                Log.d("PlanSemanal", "Primera vez que el usuario entra, generando el plan semanal.")
-                obtenerRecetasFirebase { recetas ->
-                    if (recetas.isNotEmpty()) {
-                        // Llamamos a la función suspendida dentro de la coroutine
-                        // Usamos launch para llamar la función suspendida correctamente
-                        viewModelScope.launch {
-                            val planSemanal = generarPlanSemanal(recetas, userId)
-                            actualizarYGuardarPlanSemanal(userId, planSemanal)
-                            marcarNoEsPrimeraVez()  // Marca que ya no es primera vez
-                        }
-                    } else {
-                        Log.e("PlanSemanal", "No se encontraron recetas para generar el plan")
-                    }
-                }
-            } else if (esLunes()) {
+            //Lógica de verificación con es primera vez o es lunes
+//            if (esPrimeraVez()) {
+//                Log.d("PlanSemanal", "Primera vez que el usuario entra, generando el plan semanal.")
+//                obtenerRecetasFirebase { recetas ->
+//                    if (recetas.isNotEmpty()) {
+//                        // Llamamos a la función suspendida dentro de la coroutine
+//                        // Usamos launch para llamar la función suspendida correctamente
+//                        viewModelScope.launch {
+//                            val planSemanal = generarPlanSemanal(recetas, userId)
+//                            actualizarYGuardarPlanSemanal(userId, planSemanal)
+//                            marcarNoEsPrimeraVez()  // Marca que ya no es primera vez
+//                        }
+//                    } else {
+//                        Log.e("PlanSemanal", "No se encontraron recetas para generar el plan")
+//                    }
+//                }
+            /*} else*/ if (esLunes()) {
                 Log.d("PlanSemanal", "Hoy es lunes, actualizando el plan semanal...")
                 obtenerRecetasFirebase { recetas ->
                     if (recetas.isNotEmpty()) {
@@ -114,13 +115,38 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                             actualizarYGuardarPlanSemanal(userId, planSemanal)
                         }
                     } else {
-                        Log.e("PlanSemanal", "No se encontraron recetas para generar el plan")
+                       Log.e("PlanSemanal", "No se encontraron recetas para generar el plan")
                     }
                 }
             } else {
                 Log.d("PlanSemanal", "Hoy no es lunes. No se actualiza el plan semanal.")
             }
     }
+
+
+    // si es la primera vez que el user entra (register), y no es lunes, se genera un plan incial
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun iniciarGeneracionPlanSemanalIncial(userId: String) {
+        if (!esLunes()) {
+            Log.d("PlanSemanal", "Primera vez que el usuario entra, generando el plan semanal.")
+            obtenerRecetasFirebase { recetas ->
+                if (recetas.isNotEmpty()) {
+                    // Llamamos a la función suspendida dentro de la coroutine
+                    // Usamos launch para llamar la función suspendida correctamente
+                    viewModelScope.launch {
+                        val planSemanal = generarPlanSemanal(recetas, userId)
+                        actualizarYGuardarPlanSemanal(userId, planSemanal)
+                        //marcarNoEsPrimeraVez()  // Marca que ya no es primera vez
+                    }
+                } else {
+                    Log.e("PlanSemanal", "No se encontraron recetas para generar el plan")
+                }
+            }
+        } else {
+            Log.d("PlanSemanal", "Es lunes. ")
+        }
+    }
+
 
 
     //RESTRICCIONES
@@ -204,7 +230,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun generarPlanSemanal(recetas: List<Receta>, userId: String): PlanSemanal {
         val idsRecetasSemanaAnterior = obtenerRecetasSemanaAnterior(userId = userId)
-        val recetasBarajeadas = recetas.shuffled() //las recetas de FB se desordenan para q haya menos probabilidad de q se cojan las mismas
+        val recetasBarajeadas = recetas.shuffled() // Las recetas se desordenan para evitar repetir las mismas.
 
         val candidatosDesayuno = filtrarParaDesayuno(recetasBarajeadas)
         val candidatosAlmuerzo = filtrarParaAlmuerzo(recetasBarajeadas)
@@ -230,6 +256,14 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                         aisle !in aislesUsadosEnDia &&
                         receta.id !in idsRecetasSemanaAnterior
             }
+
+            // Si no se encuentra desayuno válido, se selecciona por tipo de plato
+            if (desayunoSeleccionado == null) {
+                desayunoSeleccionado = candidatosDesayuno.firstOrNull { receta ->
+                    receta.id !in recetasUsadas && receta.id !in idsRecetasSemanaAnterior
+                }
+            }
+
             desayunoSeleccionado?.let {
                 val aisle = it.ingredients.firstOrNull()?.aisle ?: ""
                 registrarUsoAisle(aisle)
@@ -244,6 +278,14 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                         aisle !in aislesUsadosEnDia &&
                         receta.id !in idsRecetasSemanaAnterior
             }
+
+            // Si no se encuentra almuerzo válido, se selecciona por tipo de plato
+            if (almuerzoSeleccionado == null) {
+                almuerzoSeleccionado = candidatosAlmuerzo.firstOrNull { receta ->
+                    receta.id !in recetasUsadas && receta.id !in idsRecetasSemanaAnterior
+                }
+            }
+
             almuerzoSeleccionado?.let {
                 val aisle = it.ingredients.firstOrNull()?.aisle ?: ""
                 registrarUsoAisle(aisle)
@@ -258,6 +300,14 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                         aisle !in aislesUsadosEnDia &&
                         receta.id !in idsRecetasSemanaAnterior
             }
+
+            // Si no se encuentra cena válida, se selecciona por tipo de plato y que no se use ni en la semana anteior ni actual
+            if (cenaSeleccionado == null) {
+                cenaSeleccionado = candidatosCena.firstOrNull { receta ->
+                    receta.id !in recetasUsadas && receta.id !in idsRecetasSemanaAnterior
+                }
+            }
+
             cenaSeleccionado?.let {
                 val aisle = it.ingredients.firstOrNull()?.aisle ?: ""
                 registrarUsoAisle(aisle)
@@ -265,6 +315,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                 recetasUsadas.add(it.id)
             }
 
+            // Verifica que se ha seleccionado una receta para cada comida
             if (desayunoSeleccionado == null || almuerzoSeleccionado == null || cenaSeleccionado == null) {
                 Log.e("PlanSemanal", "No se pudo generar menú completo para el día $dia")
                 continue
@@ -278,9 +329,10 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         val planSemanal = PlanSemanal(semanaMeals)
-        _planSemanal.value = planSemanal
+        //_planSemanal.value = planSemanal
         return planSemanal
     }
+
 
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -430,6 +482,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
                                         // Si todos los días han sido procesados, actualizamos el plan semanal
                                         if (daysProcessed.size == DayOfWeek.entries.size) {
+                                            Log.d("PlanViewModel", "Obteniendo plan actual...")
                                             _planSemanal.value = PlanSemanal(semanaMeals)
                                         }
                                     } else {

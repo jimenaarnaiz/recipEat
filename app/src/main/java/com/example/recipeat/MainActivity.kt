@@ -17,11 +17,13 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
 import com.example.recipeat.data.database.AppDatabase
+import com.example.recipeat.data.model.PlanSemanalWorker
 import com.example.recipeat.data.repository.RecetaRepository
 import com.example.recipeat.ui.components.BottomNavBar
 import com.example.recipeat.ui.theme.RecipEatTheme
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModelFactory
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
 
@@ -36,6 +38,16 @@ class MainActivity : ComponentActivity() {
         // Crear ViewModel usando un Factory para poder pasar por param el repository en el viewModel
         val roomViewModel = ViewModelProvider(this, RoomViewModelFactory(recetaRepository))
             .get(RoomViewModel::class.java)
+
+        // Verificar si el usuario está autenticado
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val userId = currentUser?.uid
+
+        if (userId != null) {
+            // Si el usuario está autenticado, llamamos al worker para generar el plan semanal
+            PlanSemanalWorker.configurarWorker(applicationContext)
+            Log.d("Main", "Se ejecutó el Worker")
+        }
 
         setContent {
             RecipEatTheme {

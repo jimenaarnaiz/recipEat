@@ -58,7 +58,8 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.material)
     implementation(libs.androidx.tv.material)
-    implementation(libs.androidx.storage) //navigation
+    implementation(libs.androidx.storage)
+    implementation(libs.androidx.work.runtime.ktx) //navigation
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

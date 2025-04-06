@@ -64,11 +64,11 @@ fun MyRecipesScreen(navController: NavHostController, recetasViewModel: RecetasV
 
     // Carga inicial de las recetas
     LaunchedEffect(userId) {
-        if (recetasUser.isEmpty()) {
+        //if (recetasUser.isEmpty()) {
             Log.d("MyRecipeScreen", "Carga inicial de recetas del user")
             recetasViewModel.getRecetasUser(userId.toString(), limpiarLista = true)
             roomViewModel.getRoomRecetasUser(userId.toString())
-        }
+        //}
     }
 
     // cuando se agreguen nuevas recetas de user se actualizan las recetas a mostar

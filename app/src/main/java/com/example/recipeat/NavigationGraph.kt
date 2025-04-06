@@ -23,6 +23,7 @@ import com.example.recipeat.ui.screens.ProfileScreen
 import com.example.recipeat.ui.screens.RegisterScreen
 import com.example.recipeat.ui.screens.ResNameScreen
 import com.example.recipeat.ui.screens.ResIngredientsScreen
+import com.example.recipeat.ui.screens.ShoppingListScreen
 import com.example.recipeat.ui.screens.StepsScreen
 import com.example.recipeat.ui.screens.WeeklyPlanScreen
 import com.example.recipeat.ui.screens.search.UnifiedSearchScreen
@@ -60,7 +61,7 @@ fun NavigationGraph(
                 onBottomBarVisibilityChanged(false)
             }
             composable("register") {
-                RegisterScreen(navController, usersViewModel, recetasViewModel, ingredientesViewModel) // Registro
+                RegisterScreen(navController, usersViewModel, recetasViewModel, ingredientesViewModel, planViewModel) // Registro
                 onBottomBarVisibilityChanged(false)
             }
             composable(BottomNavItem.Home.route) {
@@ -131,6 +132,10 @@ fun NavigationGraph(
             composable(BottomNavItem.Plan.route) {
                 WeeklyPlanScreen(navController, planViewModel, usersViewModel)
                 onBottomBarVisibilityChanged(true)
+            }
+            composable("listaCompra") {
+                ShoppingListScreen(navController, usersViewModel, planViewModel)
+                onBottomBarVisibilityChanged(false)
             }
 
         }

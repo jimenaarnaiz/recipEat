@@ -29,6 +29,7 @@ class UsersViewModel: ViewModel() {
 
     // Función para obtener el valor del uid, ya que este solo cambia en login y logout
     fun getUidValue(): String? {
+        Log.d("UsersViewModel", "getUidValue: ${uid.value}")
         return _uid.value
     }
 
