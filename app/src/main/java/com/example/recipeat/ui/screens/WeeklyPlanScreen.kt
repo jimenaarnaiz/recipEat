@@ -67,7 +67,7 @@ fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewMo
     val uid = usersViewModel.getUidValue()
 
     // Llamar al iniciar
-    LaunchedEffect(Unit) {
+    LaunchedEffect(navController) {
         planViewModel.obtenerPlanSemanal(uid.toString())
 //        planViewModel.iniciarGeneracionPlanSemanal(uid.toString())
 //        if (!planViewModel.esPrimeraVez()) planViewModel.obtenerPlanSemanal(uid.toString())

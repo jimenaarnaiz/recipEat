@@ -100,7 +100,7 @@ fun MyRecipesScreen(navController: NavHostController, recetasViewModel: RecetasV
         floatingActionButton = {
             if (isConnected) { //solo se muestra si hay conexión
                 FloatingActionButton(
-                    onClick = { navController.navigate("add_recipe") },
+                    onClick = { navController.navigate("debug")  }, //TODO cambiar a add_reicpe
                     containerColor = Cherry,
                     modifier = Modifier
                         .padding(bottom = 80.dp) // padding debajo para q no quede opacado por la bottom bar

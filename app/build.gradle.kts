@@ -59,7 +59,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.tv.material)
     implementation(libs.androidx.storage)
-    implementation(libs.androidx.work.runtime.ktx) //navigation
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.generativeai) //navigation
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -80,7 +81,6 @@ dependencies {
     //más icons
     implementation(libs.androidx.material.icons.extended)
     // Room - room_version = "2.6.1"
-    val room_version = "2.6.1"
     implementation(libs.androidx.room.runtime)
     // Room compiler (para que Room genere las implementaciones necesarias)
     ksp(libs.androidx.room.compiler)// Esto es necesario si usas Kotlin

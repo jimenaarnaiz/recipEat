@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.AddRecipe
+import com.example.recipeat.ui.screens.DebugScreen
 import com.example.recipeat.ui.screens.DetailsScreen
 import com.example.recipeat.ui.screens.EditProfileScreen
 import com.example.recipeat.ui.screens.EditRecipeScreen
@@ -136,6 +137,11 @@ fun NavigationGraph(
             composable("listaCompra") {
                 ShoppingListScreen(navController, usersViewModel, planViewModel)
                 onBottomBarVisibilityChanged(false)
+            }
+
+            composable("debug") {
+                DebugScreen()
+                onBottomBarVisibilityChanged(true)
             }
 
         }

@@ -9,16 +9,19 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+
 import com.example.recipeat.data.model.DayMeal
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.PlanSemanal
 import com.example.recipeat.data.model.Receta
+import com.google.ai.client.generativeai.GenerativeModel
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import java.time.DayOfWeek
 import java.time.LocalDate
 
@@ -30,6 +33,10 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
     private val sharedPreferences =
         application.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
+
+    // MutableState para almacenar los ingredientes agrupados
+    private val _groupedIngredients = MutableLiveData<List<Ingrediente>>(emptyList())
+    val groupedIngredients: LiveData<List<Ingrediente>> = _groupedIngredients
 
 
     /**
@@ -227,6 +234,8 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
         }
 
 
+
+
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun generarPlanSemanal(recetas: List<Receta>, userId: String): PlanSemanal {
         val idsRecetasSemanaAnterior = obtenerRecetasSemanaAnterior(userId = userId)
@@ -257,11 +266,25 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                         receta.id !in idsRecetasSemanaAnterior
             }
 
-            // Si no se encuentra desayuno válido, se selecciona por tipo de plato
+            // Relajamos la restricción del aisle
             if (desayunoSeleccionado == null) {
                 desayunoSeleccionado = candidatosDesayuno.firstOrNull { receta ->
-                    receta.id !in recetasUsadas && receta.id !in idsRecetasSemanaAnterior
+                    val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
+                    receta.id !in recetasUsadas &&
+                            receta.id !in idsRecetasSemanaAnterior
                 }
+            }
+
+            // Relajamos la restricción de que no se haya usado esta semana
+            if (desayunoSeleccionado == null) {
+                desayunoSeleccionado = candidatosDesayuno.firstOrNull { receta ->
+                    receta.id !in idsRecetasSemanaAnterior
+                }
+            }
+
+            // Relajamos la restricción de la semana pasada también
+            if (desayunoSeleccionado == null) {
+                desayunoSeleccionado = candidatosDesayuno.firstOrNull()
             }
 
             desayunoSeleccionado?.let {
@@ -279,11 +302,25 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                         receta.id !in idsRecetasSemanaAnterior
             }
 
-            // Si no se encuentra almuerzo válido, se selecciona por tipo de plato
+            // Relajamos la restricción del aisle
             if (almuerzoSeleccionado == null) {
                 almuerzoSeleccionado = candidatosAlmuerzo.firstOrNull { receta ->
-                    receta.id !in recetasUsadas && receta.id !in idsRecetasSemanaAnterior
+                    val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
+                    receta.id !in recetasUsadas &&
+                            receta.id !in idsRecetasSemanaAnterior
                 }
+            }
+
+            // Relajamos la restricción de que no se haya usado esta semana
+            if (almuerzoSeleccionado == null) {
+                almuerzoSeleccionado = candidatosAlmuerzo.firstOrNull { receta ->
+                    receta.id !in idsRecetasSemanaAnterior
+                }
+            }
+
+            // Relajamos la restricción de la semana pasada también
+            if (almuerzoSeleccionado == null) {
+                almuerzoSeleccionado = candidatosAlmuerzo.firstOrNull()
             }
 
             almuerzoSeleccionado?.let {
@@ -301,11 +338,25 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                         receta.id !in idsRecetasSemanaAnterior
             }
 
-            // Si no se encuentra cena válida, se selecciona por tipo de plato y que no se use ni en la semana anteior ni actual
+            // Relajamos la restricción del aisle
             if (cenaSeleccionado == null) {
                 cenaSeleccionado = candidatosCena.firstOrNull { receta ->
-                    receta.id !in recetasUsadas && receta.id !in idsRecetasSemanaAnterior
+                    val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
+                    receta.id !in recetasUsadas &&
+                            receta.id !in idsRecetasSemanaAnterior
                 }
+            }
+
+            // Relajamos la restricción de que no se haya usado esta semana
+            if (cenaSeleccionado == null) {
+                cenaSeleccionado = candidatosCena.firstOrNull { receta ->
+                    receta.id !in idsRecetasSemanaAnterior
+                }
+            }
+
+            // Relajamos la restricción de la semana pasada también
+            if (cenaSeleccionado == null) {
+                cenaSeleccionado = candidatosCena.firstOrNull()
             }
 
             cenaSeleccionado?.let {
@@ -318,13 +369,12 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
             // Verifica que se ha seleccionado una receta para cada comida
             if (desayunoSeleccionado == null || almuerzoSeleccionado == null || cenaSeleccionado == null) {
                 Log.e("PlanSemanal", "No se pudo generar menú completo para el día $dia")
-                continue
             }
 
             semanaMeals[dia] = DayMeal(
-                breakfast = desayunoSeleccionado,
-                lunch = almuerzoSeleccionado,
-                dinner = cenaSeleccionado
+                breakfast = desayunoSeleccionado!!,
+                lunch = almuerzoSeleccionado!!,
+                dinner = cenaSeleccionado!!
             )
         }
 
@@ -452,6 +502,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
+                    Log.d("PlanViewModel", "existe el documento: $semanaActualId")
                     // Obtener los datos del plan semanal
                     val data = document.data ?: return@addOnSuccessListener
 
@@ -480,6 +531,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                                         semanaMeals[dia] = dayMeal
                                         daysProcessed.add(dia)
 
+                                        Log.d("PlanViewModel", "dias procesados: ${daysProcessed.size}")
                                         // Si todos los días han sido procesados, actualizamos el plan semanal
                                         if (daysProcessed.size == DayOfWeek.entries.size) {
                                             Log.d("PlanViewModel", "Obteniendo plan actual...")
@@ -573,6 +625,131 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
             esFavorita = null,  // Aquí puedes cambiar según sea necesario, ya que no está claro de dónde viene este valor.
         )
     }
+
+    fun getGroupedIngredients(ingredientes: List<Ingrediente>) {
+        val processedIngredients = groupByImageAndSimplifyIngredients(ingredientes)
+//        _groupedIngredients.value = processedIngredients
+
+        val prompt = generatePrompt(processedIngredients) // Generar el texto del prompt
+
+        // Crea el modelo generativo
+        val generativeModel = GenerativeModel(
+            modelName = "gemini-1.5-flash",  // Especifica el nombre del modelo
+            apiKey = "AIzaSyBx9JjFMNqQJ_yjnnL45rVE66plaILDM7A" // Tu clave API
+        )
+
+        viewModelScope.launch {
+            try {
+                // Usamos el modelo para generar el contenido
+                val response = generativeModel.generateContent(prompt)
+
+                // Procesamos la respuesta de Gemini
+                val groupedContent = response.text // Esto contiene la respuesta del modelo
+                Log.d("PlanViewModel","respuesta model: $groupedContent")
+
+                // Asigna el contenido procesado a _groupedIngredients
+                _groupedIngredients.value = groupedContent?.let { parseIngredients(it) }
+            } catch (e: Exception) {
+                Log.e("PlanViewModel", "Error al llamar a la API de Gemini: ${e.message}", e)
+            }
+        }
+    }
+
+
+    fun groupByImageAndSimplifyIngredients(ingredientes: List<Ingrediente>): List<Ingrediente> {
+        // Paso 1: Agrupar ingredientes por su imagen, manteniendo solo uno por imagen
+        val groupedByImage = mutableMapOf<String, Ingrediente>()
+
+        ingredientes.forEach { ingrediente ->
+            if (!groupedByImage.containsKey(ingrediente.image)) {
+                groupedByImage[ingrediente.image] = ingrediente
+            }
+        }
+
+        // Paso 2: Ahora, procesamos la lista para eliminar plural y singular
+        val processedIngredientsMap = mutableMapOf<String, Ingrediente>()
+
+        groupedByImage.values.forEach { ingrediente ->
+            val nameLowerCase = ingrediente.name.lowercase()
+
+            // Si el ingrediente es singular, convertirlo a plural
+            val pluralName = if (nameLowerCase.endsWith("s")) nameLowerCase else nameLowerCase + "s"
+
+            // Verificar si ya existe el ingrediente en plural en el mapa
+            if (!processedIngredientsMap.containsKey(pluralName)) {
+                processedIngredientsMap[pluralName] = ingrediente
+            }
+
+
+            // Paso 3: Eliminar variaciones irrelevantes como "ingredient as required"
+            if (pluralName.contains("ingredient", ignoreCase = true) &&
+                ingrediente.name.contains("as required", ignoreCase = true)
+            ) {
+                processedIngredientsMap[pluralName] = ingrediente.copy(name = "ingredient")
+            }
+        }
+
+        // Paso 4: Ordenar alfabéticamente por nombre
+        return processedIngredientsMap.values
+            .sortedBy { it.name.lowercase() }
+    }
+
+
+    // filtra los ingredientes que realmente no son
+    fun generatePrompt(ingredientes: List<Ingrediente>): String {
+        val ingredientesText = ingredientes.joinToString(", ") {
+            "${it.name}: ${it.amount} ${it.unit} ${it.aisle} ${it.image}"
+        }
+        Log.d("PlanViewModel","ingredientes q paso al model: $ingredientesText")
+
+
+        return """
+   Tengo una lista de ingredientes y necesito simplificarla para que solamente haya ingredientes reales. Elimina los que no sean ingredientes, ya que hay alguna instruccion que se ha colado.
+
+     **Orden alfabético:** Una vez hayas realizado las agrupaciones y eliminaciones, ordena todos los ingredientes resultantes alfabéticamente de la A a la Z.
+    
+     **Formato de salida:** Asegúrate de seguir este formato en cada ingrediente: nombre:aisle:image  si no hay algún campo, pones "" en dicho campo. No utilices estilos de texto.
+
+    Aquí está la lista de ingredientes que debo simplificar: $ingredientesText
+    
+    Asegúrate de seguir estrictamente este formato y las reglas mencionadas.
+    """.trimIndent()
+    }
+
+
+
+    private fun parseIngredients(content: String): List<Ingrediente> {
+        Log.d("PlanViewModel", "parseIng: ${content}")
+        val ingredientes = mutableListOf<Ingrediente>()
+
+        // Asumimos que la respuesta de Gemini tiene un formato con líneas que contienen los ingredientes
+        content.split("\n").forEach { line ->
+            // Limpiar espacios innecesarios y verificar si la línea tiene suficiente contenido
+            val parts =
+                line.trim().split(":") // Dividir por ":" para separar nombre, aisle y imagen
+            if (parts.size == 3) {
+                val name = parts[0].trim() // El nombre del ingrediente
+                val aisle = parts[1].trim() // El pasillo o categoría
+                val image = parts[2].trim() // La imagen
+
+                // Crear el objeto Ingrediente
+                ingredientes.add(
+                    Ingrediente(
+                        name = name,
+                        amount = 0.0,
+                        unit = "",
+                        aisle = aisle,
+                        image = image // Aquí asignamos null o el valor correspondiente
+                    )
+                )
+            }
+        }
+
+        return ingredientes
+    }
+
+
+
 
 
 

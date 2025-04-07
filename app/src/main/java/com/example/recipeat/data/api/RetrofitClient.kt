@@ -15,3 +15,5 @@ object RetrofitClient {
             .create(SpoonacularApi::class.java) // Creamos la instancia de la interfaz de la API
     }
 }
+
+
