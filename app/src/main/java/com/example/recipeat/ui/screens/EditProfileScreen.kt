@@ -181,8 +181,6 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
                         usersViewModel.actualizarUserProfile(
                             uid = uid,
                             newUsername = newUsername,
-                            newEmail = newEmail,
-                            //newPassword = newPassword,
                             newProfileImage = newImage,
                             onResult = { success ->
                                 if (success) {

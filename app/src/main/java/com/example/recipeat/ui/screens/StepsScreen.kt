@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -26,6 +27,7 @@ import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 import com.google.firebase.auth.FirebaseAuth
 
 
@@ -47,6 +49,27 @@ fun StepsScreen(
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // Instanciar el NetworkConnectivityManager
+    val context = LocalContext.current
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
+
+    // Registrar el callback para el estado de la red
+    LaunchedEffect(true) {
+        networkConnectivityManager.registerNetworkCallback()
+    }
+
+    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
+    DisposableEffect(context) {
+        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
+        onDispose {
+            networkConnectivityManager.unregisterNetworkCallback()
+        }
+    }
+
+    // Verificar si hay conexión
+    val isConnected = networkConnectivityManager.isConnected.value
+
 
     LaunchedEffect(navController) {
         if (uid != null) {
@@ -161,6 +184,7 @@ fun StepsScreen(
                     }
                 } else {
                     Button(
+                        enabled = isConnected,
                         onClick = {
                             if (!cocinado) {
                                 receta?.image?.let {

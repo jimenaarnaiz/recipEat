@@ -1,6 +1,8 @@
 package com.example.recipeat.ui.screens
 
+import android.app.Activity
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -87,6 +89,11 @@ fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel,
             }
     }
 
+    // Interceptar el botón de "Atrás" para salir de la aplicación
+    BackHandler {
+        val activity = context as? Activity
+        activity?.finish() // Cerrar la actividad y salir de la app
+    }
 
     Column(
         modifier = Modifier

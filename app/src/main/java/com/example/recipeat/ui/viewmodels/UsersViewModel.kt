@@ -1,15 +1,13 @@
 package com.example.recipeat.ui.viewmodels
 
+import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
-import coil.ImageLoader
-import coil.request.ImageRequest
 import com.example.recipeat.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -18,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 import java.io.FileOutputStream
 
-class UsersViewModel: ViewModel() {
+class UsersViewModel(application: Application): AndroidViewModel(application){
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
@@ -26,16 +24,40 @@ class UsersViewModel: ViewModel() {
     private val _uid = MutableStateFlow<String?>(null)
     val uid: StateFlow<String?> get() = _uid
 
+    private val context = application.applicationContext
+    private val sharedPreferences = context.getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
+    private val sessionIniciadaKey = "sesionIniciada_"
 
-    // Función para obtener el valor del uid, ya que este solo cambia en login y logout
+    init {
+        // Al iniciar el ViewModel, verifica si hay un usuario autenticado
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            _uid.value = currentUser.uid
+            // Guardamos el estado de la sesión por UID único
+            sharedPreferences.edit().putBoolean(sessionIniciadaKey + currentUser.uid, true).apply()
+        } else {
+            // Si no hay un usuario autenticado, marca que la sesión no está activa
+            sharedPreferences.edit().clear().apply()
+        }
+    }
+
     fun getUidValue(): String? {
-        Log.d("UsersViewModel", "getUidValue: ${uid.value}")
         return _uid.value
     }
 
     fun logOut() {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            // Cuando hacemos logout, eliminamos el estado de la sesión de ese UID
+            sharedPreferences.edit().putBoolean(sessionIniciadaKey + currentUser.uid, false).apply()
+        }
         FirebaseAuth.getInstance().signOut()
-        _uid.value = null // Limpiar el UID y cualquier otro dato dependiente de la sesión
+        _uid.value = null
+    }
+
+    fun isSessionActive(): Boolean {
+        val currentUser = auth.currentUser
+        return currentUser != null && sharedPreferences.getBoolean(sessionIniciadaKey + currentUser.uid, false)
     }
 
 
@@ -47,7 +69,6 @@ class UsersViewModel: ViewModel() {
                     if (user != null) {
                         user.reload().addOnCompleteListener { reloadTask ->
                             if (reloadTask.isSuccessful) {
-                                val newEmail = user.email // Nuevo email después de verificación
                                 val uid = user.uid
                                 val db = FirebaseFirestore.getInstance()
                                 val userRef = db.collection("users").document(uid)
@@ -58,22 +79,11 @@ class UsersViewModel: ViewModel() {
                                 userRef.get()
                                     .addOnSuccessListener { document ->
                                         if (document.exists()) {
-                                            val firestoreEmail = document.getString("email")
+                                            // Guardar en SharedPreferences que la sesión está iniciada
+                                            val sharedPreferences = context.getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
+                                            sharedPreferences.edit().putBoolean(sessionIniciadaKey + uid, true).apply()
 
-                                            if (newEmail != null && firestoreEmail != null && newEmail != firestoreEmail) {
-                                                // Actualizar Firestore con el nuevo email
-                                                userRef.update("email", newEmail)
-                                                    .addOnSuccessListener {
-                                                        Log.d("Login", "Email actualizado en Firestore.")
-                                                        onResult(true)
-                                                    }
-                                                    .addOnFailureListener { e ->
-                                                        Log.e("Login", "Error al actualizar email en Firestore", e)
-                                                        onResult(false)
-                                                    }
-                                            } else {
-                                                onResult(true)
-                                            }
+                                            onResult(true)
                                         } else {
                                             Log.e("Login", "No se encontró el usuario en Firestore.")
                                             onResult(false)
@@ -215,12 +225,9 @@ class UsersViewModel: ViewModel() {
             }
     }
 
-    /**
-     * TODO ELIMINAR LA OPCION DE CAMBIAR CORREO
-     */
+    // cambia el username y la foto
     fun actualizarUserProfile(
         newUsername: String?,
-        newEmail: String?,
         newProfileImage: String?,
         onResult: (Boolean) -> Unit, // Retornamos mensaje de error opcional
         uid: String
@@ -231,33 +238,11 @@ class UsersViewModel: ViewModel() {
         // Verificar que el usuario está autenticado antes de continuar
         if (user == null) {
             Log.e("UpdateUser", "No authenticated user found.")
-            onResult(false, /*"Usuario no autenticado."*/)
+            onResult(false)
             return
         }
 
         Log.d("UpdateUser", "uid: ${uid}  y user.uid: ${user.uid}")
-
-        // Verificar si el nuevo email ya está registrado antes de actualizarlo
-        if (newEmail != null && newEmail != user.email) {
-            user.verifyBeforeUpdateEmail(newEmail)
-                .addOnCompleteListener { verifyTask ->
-                    if (verifyTask.isSuccessful) {
-                        Log.d(
-                            "UpdateUser",
-                            "Verification email sent. User must verify before update."
-                        )
-                        onResult(true /*"Se ha enviado un correo de verificación. Verifícalo antes de actualizar."*/)
-                    } else {
-                        Log.e(
-                            "UpdateUser",
-                            "Failed to send verification email",
-                            verifyTask.exception
-                        )
-                        onResult(false /*"Error al enviar el correo de verificación."*/)
-                    }
-                }
-            return
-        }
 
         // Actualizar username y profile image en Firestore
         if (newUsername != null || newProfileImage != null) {
@@ -274,40 +259,12 @@ class UsersViewModel: ViewModel() {
                 }
                 .addOnFailureListener { e ->
                     Log.e("UpdateUser", "Failed to update user data in Firestore", e)
-                    onResult(false, /*"Error al actualizar los datos en Firestore."*/)
+                    onResult(false)
                 }
         } else {
-            onResult(true, )
+            onResult(true) // Si no hay cambios, se considera que la actualización fue exitosa
         }
     }
-
-
-//    fun confirmEmailUpdate(newEmail: String, uid: String, onResult: (Boolean, String?) -> Unit) {
-//        val user = auth.currentUser
-//        val db = FirebaseFirestore.getInstance()
-//
-//        if (user == null) {
-//            onResult(false, "Usuario no autenticado.")
-//            return
-//        }
-//
-//        // Verificar que el usuario haya confirmado el email en Firebase
-//        user.reload().addOnCompleteListener {
-//            if (user.email == newEmail) {
-//                db.collection("users").document(uid)
-//                    .update("email", newEmail)
-//                    .addOnSuccessListener {
-//                        onResult(true, "Correo actualizado correctamente en Firestore.")
-//                    }
-//                    .addOnFailureListener { e ->
-//                        Log.e("UpdateUser", "Failed to update email in Firestore", e)
-//                        onResult(false, "Error al actualizar el correo en Firestore.")
-//                    }
-//            } else {
-//                onResult(false, "El correo aún no ha sido verificado.")
-//            }
-//        }
-//    }
 
 
     /**
@@ -320,7 +277,7 @@ class UsersViewModel: ViewModel() {
             val contentResolver = context.contentResolver
             val inputStream = contentResolver.openInputStream(imageUri)
             val bitmap = BitmapFactory.decodeStream(inputStream)
-            val fileName = if (recetaId.isNullOrBlank()) "profile_image.jpg" else "$recetaId.jpg"
+            val fileName = if (recetaId.isNullOrBlank()) "profile_image${_uid.value}.jpg" else "$recetaId.jpg"
             val file = File(context.filesDir, fileName)
             FileOutputStream(file).use {
                 // guarda el Bitmap en el archivo como un archivo JPEG con la máxima calidad (100).
@@ -339,7 +296,7 @@ class UsersViewModel: ViewModel() {
      */
     fun loadImageFromFile(context: Context, recetaId: String?): Bitmap? {
         try {
-            val imagen = if (recetaId.isNullOrBlank()) "profile_image.jpg" else "$recetaId.jpg"
+            val imagen = if (recetaId.isNullOrBlank()) "profile_image${_uid.value}.jpg" else "$recetaId.jpg"
             val file = File(context.filesDir, imagen)
             if (file.exists()) {
                 Log.d("ImageLoad", "Cargando Imagen de receta : ${file.absolutePath}")
@@ -360,42 +317,6 @@ class UsersViewModel: ViewModel() {
             Log.d("ImageDelete", "Imagen de receta eliminada: ${file.absolutePath}")
         }
     }
-
-
-
-    //TODO eliminar cuando tenga todas las recetas bien
-//    fun eliminarRecetasDeBebidaFirestore() {
-//        val db = FirebaseFirestore.getInstance()
-//        var count = 0
-//
-//        db.collection("recetas")
-//            .get()
-//            .addOnSuccessListener { result ->
-//                val batch = db.batch() // Usamos batch para mejorar el rendimiento
-//                for (document in result) {
-//                    val dishTypes = document.get("dishTypes") as? List<String> ?: emptyList()
-//
-//                    if (dishTypes.contains("drink") || dishTypes.contains("beverage")) {
-//                        batch.delete(db.collection("recetas").document(document.id))
-//                        count++
-//                    }
-//                }
-//
-//                // Ejecutamos la operación en batch
-//                batch.commit()
-//                    .addOnSuccessListener {
-//                        println("Total de recetas eliminadas: $count")
-//                    }
-//                    .addOnFailureListener { exception ->
-//                        println("Error al eliminar recetas: $exception")
-//                    }
-//            }
-//            .addOnFailureListener { exception ->
-//                println("Error al obtener las recetas: $exception")
-//            }
-//    }
-
-
 
 
 

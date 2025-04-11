@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 
 import com.example.recipeat.data.model.DayMeal
 import com.example.recipeat.data.model.Ingrediente
+import com.example.recipeat.data.model.IngredienteCompra
 import com.example.recipeat.data.model.PlanSemanal
 import com.example.recipeat.data.model.Receta
 import com.google.ai.client.generativeai.GenerativeModel
@@ -31,12 +32,16 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
     private val _planSemanal = MutableLiveData<PlanSemanal>()
     val planSemanal: LiveData<PlanSemanal> = _planSemanal
 
-    private val sharedPreferences =
-        application.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
+//    private val sharedPreferences =
+//        application.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
 
-    // MutableState para almacenar los ingredientes agrupados
-    private val _groupedIngredients = MutableLiveData<List<Ingrediente>>(emptyList())
-    val groupedIngredients: LiveData<List<Ingrediente>> = _groupedIngredients
+//    private val _groupedIngredients = MutableLiveData<List<IngredienteCompra>>(emptyList())
+//    val groupedIngredients: LiveData<List<IngredienteCompra>> = _groupedIngredients
+
+    private val _listaCompra = MutableLiveData<List<IngredienteCompra>>(emptyList())
+    val listaCompra: LiveData<List<IngredienteCompra>> = _listaCompra
+
+
 
 
     /**
@@ -72,25 +77,25 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
         return hoy.dayOfWeek == DayOfWeek.MONDAY
     }
 
-    /**
-     * Comprueba si es la primera vez que el usuario accede al plan
-     */
-    fun esPrimeraVez(): Boolean {
-        val primeraVez = sharedPreferences.getBoolean("primera_vez", true)
-        Log.d("PlanSemanal", "Valor de primera_vez: $primeraVez")
-        return primeraVez
-    }
-
-    fun borrarPrimeraVez() {
-        Log.d("PlanSemanal", "Borrando valor de primera_vez")
-        sharedPreferences.edit().remove("primera_vez").apply()
-    }
-
-    // Función para marcar que ya no es la primera vez que entra en el plan
-    private fun marcarNoEsPrimeraVez() {
-        Log.d("PlanSemanal", "Marcando primera_vez a false")
-        sharedPreferences.edit().putBoolean("primera_vez", false).apply()
-    }
+//    /**
+//     * Comprueba si es la primera vez que el usuario accede al plan
+//     */
+//    fun esPrimeraVez(): Boolean {
+//        val primeraVez = sharedPreferences.getBoolean("primera_vez", true)
+//        Log.d("PlanSemanal", "Valor de primera_vez: $primeraVez")
+//        return primeraVez
+//    }
+//
+//    fun borrarPrimeraVez() {
+//        Log.d("PlanSemanal", "Borrando valor de primera_vez")
+//        sharedPreferences.edit().remove("primera_vez").apply()
+//    }
+//
+//    // Función para marcar que ya no es la primera vez que entra en el plan
+//    private fun marcarNoEsPrimeraVez() {
+//        Log.d("PlanSemanal", "Marcando primera_vez a false")
+//        sharedPreferences.edit().putBoolean("primera_vez", false).apply()
+//    }
 
 
     // Función que ejecuta el Worker cada lunes que genera el plan semanal
@@ -120,6 +125,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                         viewModelScope.launch {
                             val planSemanal = generarPlanSemanal(recetas, userId)
                             actualizarYGuardarPlanSemanal(userId, planSemanal)
+                            guardarListaDeLaCompraEnFirebase(userId, planSemanal)
                         }
                     } else {
                        Log.e("PlanSemanal", "No se encontraron recetas para generar el plan")
@@ -131,7 +137,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
-    // si es la primera vez que el user entra (register), y no es lunes, se genera un plan incial
+    // si es la primera vez que el user entra (register), y no es lunes, se genera un plan inicial
     @RequiresApi(Build.VERSION_CODES.O)
     fun iniciarGeneracionPlanSemanalIncial(userId: String) {
         if (!esLunes()) {
@@ -143,6 +149,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                     viewModelScope.launch {
                         val planSemanal = generarPlanSemanal(recetas, userId)
                         actualizarYGuardarPlanSemanal(userId, planSemanal)
+                        guardarListaDeLaCompraEnFirebase(userId, planSemanal)
                         //marcarNoEsPrimeraVez()  // Marca que ya no es primera vez
                     }
                 } else {
@@ -155,9 +162,198 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
+    fun obtenerIngredientesComoLista(planSemanal: PlanSemanal): List<Ingrediente> {
+        val ingredientesList = mutableListOf<Ingrediente>()
+
+        planSemanal.weekMeals.values.forEach { dayMeal ->
+            listOf(dayMeal.breakfast, dayMeal.lunch, dayMeal.dinner).forEach { receta ->
+                ingredientesList.addAll(receta.ingredients)
+            }
+        }
+
+        return ingredientesList
+    }
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun guardarListaDeLaCompraEnFirebase(uid: String, planSemanal: PlanSemanal) {
+        viewModelScope.launch {
+            Log.d("PlanViewModel", "Empezando a guardar lista de la compra...")
+            // Paso 1: Obtener ingredientes del plan semanal
+            val ingredientes = obtenerIngredientesComoLista(planSemanal)
+
+            // Paso 2: Procesar ingredientes con Gemini (agrupados y filtrados)
+            val ingredientesAgrupados = getGroupedIngredients(ingredientes)
+
+            // Paso 3: Verificar si hay ingredientes válidos para guardar
+            if (ingredientesAgrupados.isEmpty()) {
+                Log.e("PlanViewModel", "La lista de ingredientes agrupados está vacía.")
+                return@launch
+            }
+
+            // Paso 4: Preparar datos para Firestore
+            val firestore = FirebaseFirestore.getInstance()
+            val semanaId = obtenerSemanaActualId()
+
+            Log.d("PlanViewModel", "Preparando datos para firebase para guardar lista de la compra...")
+
+            val ingredientesList = ingredientesAgrupados.map { ingrediente ->
+                mapOf(
+                    "name" to ingrediente.name,
+                    "aisle" to ingrediente.aisle,
+                    "image" to ingrediente.image,
+                    "medidas" to ingrediente.medidas.map { medida ->
+                        mapOf(
+                            "amount" to medida.first,
+                            "unit" to medida.second
+                        )
+                    },
+                    "estaComprado" to ingrediente.estaComprado
+                )
+            }
+
+            // Paso 5: Guardar en Firestore
+            firestore
+                .collection("planSemanal")
+                .document(uid)
+                .collection("listaCompra")
+                .document("listaCompraActual")
+                .set(mapOf("ingredientes" to ingredientesList))
+                .addOnSuccessListener {
+                    Log.d("Firebase", "Lista de la compra guardada exitosamente")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("Firebase", "Error al guardar la lista de la compra", e)
+                }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun obtenerListaDeLaCompraDeFirebase(uid: String) {
+        viewModelScope.launch {
+            Log.d("PlanViewModel", "Empezando a obtener lista de la compra...")
+
+            // Acceder a Firestore para obtener la lista de la compra
+            val firestore = FirebaseFirestore.getInstance()
+
+            // Acceder a la colección de la lista de la compra
+            firestore
+                .collection("planSemanal")
+                .document(uid)
+                .collection("listaCompra")
+                .document("listaCompraActual")
+                .get()
+                .addOnSuccessListener { document ->
+                    if (document.exists()) {
+                        Log.d("Firebase", "Lista de la compra obtenida exitosamente")
+
+                        // Paso 3: Procesar los ingredientes y asignarlos a _listaCompra
+                        val ingredientesList = document.get("ingredientes") as? List<Map<String, Any>> ?: emptyList()
+
+                        val listaCompra = ingredientesList.map { ingrediente ->
+                            val name = ingrediente["name"] as? String ?: ""
+                            val aisle = ingrediente["aisle"] as? String ?: ""
+                            val image = ingrediente["image"] as? String ?: ""
+                            val medidas = ingrediente["medidas"] as? List<Map<String, Any>> ?: emptyList()
+                            val estaComprado = ingrediente["estaComprado"] as? Boolean ?: false
+
+                            val medidasList = medidas.map { medida ->
+                                Pair(medida["amount"] as? Double ?: 0.0, medida["unit"] as? String ?: "")
+                            }
+
+                            IngredienteCompra(
+                                name = name,
+                                aisle = aisle,
+                                image = image,
+                                medidas = medidasList,
+                                estaComprado = estaComprado
+                            )
+                        }
+
+                        // Asignar a la variable _listaCompra
+                        _listaCompra.value = listaCompra
+
+                        Log.d("PlanViewModel", "Lista de la compra guardada en _listaCompra")
+                    } else {
+                        Log.e("Firebase", "No se encontró la lista de la compra para el usuario $uid en la semana actual")
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e("Firebase", "Error al obtener la lista de la compra", e)
+                }
+        }
+    }
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun actualizarEstadoIngredienteEnFirebase(uid: String, nombreIngrediente: String, estaComprado: Boolean) {
+        viewModelScope.launch {
+            Log.d("PlanViewModel", "Empezando a actualizar el estado de comprado...")
+
+            // Paso 1: Acceder a Firestore
+            val firestore = FirebaseFirestore.getInstance()
+
+            // Paso 2: Acceder al documento de la lista de la compra del usuario
+            firestore
+                .collection("planSemanal")
+                .document(uid)
+                .collection("listaCompra")
+                .document("listaCompraActual")  // Usamos el documento fijo para la lista de la compra
+                .get()
+                .addOnSuccessListener { document ->
+                    if (document.exists()) {
+                        Log.d("Firebase", "Lista de la compra obtenida exitosamente")
+
+                        // Paso 3: Obtener la lista de ingredientes
+                        val ingredientesList = document.get("ingredientes") as? List<Map<String, Any>> ?: emptyList()
+
+                        // Paso 4: Buscar el ingrediente y actualizar su estado de "estaComprado"
+                        val ingredientesActualizados = ingredientesList.map { ingrediente ->
+                            val ingredienteMap = ingrediente.toMutableMap()
+                            val nombre = ingredienteMap["name"] as? String ?: ""
+
+                            if (nombre == nombreIngrediente) {
+                                Log.d("PlanViewModel", "Coincidencia encontrada: $nombre == $nombreIngrediente")
+                                ingredienteMap["estaComprado"] = estaComprado
+                            }
+
+                            ingredienteMap
+                        }
+
+                        // Paso 5: Guardar la lista actualizada de vuelta en Firestore
+                        firestore
+                            .collection("planSemanal")
+                            .document(uid)
+                            .collection("listaCompra")
+                            .document("listaCompraActual")
+                            .set(mapOf("ingredientes" to ingredientesActualizados))
+                            .addOnSuccessListener {
+                                Log.d("Firebase", "Estado de comprado actualizado correctamente")
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("Firebase", "Error al actualizar el estado de comprado", e)
+                            }
+                    } else {
+                        Log.e("Firebase", "No se encontró la lista de la compra para el usuario $uid")
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e("Firebase", "Error al obtener la lista de la compra", e)
+                }
+        }
+    }
+
+
+
+
 
     //RESTRICCIONES
 
+    /**
+    * Filtra las recetas aptas para el desayuno.
+    * Verifica si la receta es del tipo desayuno y si su tiempo de preparación es adecuado (≤ 30 minutos).
+    * Si no tiene tipo se mira que esté en el pasillo adecuado.
+    **/
     fun filtrarParaDesayuno(recetas: List<Receta>): List<Receta> {
         val dishTypesValidos = listOf("breakfast", "morning meal", "brunch")
         val aislesValidos = listOf(
@@ -169,6 +365,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
         return recetas.filter { receta ->
             val esTipoDesayuno = if (receta.dishTypes.isNotEmpty()) {
                 receta.dishTypes.any { it.lowercase() in dishTypesValidos }
+            // Si no tiene tipos de plato, verifica si el ingrediente pertenece a un pasillo válido para el desayuno.
             } else {
                 receta.ingredients.any { it.aisle in aislesValidos }
             }
@@ -189,58 +386,88 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                 if (receta.dishTypes.isNotEmpty()) {
                     receta.dishTypes.any { it.lowercase() in dishTypesValidos }
                 } else {
-                    // Si no tiene dishTypes, se filtra según algún ingrediente.
+                    // Si no tiene dishTypes, se filtra según el pasillo.
                     receta.ingredients.any { it.aisle in aislesValidos }
                 }
             }
         }
 
-        fun filtrarParaCena(recetas: List<Receta>): List<Receta> {
-            val dishTypesValidos = listOf("dinner")
-            val aislesValidos = listOf(
-                "Meat", "Ethnic Foods", "Seafood", "Pasta and Rice", "Produce", "Frozen"
-            )
-            return recetas.filter { receta ->
-                if (receta.dishTypes.isNotEmpty()) {
-                    receta.dishTypes.any { it.lowercase() in dishTypesValidos }
-                } else {
-                    // Cuando dishTypes esté vacío, usamos el aisle.
-                    receta.ingredients.any { it.aisle in aislesValidos }
-                }
-            }
-        }
-
-
-        // Mapa para contar cuántas veces se ha usado cada aisle (se guarda en minúscula para uniformidad)
-        val usoAisle = mutableMapOf<String, Int>()
-
-        // Definir límites para algunos aisles, "meat" y "pasta and rice"
-        val limitesAisle = mapOf(
-            "meat" to 3,
-            "pasta and rice" to 3
-            // agregar otros límites
+    fun filtrarParaCena(recetas: List<Receta>): List<Receta> {
+        val dishTypesValidos = listOf("dinner")
+        val aislesValidos = listOf(
+            "Meat", "Ethnic Foods", "Seafood", "Pasta and Rice", "Produce", "Frozen"
         )
-
-        fun puedeUsarAisle(aisle: String): Boolean {
-            val key = aisle.lowercase()
-            val actual = usoAisle.getOrDefault(key, 0)
-            val limite = limitesAisle.getOrDefault(key, Int.MAX_VALUE)
-            return actual < limite
+        return recetas.filter { receta ->
+            if (receta.dishTypes.isNotEmpty()) {
+                receta.dishTypes.any { it.lowercase() in dishTypesValidos }
+            } else {
+                // Cuando dishTypes esté vacío, usamos el aisle.
+                receta.ingredients.any { it.aisle in aislesValidos }
+            }
         }
+    }
 
-        fun registrarUsoAisle(aisle: String) {
-            val key = aisle.lowercase()
-            usoAisle[key] = usoAisle.getOrDefault(key, 0) + 1
-        }
+    // Mapa para contar cuántas veces se ha usado cada aisle (se guarda en minúscula para uniformidad)
+    val usoAisle = mutableMapOf<String, Int>()
+
+    // Definir límites para algunos aisles, "meat" y "pasta and rice" para evitar su uso excesivo en el mismo plan semanal.
+    val limitesAisle = mapOf(
+        "meat" to 3,
+        "pasta and rice" to 3
+        // agregar otros límites
+    )
+
+    /**
+     * Verifica si se puede usar un pasillo para una receta en función del número de veces que ya se ha utilizado ese pasillo
+     * durante la generación del plan semanal. Cada pasillo tiene un límite de uso específico, para evitar que se utilicen
+     * ingredientes del mismo pasillo excesivamente durante la semana.
+     *
+     * El métdo obtiene el número actual de usos del pasillo en cuestión y compara si es menor que el límite definido
+     * para ese pasillo. Si es menor, el pasillo puede ser utilizado; si no, no se podrá usar más ingredientes de ese pasillo.
+
+     * @return True si el pasillo se puede usar (no se ha superado el límite), False en caso contrario.
+     */
+    fun puedeUsarAisle(aisle: String): Boolean {
+        val key = aisle.lowercase() // Convertimos el pasillo a minúsculas para garantizar consistencia.
+        val actual = usoAisle.getOrDefault(key, 0) // Obtenemos el número actual de usos del pasillo.
+        val limite = limitesAisle.getOrDefault(key, Int.MAX_VALUE) // Obtenemos el límite del pasillo (por defecto es infinito).
+        return actual < limite // Comprobamos si el número de usos es menor que el límite.
+    }
+
+    /**
+     * Registra el uso de un pasillo al generar el plan semanal. Cada vez que se utiliza un ingrediente de un pasillo,
+     * se incrementa el contador correspondiente en el mapa `usoAisle` para llevar un control de la cantidad de veces
+     * que se ha utilizado cada pasillo durante la generación del plan.
+     */
+    fun registrarUsoAisle(aisle: String) {
+        val key = aisle.lowercase() // Convertimos el pasillo a minúsculas para garantizar consistencia.
+        usoAisle[key] = usoAisle.getOrDefault(key, 0) + 1 // Incrementamos el contador de uso del pasillo.
+    }
 
 
-
-
+    /**
+     * Genera un plan semanal de comidas (desayuno, almuerzo y cena) para el usuario, utilizando las recetas proporcionadas.
+     * El plan intenta asegurar la diversidad de los ingredientes y evitar la repetición de las recetas de la semana anterior.
+     * Además, se asegura de que cada comida del día esté correctamente asignada, considerando restricciones como los tipos de platos (desayuno, almuerzo, cena) y los pasillos de ingredientes disponibles.
+     *
+     * El algoritmo realiza los siguientes pasos:
+     * 1. Obtiene las recetas de la semana anterior para evitar repeticiones.
+     * 2. Baraja las recetas disponibles para crear una selección aleatoria.
+     * 3. Filtra las recetas para el desayuno, almuerzo y cena según los tipos de platos y pasillos válidos.
+     * 4. Asigna una receta para cada comida del día, respetando restricciones de ingredientes y evitando el uso excesivo de ciertos pasillos (como carne o pasta).
+     * 5. En caso de no encontrar una receta adecuada que cumpla todas las restricciones, relaja gradualmente las restricciones (p. ej., eliminando la condición de pasillo o de repetición semanal).
+     * 6. Registra el uso de pasillos y recetas para garantizar que las recetas no se repitan innecesariamente.
+     *
+     * @param recetas Lista de recetas de firebase para generar el plan semanal.
+     * @param userId ID del usuario a generar el plan.
+     * @return Un objeto PlanSemanal que contiene las comidas asignadas para cada día de la semana.
+     */
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun generarPlanSemanal(recetas: List<Receta>, userId: String): PlanSemanal {
         val idsRecetasSemanaAnterior = obtenerRecetasSemanaAnterior(userId = userId)
         val recetasBarajeadas = recetas.shuffled() // Las recetas se desordenan para evitar repetir las mismas.
 
+        // Se filtran las recetas para cada comida (desayuno, almuerzo, cena)
         val candidatosDesayuno = filtrarParaDesayuno(recetasBarajeadas)
         val candidatosAlmuerzo = filtrarParaAlmuerzo(recetasBarajeadas)
         val candidatosCena = filtrarParaCena(recetasBarajeadas)
@@ -250,127 +477,45 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
         val recetasUsadas = mutableSetOf<String>()
 
+        // Se itera sobre cada día de la semana para asignar las comidas
         for (dia in diasSemana) {
             var desayunoSeleccionado: Receta?
             var almuerzoSeleccionado: Receta?
             var cenaSeleccionado: Receta?
 
+            // Para asegurarse de que no se asignen más recetas que pertenezcan al mismo "pasillo" de ingredientes en el mismo día
             val aislesUsadosEnDia = mutableSetOf<String>()
 
-            // Desayuno
-            desayunoSeleccionado = candidatosDesayuno.firstOrNull { receta ->
-                val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
-                receta.id !in recetasUsadas &&
-                        puedeUsarAisle(aisle) &&
-                        aisle !in aislesUsadosEnDia &&
-                        receta.id !in idsRecetasSemanaAnterior
-            }
+            // Asignar desayuno
+            desayunoSeleccionado = seleccionarRecetaParaComida(
+                candidatosDesayuno,
+                aislesUsadosEnDia,
+                recetasUsadas,
+                idsRecetasSemanaAnterior
+            )
 
-            // Relajamos la restricción del aisle
-            if (desayunoSeleccionado == null) {
-                desayunoSeleccionado = candidatosDesayuno.firstOrNull { receta ->
-                    val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
-                    receta.id !in recetasUsadas &&
-                            receta.id !in idsRecetasSemanaAnterior
-                }
-            }
+            // Asignar almuerzo
+            almuerzoSeleccionado = seleccionarRecetaParaComida(
+                candidatosAlmuerzo,
+                aislesUsadosEnDia,
+                recetasUsadas,
+                idsRecetasSemanaAnterior
+            )
 
-            // Relajamos la restricción de que no se haya usado esta semana
-            if (desayunoSeleccionado == null) {
-                desayunoSeleccionado = candidatosDesayuno.firstOrNull { receta ->
-                    receta.id !in idsRecetasSemanaAnterior
-                }
-            }
-
-            // Relajamos la restricción de la semana pasada también
-            if (desayunoSeleccionado == null) {
-                desayunoSeleccionado = candidatosDesayuno.firstOrNull()
-            }
-
-            desayunoSeleccionado?.let {
-                val aisle = it.ingredients.firstOrNull()?.aisle ?: ""
-                registrarUsoAisle(aisle)
-                aislesUsadosEnDia.add(aisle)
-                recetasUsadas.add(it.id)
-            }
-
-            // Almuerzo
-            almuerzoSeleccionado = candidatosAlmuerzo.firstOrNull { receta ->
-                val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
-                receta.id !in recetasUsadas &&
-                        aisle !in aislesUsadosEnDia &&
-                        receta.id !in idsRecetasSemanaAnterior
-            }
-
-            // Relajamos la restricción del aisle
-            if (almuerzoSeleccionado == null) {
-                almuerzoSeleccionado = candidatosAlmuerzo.firstOrNull { receta ->
-                    val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
-                    receta.id !in recetasUsadas &&
-                            receta.id !in idsRecetasSemanaAnterior
-                }
-            }
-
-            // Relajamos la restricción de que no se haya usado esta semana
-            if (almuerzoSeleccionado == null) {
-                almuerzoSeleccionado = candidatosAlmuerzo.firstOrNull { receta ->
-                    receta.id !in idsRecetasSemanaAnterior
-                }
-            }
-
-            // Relajamos la restricción de la semana pasada también
-            if (almuerzoSeleccionado == null) {
-                almuerzoSeleccionado = candidatosAlmuerzo.firstOrNull()
-            }
-
-            almuerzoSeleccionado?.let {
-                val aisle = it.ingredients.firstOrNull()?.aisle ?: ""
-                registrarUsoAisle(aisle)
-                aislesUsadosEnDia.add(aisle)
-                recetasUsadas.add(it.id)
-            }
-
-            // Cena
-            cenaSeleccionado = candidatosCena.firstOrNull { receta ->
-                val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
-                receta.id !in recetasUsadas &&
-                        aisle !in aislesUsadosEnDia &&
-                        receta.id !in idsRecetasSemanaAnterior
-            }
-
-            // Relajamos la restricción del aisle
-            if (cenaSeleccionado == null) {
-                cenaSeleccionado = candidatosCena.firstOrNull { receta ->
-                    val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
-                    receta.id !in recetasUsadas &&
-                            receta.id !in idsRecetasSemanaAnterior
-                }
-            }
-
-            // Relajamos la restricción de que no se haya usado esta semana
-            if (cenaSeleccionado == null) {
-                cenaSeleccionado = candidatosCena.firstOrNull { receta ->
-                    receta.id !in idsRecetasSemanaAnterior
-                }
-            }
-
-            // Relajamos la restricción de la semana pasada también
-            if (cenaSeleccionado == null) {
-                cenaSeleccionado = candidatosCena.firstOrNull()
-            }
-
-            cenaSeleccionado?.let {
-                val aisle = it.ingredients.firstOrNull()?.aisle ?: ""
-                registrarUsoAisle(aisle)
-                aislesUsadosEnDia.add(aisle)
-                recetasUsadas.add(it.id)
-            }
+            // Asignar cena
+            cenaSeleccionado = seleccionarRecetaParaComida(
+                candidatosCena,
+                aislesUsadosEnDia,
+                recetasUsadas,
+                idsRecetasSemanaAnterior
+            )
 
             // Verifica que se ha seleccionado una receta para cada comida
             if (desayunoSeleccionado == null || almuerzoSeleccionado == null || cenaSeleccionado == null) {
                 Log.e("PlanSemanal", "No se pudo generar menú completo para el día $dia")
             }
 
+            // Asignar las comidas seleccionadas al día correspondiente
             semanaMeals[dia] = DayMeal(
                 breakfast = desayunoSeleccionado!!,
                 lunch = almuerzoSeleccionado!!,
@@ -379,8 +524,66 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         val planSemanal = PlanSemanal(semanaMeals)
-        //_planSemanal.value = planSemanal
         return planSemanal
+    }
+
+    // Función auxiliar para seleccionar una receta para una comida (desayuno, almuerzo o cena)
+    fun seleccionarRecetaParaComida(
+        candidatos: List<Receta>,
+        aislesUsadosEnDia: MutableSet<String>,
+        recetasUsadas: MutableSet<String>,
+        idsRecetasSemanaAnterior: List<String>
+    ): Receta? {
+        // Primero intentamos seleccionar una receta que no haya sido usada y que respete las restricciones
+        var seleccionada: Receta?
+
+        // Intento 1: No repetir "aisle" y no repetir receta
+        seleccionada = candidatos.firstOrNull { receta ->
+            val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
+            receta.id !in recetasUsadas &&
+                    puedeUsarAisle(aisle) &&
+                    aisle !in aislesUsadosEnDia &&
+                    receta.id !in idsRecetasSemanaAnterior
+        }
+
+        // Intento 2: Relajamos la restricción de "aisle"
+        if (seleccionada == null) {
+            seleccionada = candidatos.firstOrNull { receta ->
+                val aisle = receta.ingredients.firstOrNull()?.aisle ?: ""
+                receta.id !in recetasUsadas &&
+                        aisle !in aislesUsadosEnDia &&
+                        receta.id !in idsRecetasSemanaAnterior
+            }
+        }
+
+        // Intento 3: Relajamos la restricción de recetas de la semana anterior
+        if (seleccionada == null) {
+            seleccionada = candidatos.firstOrNull { receta ->
+                receta.id !in recetasUsadas && receta.id !in idsRecetasSemanaAnterior
+            }
+        }
+
+        // Intento 4: Sin restricciones
+        if (seleccionada == null) {
+            seleccionada = candidatos.firstOrNull { receta ->
+                receta.id !in recetasUsadas
+            }
+        }
+
+        // Intento 5: Si ninguna de las anteriores, seleccionamos cualquier receta
+        if (seleccionada == null) {
+            seleccionada = candidatos.firstOrNull()
+        }
+
+        // Si se ha seleccionado una receta, la agregamos a las listas de usadas
+        seleccionada?.let {
+            val aisle = it.ingredients.firstOrNull()?.aisle ?: ""
+            registrarUsoAisle(aisle)
+            aislesUsadosEnDia.add(aisle)
+            recetasUsadas.add(it.id)
+        }
+
+        return seleccionada
     }
 
 
@@ -489,6 +692,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
+    //obtiene de firebase el plan semanal actual
     @RequiresApi(Build.VERSION_CODES.O)
     fun obtenerPlanSemanal(userId: String) {
         //semana actual
@@ -626,130 +830,107 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun getGroupedIngredients(ingredientes: List<Ingrediente>) {
-        val processedIngredients = groupByImageAndSimplifyIngredients(ingredientes)
-//        _groupedIngredients.value = processedIngredients
+    /*
+    * Agrupa y filtra ingredientes usando Gemini para eliminar los ingredientes que realmente son instrucciones.
+    * Devuelve una lista de ingredientes procesados (IngredienteCompra).
+    * */
+    suspend fun getGroupedIngredients(ingredientes: List<Ingrediente>): List<IngredienteCompra> {
+        val ingredientesProcesados = groupByImagen(ingredientes)
+        val nombresIngredientes = ingredientesProcesados.map { it.name }
+        val prompt = generatePrompt(nombresIngredientes)
 
-        val prompt = generatePrompt(processedIngredients) // Generar el texto del prompt
-
-        // Crea el modelo generativo
         val generativeModel = GenerativeModel(
-            modelName = "gemini-1.5-flash",  // Especifica el nombre del modelo
-            apiKey = "AIzaSyBx9JjFMNqQJ_yjnnL45rVE66plaILDM7A" // Tu clave API
+            modelName = "gemini-1.5-flash",
+            apiKey = "AIzaSyBx9JjFMNqQJ_yjnnL45rVE66plaILDM7A"
         )
 
-        viewModelScope.launch {
-            try {
-                // Usamos el modelo para generar el contenido
-                val response = generativeModel.generateContent(prompt)
+        return try {
+            val response = generativeModel.generateContent(prompt)
+            val groupedContent = response.text
 
-                // Procesamos la respuesta de Gemini
-                val groupedContent = response.text // Esto contiene la respuesta del modelo
-                Log.d("PlanViewModel","respuesta model: $groupedContent")
+            val nombresAEliminar = groupedContent
+                ?.split(",")
+                ?.map { it.trim().lowercase() }
 
-                // Asigna el contenido procesado a _groupedIngredients
-                _groupedIngredients.value = groupedContent?.let { parseIngredients(it) }
-            } catch (e: Exception) {
-                Log.e("PlanViewModel", "Error al llamar a la API de Gemini: ${e.message}", e)
+            val ingredientesFiltrados = ingredientesProcesados.filter { ingrediente ->
+                !nombresAEliminar!!.contains(ingrediente.name.lowercase())
             }
+
+            Log.d("PlanViewModel", "Filtrados: ${ingredientesFiltrados.size}")
+            ingredientesFiltrados
+        } catch (e: Exception) {
+            Log.e("PlanViewModel", "Error al usar Gemini: ${e.message}", e)
+            emptyList()
         }
     }
 
 
-    fun groupByImageAndSimplifyIngredients(ingredientes: List<Ingrediente>): List<Ingrediente> {
-        // Paso 1: Agrupar ingredientes por su imagen, manteniendo solo uno por imagen
-        val groupedByImage = mutableMapOf<String, Ingrediente>()
-
-        ingredientes.forEach { ingrediente ->
-            if (!groupedByImage.containsKey(ingrediente.image)) {
-                groupedByImage[ingrediente.image] = ingrediente
-            }
-        }
-
-        // Paso 2: Ahora, procesamos la lista para eliminar plural y singular
-        val processedIngredientsMap = mutableMapOf<String, Ingrediente>()
-
-        groupedByImage.values.forEach { ingrediente ->
-            val nameLowerCase = ingrediente.name.lowercase()
-
-            // Si el ingrediente es singular, convertirlo a plural
-            val pluralName = if (nameLowerCase.endsWith("s")) nameLowerCase else nameLowerCase + "s"
-
-            // Verificar si ya existe el ingrediente en plural en el mapa
-            if (!processedIngredientsMap.containsKey(pluralName)) {
-                processedIngredientsMap[pluralName] = ingrediente
-            }
-
-
-            // Paso 3: Eliminar variaciones irrelevantes como "ingredient as required"
-            if (pluralName.contains("ingredient", ignoreCase = true) &&
-                ingrediente.name.contains("as required", ignoreCase = true)
-            ) {
-                processedIngredientsMap[pluralName] = ingrediente.copy(name = "ingredient")
-            }
-        }
-
-        // Paso 4: Ordenar alfabéticamente por nombre
-        return processedIngredientsMap.values
-            .sortedBy { it.name.lowercase() }
-    }
-
-
-    // filtra los ingredientes que realmente no son
-    fun generatePrompt(ingredientes: List<Ingrediente>): String {
+    /**
+     * Devuelve una lista con los nombres de ingredientes que no son realmente ingredientes,
+     * Formato lista: name1,name2...
+     */
+    fun generatePrompt(ingredientes: List<String>): String {
         val ingredientesText = ingredientes.joinToString(", ") {
-            "${it.name}: ${it.amount} ${it.unit} ${it.aisle} ${it.image}"
+            it
         }
-        Log.d("PlanViewModel","ingredientes q paso al model: $ingredientesText")
+        Log.d("PlanViewModel", "ingredientes q paso al model: $ingredientesText")
 
 
         return """
-   Tengo una lista de ingredientes y necesito simplificarla para que solamente haya ingredientes reales. Elimina los que no sean ingredientes, ya que hay alguna instruccion que se ha colado.
-
-     **Orden alfabético:** Una vez hayas realizado las agrupaciones y eliminaciones, ordena todos los ingredientes resultantes alfabéticamente de la A a la Z.
-    
-     **Formato de salida:** Asegúrate de seguir este formato en cada ingrediente: nombre:aisle:image  si no hay algún campo, pones "" en dicho campo. No utilices estilos de texto.
-
+   Tengo una lista de ingredientes y necesito simplificarla para que solamente haya ingredientes. Ponme el nombre de ingredientes contengan verbos en el nombre, ya que hay alguna instruccion que se ha colado.
     Aquí está la lista de ingredientes que debo simplificar: $ingredientesText
     
-    Asegúrate de seguir estrictamente este formato y las reglas mencionadas.
+    Asegúrate de seguir estrictamente este formato: no uses estilos y separa los nombres por comas sin espacios.
     """.trimIndent()
     }
 
 
+    /**
+     * Filtramos los ingredientes que tienen as required para que no salga eso en el nombre
+     *
+     * Agrupo los ingredientes con la misma imagen, si no tienen, agrupamos por nombre
+     * y agrego sus cantidades-medidas para evitar repetidos (pe: egg y eggs)
+     *
+     * Ordenamos alfabéticamente por nombre
+     */
+    fun groupByImagen(ingredientes: List<Ingrediente>): List<IngredienteCompra> {
+        val agrupados = mutableMapOf<String, IngredienteCompra>()
 
-    private fun parseIngredients(content: String): List<Ingrediente> {
-        Log.d("PlanViewModel", "parseIng: ${content}")
-        val ingredientes = mutableListOf<Ingrediente>()
+        ingredientes.forEach { ingrediente ->
+            // Verificamos si el nombre contiene "as required"
+            var nombre = ingrediente.name.lowercase()
 
-        // Asumimos que la respuesta de Gemini tiene un formato con líneas que contienen los ingredientes
-        content.split("\n").forEach { line ->
-            // Limpiar espacios innecesarios y verificar si la línea tiene suficiente contenido
-            val parts =
-                line.trim().split(":") // Dividir por ":" para separar nombre, aisle y imagen
-            if (parts.size == 3) {
-                val name = parts[0].trim() // El nombre del ingrediente
-                val aisle = parts[1].trim() // El pasillo o categoría
-                val image = parts[2].trim() // La imagen
+            // Si contiene "as required", tomamos lo que está antes de esa frase
+            if (nombre.contains("as required", ignoreCase = true)) {
+                nombre = nombre.substringBefore("as required").trim() // Obtenemos el nombre antes de "as required"
+            }
 
-                // Crear el objeto Ingrediente
-                ingredientes.add(
-                    Ingrediente(
-                        name = name,
-                        amount = 0.0,
-                        unit = "",
-                        aisle = aisle,
-                        image = image // Aquí asignamos null o el valor correspondiente
-                    )
+            // Obtenemos la imagen del ingrediente
+            val imagen = ingrediente.image.ifEmpty { null }
+
+            // Si tiene imagen, agrupamos por imagen, si no, agrupamos por nombre
+            val claveAgrupacion = imagen ?: nombre
+
+            // Agrupar los ingredientes por imagen o nombre
+            if (agrupados.containsKey(claveAgrupacion)) {
+                // Si ya existe la clave de agrupación, combinamos las medidas sin modificar la lista original
+                agrupados[claveAgrupacion]?.medidas = agrupados[claveAgrupacion]?.medidas?.plus(ingrediente.amount to ingrediente.unit)
+                    ?: listOf(ingrediente.amount to ingrediente.unit)
+            } else {
+                // Si no existe, creamos una nueva entrada en el mapa
+                agrupados[claveAgrupacion] = IngredienteCompra(
+                    name = nombre,
+                    aisle = ingrediente.aisle.ifEmpty { "" },
+                    image = imagen ?: "",  // Si no tiene imagen, dejamos vacío
+                    medidas = listOf(ingrediente.amount to ingrediente.unit), // Usamos una lista inmutable
+                    estaComprado = false
                 )
             }
         }
 
-        return ingredientes
+        // Ordenamos alfabéticamente
+        return agrupados.values.sortedBy { it.name.lowercase() }
     }
-
-
-
 
 
 

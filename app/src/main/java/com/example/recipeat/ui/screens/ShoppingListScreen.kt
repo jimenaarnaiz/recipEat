@@ -1,5 +1,7 @@
 package com.example.recipeat.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,116 +17,56 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.recipeat.data.model.Ingrediente
+import com.example.recipeat.R
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ShoppingListScreen(
     navController: NavHostController,
     usersViewModel: UsersViewModel,
     planViewModel: PlanViewModel
 ) {
-    // Suponemos que planSemanal es LiveData<PlanSemanal>
-    val planSemanal by planViewModel.planSemanal.observeAsState()
 
-//    // Definir un conjunto de unidades aceptadas (en minúsculas)
-//    val acceptedUnits = setOf("g", "gram", "grams", "unit", "units", "serving", "servings", "ml")
+    val uid = usersViewModel.getUidValue()
+    // Observar los ingredientes agrupados desde el ViewModel
+    val ingredienteslistaCompraState = planViewModel.listaCompra.observeAsState(emptyList())
 
-//    val ingredientesAgrupados = remember(planSemanal) {
-//        val mapaIngredientes = mutableMapOf<String, Triple<Double, String, String>>() // nombre -> (cantidad total, unidad, imageUrl)
-//        planSemanal?.weekMeals?.values?.forEach { dayMeal ->
-//            listOf(dayMeal.breakfast, dayMeal.lunch, dayMeal.dinner).forEach { receta ->
-//                receta.ingredients.forEach { ingrediente ->
-//                    val name = ingrediente.name
-//                    val amount = ingrediente.amount
-//                    val unit = ingrediente.unit
-//                    val image = ingrediente.image
-//
-//                    // Si ya existe el ingrediente y la unidad coincide (ignorando mayúsculas), sumamos la cantidad
-//                    if (mapaIngredientes.containsKey(name)) {
-//                        val (existingAmount, existingUnit, existingImage) = mapaIngredientes[name]!!
-//                        if (unit.lowercase(Locale.getDefault()) == existingUnit.lowercase(Locale.getDefault())) {
-//                            mapaIngredientes[name] = Triple(existingAmount + amount, unit, image.ifEmpty { existingImage })
-//                        } else {
-//                            // Si la unidad difiere, diferenciamos la clave agregando la unidad al nombre
-//                            val newKey = "$name ($unit)"
-//                            mapaIngredientes[newKey] = Triple(amount, unit, image)
-//                        }
-//                    } else {
-//                        mapaIngredientes[name] = Triple(amount, unit, image)
-//                    }
-//                }
-//            }
-//        }
-//        mapaIngredientes.toList()
-//    }
+    val context = LocalContext.current
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
 
+    // Registrar el callback para el estado de la red
+    LaunchedEffect(true) {
+        networkConnectivityManager.registerNetworkCallback()
+    }
 
-    val ingredientesAgrupados = remember(planSemanal) {
-        val ingredientesList =
-            mutableListOf<List<Any>>() // Para almacenar los ingredientes en el formato adecuado
-
-        // Verificar que el plan semanal no es nulo y que contiene las comidas
-        planSemanal?.weekMeals?.values?.forEach { dayMeal ->
-            // Iterar sobre las comidas del día: desayuno, almuerzo y cena
-            listOf(dayMeal.breakfast, dayMeal.lunch, dayMeal.dinner).forEach { receta ->
-                receta.ingredients.forEach { ingrediente ->
-                    // Extraer la información de cada ingrediente
-                    val name = ingrediente.name
-                    val amount = ingrediente.amount
-                    val unit = ingrediente.unit
-                    val aisle =
-                        ingrediente.aisle ?: "Unknown"  // Si aisle es nulo, asignamos "Unknown"
-                    val image = ingrediente.image
-
-                    // Agregar al listado en el formato adecuado
-                    ingredientesList.add(listOf(name, amount, unit, aisle, image))
-                }
-            }
+    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
+    DisposableEffect(context) {
+        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
+        onDispose {
+            networkConnectivityManager.unregisterNetworkCallback()
         }
-
-        ingredientesList // Devolver la lista de ingredientes
-
     }
 
-// Observar los ingredientes agrupados desde el ViewModel
-    val ingredientesAgrupados2 = planViewModel.groupedIngredients.observeAsState(emptyList())
+    // Verificar si hay conexión y ajustar el ícono de favoritos
+    val isConnected = networkConnectivityManager.isConnected.value
 
-
-//    // Para imprimir los ingredientes agrupados:
-//    LaunchedEffect(ingredientesAgrupados) {
-//        ingredientesAgrupados.forEach { (nombre, triple) ->
-//            val (cantidad, unidad, imagen) = triple
-//            Log.d("ShoppingListScreen", "$nombre: $cantidad $unidad $imagen")
-//        }
-//    }
-
-
-    // Llamar a la función para procesar los ingredientes
-    LaunchedEffect(ingredientesAgrupados) {
-        // Llamar a la función del ViewModel para procesar los ingredientes
-        planViewModel.getGroupedIngredients(ingredientesAgrupados.map {
-            Ingrediente(
-                name = it[0] as String,
-                amount = it[1] as Double,
-                unit = it[2] as String,
-                aisle = it[3] as String,
-                image = it[4] as String
-            )
-        })
-
-    }
 
     Scaffold(
         topBar = {
@@ -140,23 +82,31 @@ fun ShoppingListScreen(
                 .padding(paddingValues)
         ) {
             // Agrupar los ingredientes por el campo "aisle"
-            val ingredientesAgrupadosAisle =
-                ingredientesAgrupados2.value.groupBy { it.aisle.ifEmpty { "Others" } }
+            val ingredientesAgrupadosAisle = ingredienteslistaCompraState.value.groupBy {
+                when {
+                    it.aisle.isEmpty() || it.aisle == "?" -> "Others"
+                    else -> it.aisle
+                }
+            }
 
             LazyColumn {
-                // Recorrer cada grupo
+                // Recorrer cada grupo de ingredientes agrupados por 'aisle'
                 ingredientesAgrupadosAisle.forEach { (aisle, ingredientesDelAisle) ->
+
                     item {
                         // Mostrar el nombre del aisle como un encabezado
                         Text(
                             text = aisle,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                             modifier = Modifier.padding(8.dp)
                         )
                     }
+
                     // Mostrar los ingredientes que pertenecen a ese aisle
                     items(ingredientesDelAisle) { ingrediente ->
-                        val checkedState = remember { mutableStateOf(false) }
+                        // Usa el valor real del ingrediente para el estado del Checkbox
+                        var checkedState = rememberSaveable { mutableStateOf(ingrediente.estaComprado) }
+                        // Usamos Row para alinear la imagen y el Checkbox, y Column para los nombres y medidas
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -166,27 +116,52 @@ fun ShoppingListScreen(
                             // Mostrar imagen del ingrediente
                             AsyncImage(
                                 model = "https://img.spoonacular.com/ingredients_100x100/${ingrediente.image}",
+                                error = painterResource(id = R.drawable.ingredient_placeholder),
                                 contentDescription = ingrediente.name,
                                 modifier = Modifier.size(40.dp)
                             )
+
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = ingrediente.name
-                            )
-                            Spacer(modifier = Modifier.weight(1f))
+
+                            // Usamos Column para mostrar el nombre y las medidas debajo
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                // Mostrar nombre del ingrediente
+                                Text(
+                                    text = ingrediente.name,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                // Mostrar las medidas y cantidades del ingrediente justo debajo del nombre
+                                Text(
+                                    text = ingrediente.medidas.joinToString(" + ") {
+                                    "${it.first} ${it.second}"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(top = 4.dp) // Espaciado entre nombre y medidas
+                                )
+                            }
 
                             // CheckBox para marcar el ingrediente como comprado
                             Checkbox(
-                                checked = checkedState.value,
+                                enabled = isConnected,
+                                checked = checkedState.value, // El estado del Checkbox se basa en el valor de checkedState
                                 onCheckedChange = { checked ->
                                     checkedState.value = checked
-                                    // TODO lógica guardar el estado en una base de datos o actualizar el ViewModel
+                                    // Actualizar el estado en Firebase a través del ViewModel
+                                    planViewModel.actualizarEstadoIngredienteEnFirebase(
+                                        uid.toString(),
+                                        ingrediente.name,
+                                        checkedState.value
+                                    )
                                 }
                             )
                         }
                     }
                 }
             }
+
         }
     }
 }

@@ -54,7 +54,7 @@ fun NavigationGraph(
     Scaffold { padding ->
         NavHost(
             navController = navController,
-            startDestination = "login", // TODO Pantalla de inicio es el login
+            startDestination = if (usersViewModel.isSessionActive()) "home" else "login" // Verifica si la sesión está activa
             //modifier = Modifier.padding(padding) AÑADE PADDING INNECESARIO ARRIBA
         ) {
             composable("login") {
