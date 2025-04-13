@@ -121,6 +121,7 @@ fun ResIngredientsScreen(
                 navController = navController,
                 onBackPressed = {
                     filtrosViewModel.restablecerFiltros()
+                    filtrosViewModel.restablecerOrden()
                     navController.popBackStack()
                 }
             )
@@ -241,7 +242,6 @@ fun ResIngredientsScreen(
                                 )
                             }
                         }
-
                     }
                 }
             }
@@ -273,11 +273,14 @@ fun RecetaCardRes2(receta: Receta, navController: NavController, ingredientes: L
             imagen = if (receta.image?.isNotBlank() == true) {
                 receta.image
             } else {
-                "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
+                "${R.drawable.food_placeholder}"
             }
 
             Image(
-                painter = rememberAsyncImagePainter(imagen),
+                painter = rememberAsyncImagePainter(
+                    model = imagen,
+                    error = painterResource(id = R.drawable.food_placeholder) // Imagen por defecto en caso de error
+                ),
                 contentDescription = receta.title,
                 modifier = Modifier
                     .fillMaxWidth() // La imagen ocupa tdo el ancho de la Card

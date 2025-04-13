@@ -48,9 +48,12 @@ class RecetasViewModel : ViewModel() {
     // para name search
     private val _recetasSugeridas = MutableStateFlow<List<SugerenciaReceta>>(emptyList())
     val recetasSugeridas: StateFlow<List<SugerenciaReceta>> = _recetasSugeridas
-
+    // para resultados de busqueda
     private val _recetas = MutableLiveData<List<Receta>>(emptyList())
     val recetas: LiveData<List<Receta>> = _recetas
+
+    private val _recetasHome = MutableLiveData<List<Receta>>(emptyList())
+    val recetasHome: LiveData<List<Receta>> = _recetasHome
 
     // para my recipes (user)
     private val _recetasUser = MutableLiveData<List<Receta>>(emptyList())
@@ -527,7 +530,7 @@ class RecetasViewModel : ViewModel() {
 
         _isLoadingMore.value = true // Indicar que está cargando
 
-        var query = db.collection("recetas")
+        var query = db.collection("bulkRecetas")
             .orderBy("id") // Ordena por ID
             .limit(15)
 
@@ -555,11 +558,11 @@ class RecetasViewModel : ViewModel() {
                     }
 
                     if (limpiarLista) {
-                        _recetas.value = nuevasRecetas
+                        _recetasHome.value = nuevasRecetas
                     } else {
-                        _recetas.value = _recetas.value.orEmpty() + nuevasRecetas
+                        _recetasHome.value = _recetasHome.value.orEmpty() + nuevasRecetas
                     }
-                    Log.d("RecetasViewModel", "Total recetas: ${_recetas.value?.size}")
+                    Log.d("RecetasViewModel", "Total recetas: ${_recetasHome.value?.size}")
                 } else {
                     Log.d("RecetasViewModel", "No hay más recetas para cargar.")
                 }
@@ -588,7 +591,7 @@ class RecetasViewModel : ViewModel() {
                         .collection("recipes") // Subcolección de recetas
                         .document(recetaId) // Documento específico de la receta con recetaId
                 } else {
-                    db.collection("recetas")    // Colección de recetas de la API
+                    db.collection("bulkRecetas")    // Colección de recetas de la API
                         .document(recetaId)
                 }
 
@@ -673,7 +676,7 @@ class RecetasViewModel : ViewModel() {
         // Convertir la lista de ingredientes a minúsculas para hacer la búsqueda insensible a mayúsculas/minúsculas
         //val ingredientesNormalizados = ingredientes.map { it.lowercase() }
 
-        db.collection("recetas")
+        db.collection("bulkRecetas")
             .get()
             .addOnSuccessListener { result ->
                 val recetasCoincidentesTotales = mutableListOf<Receta>()
@@ -792,7 +795,7 @@ class RecetasViewModel : ViewModel() {
 
         if (palabrasClave.isEmpty()) return
 
-        db.collection("recetas")
+        db.collection("bulkRecetas")
             .get()
             .addOnSuccessListener { result ->
                 val sugerencias = mutableListOf<SugerenciaReceta>()
@@ -827,7 +830,7 @@ class RecetasViewModel : ViewModel() {
 
         if (palabrasClave.isEmpty()) return
 
-        db.collection("recetas")
+        db.collection("bulkRecetas")
             .get()
             .addOnSuccessListener { result ->
                 val resultados = mutableListOf<Receta>()
@@ -1004,10 +1007,9 @@ class RecetasViewModel : ViewModel() {
             }
     }
 
+
     fun añadirHistorial(uid: String, userReceta: String, recetaId: String, title: String, image: String) {
-
         val historialRef = db.collection("favs_hist").document(uid).collection("historial")
-
         val historialEntry = RecetaSimple(
             id = recetaId,
             title = title,
@@ -1939,8 +1941,6 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-
-
     private fun saveBatchIndexToFirebase(index: Int) {
         val batchData = hashMapOf("batchIndex" to index)
 
@@ -2158,9 +2158,7 @@ class RecetasViewModel : ViewModel() {
                             }
                         }
                     }
-
                     val aisleTypesCollection = db.collection("planSemanal").document("aisleTypes").collection("items")
-
 
                     for (aisle in aisleSet) {
                         val safeAisle = aisle.replace("/", "-") // 🚫 Corrige nombres inválidos
@@ -2206,8 +2204,6 @@ class RecetasViewModel : ViewModel() {
                 println("Error al obtener recetas: ${it.message}")
             }
     }
-
-
 
 
 

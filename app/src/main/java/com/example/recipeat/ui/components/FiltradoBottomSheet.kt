@@ -106,10 +106,13 @@ fun FiltroBottomSheet(
                                 tipoDietaFiltro + opcion // Si no estaba, lo agrega
                             }
                         },
-                        label = { Text(opcion) },
+                        label = {
+                            Text(opcion)
+                        },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = LightYellow, // fondo cuando está seleccionado
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            labelColor = if (tipoDietaFiltro.contains(opcion)) Color.Black else MaterialTheme.colorScheme.onSurface
                         )
                     )
                 }
@@ -175,7 +178,12 @@ fun SegmentedButtonRow(opciones: List<Int>, seleccionado: Int?, onSelectedChange
                         onSelectedChange(opcion)
                     }
                 },
-                label = { Text("$opcion") },
+                label = {
+                    Text(
+                        "$opcion",
+                        color = if (opcion == seleccionado) Color.Black else MaterialTheme.colorScheme.onSurface
+                    )
+                },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = LightYellow, // fondo cuando está seleccionado
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,

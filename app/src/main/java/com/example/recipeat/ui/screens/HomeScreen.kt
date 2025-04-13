@@ -42,7 +42,7 @@ import com.example.recipeat.utils.NetworkConnectivityManager
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel, recetasViewModel: RecetasViewModel) {
-    val recetasState by recetasViewModel.recetas.observeAsState(emptyList())
+    val recetasState by recetasViewModel.recetasHome.observeAsState(emptyList())
     val isLoadingMore by recetasViewModel.isLoadingMore.observeAsState(false)
 
     var username by rememberSaveable { mutableStateOf<String?>(null) }

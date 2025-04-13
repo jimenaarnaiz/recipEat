@@ -100,6 +100,7 @@ fun ResNameScreen(
                 navController = navController,
                 onBackPressed = {
                     filtrosViewModel.restablecerFiltros()
+                    filtrosViewModel.restablecerOrden()
                     navController.popBackStack()
                 }
             )
