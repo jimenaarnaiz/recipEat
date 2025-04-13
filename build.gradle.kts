@@ -8,6 +8,7 @@ plugins {
     id("com.google.devtools.ksp") version "2.0.21-1.0.27" apply false
 }
 
+
 sonarqube {
     properties {
         property("sonar.host.url", "http://localhost:9000") // Actualiza con la URL correcta de tu servidor
@@ -20,4 +21,5 @@ sonarqube {
         property("sonar.java.binaries", "build/intermediates/classes/debug")  // Compilados del código
     }
 }
+
 

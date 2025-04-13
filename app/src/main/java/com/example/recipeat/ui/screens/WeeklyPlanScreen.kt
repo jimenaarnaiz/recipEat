@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -93,12 +94,15 @@ fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewMo
     val isConnected = networkConnectivityManager.isConnected.value
 
     // Llamar al iniciar
-    LaunchedEffect(uid) {
-        planViewModel.obtenerPlanSemanal(uid.toString())
-        Log.d("WeeklyPlanScreen", "obteniendo lista de la compra...")
-        planViewModel.obtenerListaDeLaCompraDeFirebase(uid.toString())
-    }
+    //if (isConnected) {
+        LaunchedEffect(uid) {
+            planViewModel.obtenerPlanSemanal(uid.toString())
+            Log.d("WeeklyPlanScreen", "obteniendo lista de la compra...")
+            planViewModel.obtenerListaDeLaCompraDeFirebase(uid.toString())
+        }
+    //}
 
+    //TODO: TARDA EN ESTA INSTRUCCION CUANDO NO HAY CONEXION NS POR Q!!!!
     val planSemanal by planViewModel.planSemanal.observeAsState() //debe ir después del launched, si no, no mostrará nada
     // Verifica que el plan semanal no sea nulo antes de usarlo
     val weeklyPlan = planSemanal?.weekMeals ?: return
@@ -121,7 +125,7 @@ fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewMo
                 style = MaterialTheme.typography.titleSmall
             )
 
-            // Ícono de carrito de compras
+            // Icono de carrito de compras
             IconButton(
                 onClick = {
                     navController.navigate("listaCompra")
@@ -131,7 +135,7 @@ fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewMo
                 Icon(
                     imageVector = Icons.Filled.ShoppingCart,
                     contentDescription = "Shopping Cart",
-                    tint = if (isConnected) Cherry else Color.Gray
+                    tint = Cherry //if (isConnected) Cherry else Color.Gray
                 )
             }
         }
@@ -147,25 +151,21 @@ fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewMo
         }
         Spacer(modifier = Modifier.height(16.dp))
 
-//        // Ícono de carrito de compras
-//        IconButton(
-//            onClick = {
-//                navController.navigate("listaCompra")
-//            },
-//            modifier = Modifier.size(48.dp)
-//        ) {
-//            Icon(
-//                imageVector = Icons.Filled.ShoppingCart,
-//                contentDescription = "Shopping Cart",
-//                tint = if (isConnected) Cherry else Color.Gray
-//            )
-//        }
-//        Spacer(modifier = Modifier.height(16.dp))
-
-        // Mostrar recetas del día seleccionado
-        DayDetailsContent(weeklyPlan = weeklyPlan, selectedDay = selectedDay, navController, isConnected)
-
-
+        if (isConnected) {// Mostrar recetas del día seleccionado
+            DayDetailsContent(weeklyPlan = weeklyPlan, selectedDay = selectedDay, navController)
+        } else {
+            // Si no hay conexión, muestra un mensaje de error centrado
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No internet. Please check your connection.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    //color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
     }
 }
 
@@ -183,7 +183,11 @@ fun DayButton(day: DayOfWeek, selectedDay: DayOfWeek, onClick: (DayOfWeek) -> Un
             .padding(1.5.dp)
             .width(48.dp)
             .then(
-                if (isToday) Modifier.border(2.dp, Color.DarkGray, RoundedCornerShape(8.dp)) else Modifier
+                if (isToday) Modifier.border(
+                    2.dp,
+                    Color.DarkGray,
+                    RoundedCornerShape(8.dp)
+                ) else Modifier
             ),
         color = if (day == selectedDay) Cherry else LightYellow,
         shape = RoundedCornerShape(8.dp),
@@ -211,24 +215,26 @@ fun DayButton(day: DayOfWeek, selectedDay: DayOfWeek, onClick: (DayOfWeek) -> Un
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DayDetailsContent(weeklyPlan: Map<DayOfWeek, DayMeal>, selectedDay: DayOfWeek, navController: NavHostController, isConnected: Boolean) {
+fun DayDetailsContent(weeklyPlan: Map<DayOfWeek, DayMeal>, selectedDay: DayOfWeek, navController: NavHostController) {
     // Aquí usamos el día seleccionado para obtener las recetas del día correspondiente
     val selectedMeals = weeklyPlan[DayOfWeek.entries.find { it.name == selectedDay.name }]
 
-    if (selectedMeals != null && isConnected) {
+    if (selectedMeals != null) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            MealDetailCard(dishType = DishTypes.breakfast.name, receta = selectedMeals.breakfast, navController)
-            MealDetailCard(dishType = DishTypes.lunch.name, receta = selectedMeals.lunch, navController)
-            MealDetailCard(dishType = DishTypes.dinner.name, receta = selectedMeals.dinner, navController)
-        }
-    } else if (!isConnected) {
-        // Si no hay conexión, muestra un mensaje de error
-        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "No internet. Please check your connection.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.error
+            MealDetailCard(
+                dishType = DishTypes.breakfast.name,
+                receta = selectedMeals.breakfast,
+                navController
+            )
+            MealDetailCard(
+                dishType = DishTypes.lunch.name,
+                receta = selectedMeals.lunch,
+                navController
+            )
+            MealDetailCard(
+                dishType = DishTypes.dinner.name,
+                receta = selectedMeals.dinner,
+                navController
             )
         }
     }

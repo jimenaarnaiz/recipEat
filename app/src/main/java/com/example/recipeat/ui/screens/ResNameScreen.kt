@@ -2,6 +2,7 @@ package com.example.recipeat.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -31,6 +33,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.recipeat.ui.components.AppBar
@@ -41,6 +45,7 @@ import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 
 @Composable
 fun ResNameScreen(
@@ -58,6 +63,25 @@ fun ResNameScreen(
 
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastName by rememberSaveable { mutableStateOf("") }
+
+    val context = LocalContext.current
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
+
+    // Registrar el callback para el estado de la red
+    LaunchedEffect(true) {
+        networkConnectivityManager.registerNetworkCallback()
+    }
+
+    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
+    DisposableEffect(context) {
+        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
+        onDispose {
+            networkConnectivityManager.unregisterNetworkCallback()
+        }
+    }
+
+    // Verificar si hay conexión y ajustar el ícono de favoritos
+    val isConnected = networkConnectivityManager.isConnected.value
 
     // Función que busca recetas mientras se escribe en el input
     LaunchedEffect(nombreReceta) {
@@ -107,6 +131,7 @@ fun ResNameScreen(
                         ) {
                             // Botón de Filtros
                             Button(
+                                enabled = isConnected,
                                 onClick = { showBottomSheet = true },
                                 modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
                                 shape = RoundedCornerShape(12.dp), // Bordes redondeados
@@ -118,6 +143,7 @@ fun ResNameScreen(
 
                             // Botón de Ordenar
                             Button(
+                                enabled = isConnected,
                                 onClick = { showOrderBottomSheet = true },
                                 modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
                                 shape = RoundedCornerShape(12.dp), // Bordes redondeados
@@ -174,15 +200,35 @@ fun ResNameScreen(
                         }
                     }
 
-                    items(recetas) { receta ->
-                        RecetaCard(receta, navController, usersViewModel)
-                    }
-
-                    // Cargar más recetas si el usuario está cerca del final
-                    item {
-                        if (recetas.isNotEmpty()) {
-                            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    // Mostrar recetas solo si hay conexión
+                    if (isConnected) {
+                        items(recetas) { receta ->
+                            RecetaCard(receta, navController, usersViewModel)
                         }
+
+                        item {
+                            if (recetas.isNotEmpty()) {
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                            }
+                        }
+                    } else {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillParentMaxSize(), // Usa tdo el espacio disponible dentro del LazyColumn
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No internet. Please check your connection.",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                )
+                            }
+                        }
+
                     }
                 }
             }

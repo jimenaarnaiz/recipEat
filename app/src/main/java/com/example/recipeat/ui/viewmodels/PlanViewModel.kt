@@ -1,7 +1,6 @@
 package com.example.recipeat.ui.viewmodels
 
 import android.app.Application
-import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -9,7 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-
+import com.example.recipeat.BuildConfig.API_GEMINI_KEY
 import com.example.recipeat.data.model.DayMeal
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.IngredienteCompra
@@ -22,7 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import retrofit2.HttpException
 import java.time.DayOfWeek
 import java.time.LocalDate
 
@@ -32,17 +30,8 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
     private val _planSemanal = MutableLiveData<PlanSemanal>()
     val planSemanal: LiveData<PlanSemanal> = _planSemanal
 
-//    private val sharedPreferences =
-//        application.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
-
-//    private val _groupedIngredients = MutableLiveData<List<IngredienteCompra>>(emptyList())
-//    val groupedIngredients: LiveData<List<IngredienteCompra>> = _groupedIngredients
-
     private val _listaCompra = MutableLiveData<List<IngredienteCompra>>(emptyList())
     val listaCompra: LiveData<List<IngredienteCompra>> = _listaCompra
-
-
-
 
     /**
      * Calculamos el identificador de la semana actual en formato "día/mes"
@@ -77,47 +66,11 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
         return hoy.dayOfWeek == DayOfWeek.MONDAY
     }
 
-//    /**
-//     * Comprueba si es la primera vez que el usuario accede al plan
-//     */
-//    fun esPrimeraVez(): Boolean {
-//        val primeraVez = sharedPreferences.getBoolean("primera_vez", true)
-//        Log.d("PlanSemanal", "Valor de primera_vez: $primeraVez")
-//        return primeraVez
-//    }
-//
-//    fun borrarPrimeraVez() {
-//        Log.d("PlanSemanal", "Borrando valor de primera_vez")
-//        sharedPreferences.edit().remove("primera_vez").apply()
-//    }
-//
-//    // Función para marcar que ya no es la primera vez que entra en el plan
-//    private fun marcarNoEsPrimeraVez() {
-//        Log.d("PlanSemanal", "Marcando primera_vez a false")
-//        sharedPreferences.edit().putBoolean("primera_vez", false).apply()
-//    }
-
 
     // Función que ejecuta el Worker cada lunes que genera el plan semanal
     @RequiresApi(Build.VERSION_CODES.O)
     fun iniciarGeneracionPlanSemanal(userId: String) {
-            //Lógica de verificación con es primera vez o es lunes
-//            if (esPrimeraVez()) {
-//                Log.d("PlanSemanal", "Primera vez que el usuario entra, generando el plan semanal.")
-//                obtenerRecetasFirebase { recetas ->
-//                    if (recetas.isNotEmpty()) {
-//                        // Llamamos a la función suspendida dentro de la coroutine
-//                        // Usamos launch para llamar la función suspendida correctamente
-//                        viewModelScope.launch {
-//                            val planSemanal = generarPlanSemanal(recetas, userId)
-//                            actualizarYGuardarPlanSemanal(userId, planSemanal)
-//                            marcarNoEsPrimeraVez()  // Marca que ya no es primera vez
-//                        }
-//                    } else {
-//                        Log.e("PlanSemanal", "No se encontraron recetas para generar el plan")
-//                    }
-//                }
-            /*} else*/ if (esLunes()) {
+           if (esLunes()) {
                 Log.d("PlanSemanal", "Hoy es lunes, actualizando el plan semanal...")
                 obtenerRecetasFirebase { recetas ->
                     if (recetas.isNotEmpty()) {
@@ -193,7 +146,6 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
             // Paso 4: Preparar datos para Firestore
             val firestore = FirebaseFirestore.getInstance()
-            val semanaId = obtenerSemanaActualId()
 
             Log.d("PlanViewModel", "Preparando datos para firebase para guardar lista de la compra...")
 
@@ -612,8 +564,8 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                 val semanaData = documentSnapshot.data
                 semanaData?.forEach { (_, value) ->
                     val desayunoId = (value as Map<*, *>)["breakfast"] as? String
-                    val almuerzoId = (value as Map<*, *>)["lunch"] as? String
-                    val cenaId = (value as Map<*, *>)["dinner"] as? String
+                    val almuerzoId = value["lunch"] as? String
+                    val cenaId = value["dinner"] as? String
                     desayunoId?.let { idsRecetasSemanaAnterior.add(it) }
                     almuerzoId?.let { idsRecetasSemanaAnterior.add(it) }
                     cenaId?.let { idsRecetasSemanaAnterior.add(it) }
@@ -841,7 +793,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
 
         val generativeModel = GenerativeModel(
             modelName = "gemini-1.5-flash",
-            apiKey = "AIzaSyBx9JjFMNqQJ_yjnnL45rVE66plaILDM7A"
+            apiKey = API_GEMINI_KEY
         )
 
         return try {

@@ -102,6 +102,7 @@ fun IngredientsSearch(
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.surface)
                                     .clickable(
+                                        enabled = isConnected,
                                         onClick = {
                                             ingredientesViewModel.removeIngredient(ingrediente)
                                         }
@@ -117,6 +118,7 @@ fun IngredientsSearch(
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.surface)
                                     .clickable(
+                                        enabled = isConnected,
                                         onClick = {
                                             ingredientesViewModel.removeIngredient(ingrediente)
                                         }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -33,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,7 +49,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -63,6 +67,7 @@ import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 
 @Composable
 fun ResIngredientsScreen(
@@ -80,6 +85,25 @@ fun ResIngredientsScreen(
 
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastIngredientes by rememberSaveable { mutableStateOf<List<IngredienteSimple>>(emptyList()) }
+
+    val context = LocalContext.current
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
+
+    // Registrar el callback para el estado de la red
+    LaunchedEffect(true) {
+        networkConnectivityManager.registerNetworkCallback()
+    }
+
+    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
+    DisposableEffect(context) {
+        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
+        onDispose {
+            networkConnectivityManager.unregisterNetworkCallback()
+        }
+    }
+
+    // Verificar si hay conexión y ajustar el ícono de favoritos
+    val isConnected = networkConnectivityManager.isConnected.value
 
     LaunchedEffect(ingredientes) {
         // Solo ejecutar si los ingredientes han cambiado
@@ -115,8 +139,6 @@ fun ResIngredientsScreen(
                 Text(
                     text = "No results available"
                 )
-                // Mostrar un indicador de carga si no se han cargado las recetas
-                //CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
                 // Carrusel de recetas
                 LazyColumn(
@@ -132,6 +154,7 @@ fun ResIngredientsScreen(
                         ) {
                             // Botón de Filtros
                             Button(
+                                enabled = isConnected,
                                 onClick = { showBottomSheet = true },
                                 modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
                                 shape = RoundedCornerShape(12.dp), // Bordes redondeados
@@ -143,6 +166,7 @@ fun ResIngredientsScreen(
 
                             // Botón de Ordenar
                             Button(
+                                enabled = isConnected,
                                 onClick = { showOrderBottomSheet = true },
                                 modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
                                 shape = RoundedCornerShape(12.dp), // Bordes redondeados
@@ -196,11 +220,29 @@ fun ResIngredientsScreen(
                             )
                         }
                     }
+                    if (isConnected) {
+                        items(recetas) { receta ->
+                            RecetaCardRes2(receta, navController, ingredientes)
+                        }
+                    }else{
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillParentMaxSize(), // Usa tdo el espacio disponible dentro del LazyColumn
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No internet. Please check your connection.",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                )
+                            }
+                        }
 
-                    items(recetas) { receta ->
-                        RecetaCardRes2(receta, navController, ingredientes)
                     }
-                    
                 }
             }
         }
@@ -305,16 +347,6 @@ fun RecetaCardRes2(receta: Receta, navController: NavController, ingredientes: L
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.align(Alignment.Start)
                     )
-
-//                    // Mostrar los nombres de los ingredientes faltantes
-//                    Text(
-//                        text = "${
-//                            receta.unusedIngredients.joinToString(", ") { it.name }
-//                        }",
-//                        style = MaterialTheme.typography.bodySmall,
-//                        maxLines = 1, // Limitar el texto a una sola línea
-//                        overflow = TextOverflow.Ellipsis // Truncar el texto si es muy largo
-//                    )
                 }
 
                 // Mostrar los ingredientes buscados por el usuario

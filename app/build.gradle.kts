@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +8,14 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
     id("com.google.devtools.ksp")
 }
+
+val localProperties = Properties()
+localProperties.load(FileInputStream(rootProject.file("local.properties")))
+
+val spoonacularKey: String = localProperties.getProperty("API_SPOONACULAR_KEY")
+val sonarqubeToken: String = localProperties.getProperty("SONARQUBE_TOKEN")
+val geminiKey: String = localProperties.getProperty("API_GEMINI_KEY")
+
 
 android {
     namespace = "com.example.recipeat"
@@ -18,6 +29,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        //API KEYS
+        buildConfigField("String", "API_SPOONACULAR_KEY", spoonacularKey)
+        buildConfigField("String", "SONARQUBE_TOKEN", sonarqubeToken)
+        buildConfigField("String", "API_GEMINI_KEY", geminiKey)
+
     }
 
     buildTypes {
@@ -38,6 +55,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true  // Habilita BuildConfig para lo de las key
     }
 }
 
