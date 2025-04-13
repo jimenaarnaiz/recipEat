@@ -98,7 +98,7 @@ fun NavigationGraph(
                 onBottomBarVisibilityChanged(false)
             }
             composable("resultadosIngredientes") {
-                ResIngredientsScreen(navController, recetasViewModel, ingredientesViewModel, filtrosViewModel)
+                ResIngredientsScreen(navController, recetasViewModel, ingredientesViewModel, filtrosViewModel, usersViewModel)
                 onBottomBarVisibilityChanged(false)
             }
             composable("add_recipe") {
@@ -138,7 +138,6 @@ fun NavigationGraph(
                 ShoppingListScreen(navController, usersViewModel, planViewModel)
                 onBottomBarVisibilityChanged(false)
             }
-
             composable("debug") {
                 DebugScreen()
                 onBottomBarVisibilityChanged(true)

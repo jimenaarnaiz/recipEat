@@ -125,7 +125,6 @@ fun RecetaCard(receta: Receta, navController: NavController, usersViewModel: Use
                         modifier = Modifier.padding(end = 1.dp) // Espaciado entre el ícono y el texto
                     )
 
-
                     Text(
                         text = receta.time.toString(),
                         style = MaterialTheme.typography.bodyMedium,

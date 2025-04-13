@@ -205,18 +205,18 @@ fun AddRecipe(
                     onNameChange = { ingredientName = it; validateIngredient(it) },
                     onAmountChange = { amount = it },
                     onUnitChange = { unit = it },
-                    onAddIngredient = {
+                    onAddIngredient = { localIngredientImage ->
                         if (isIngredientValid && amount.isNotEmpty() && unit.isNotEmpty()) {
                             val newIngredient = Ingrediente(
                                 name = ingredientName,
-                                image = "https://img.spoonacular.com/ingredients_100x100/${ingredientImage}",
+                                image = localIngredientImage,  // Usamos la imagen local pasada
                                 amount = amount.toDouble(),
                                 unit = unit,
                                 aisle = ""
                             )
                             ingredients = ingredients + newIngredient
                             ingredientName = ""
-                            ingredientImage = ""
+                            ingredientImage = ""  // Resetear la imagen local
                             amount = ""
                             unit = ""
                         }
@@ -276,7 +276,7 @@ fun AddRecipe(
                             steps = instructions,
                             time = time.toInt(),
                             dishTypes = selectedOccasion,
-                            userId = uid.toString(), //TODO OJO COMPROBAR Q VA BIEN
+                            userId = uid.toString(),
                             usedIngredientCount = ingredients.size,
                             glutenFree = isGlutenFree,
                             vegan = isVegan,
@@ -347,7 +347,6 @@ fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<Pick
                 .height(100.dp) // Más compacta aún
                 .clip(RoundedCornerShape(8.dp))
                 .padding(16.dp)
-//                .size(150.dp)
                 .shadow(4.dp),
             contentScale = ContentScale.Crop
         )
@@ -439,7 +438,7 @@ fun IngredientField(
     onNameChange: (String) -> Unit,
     onAmountChange: (String) -> Unit,
     onUnitChange: (String) -> Unit,
-    onAddIngredient: () -> Unit
+    onAddIngredient: (String) -> Unit
 ) {
     Column {
         // Estado local para la imagen del ingrediente
@@ -457,7 +456,9 @@ fun IngredientField(
 
         if (isIngredientValid) {
             val validIngredient = ingredientesValidos.value.find { it.name == ingredientName }
-            localIngredientImage = validIngredient?.image.orEmpty()
+            if (validIngredient != null) {
+                localIngredientImage = validIngredient.image
+            }
         }
 
         Row(
@@ -478,8 +479,9 @@ fun IngredientField(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Log.d("AddRecipe", "localIngredientImage: $localIngredientImage")
         Button(
-            onClick = onAddIngredient,
+            onClick = { onAddIngredient(localIngredientImage)  },
             modifier = Modifier.fillMaxWidth(),
             colors = buttonColors(containerColor = LightYellow, contentColor = Color.Black)
         ) {

@@ -56,6 +56,7 @@ fun ResNameScreen(
     usersViewModel: UsersViewModel
 ) {
 
+    val userId = usersViewModel.getUidValue()
     val recetas by recetasViewModel.recetas.observeAsState(emptyList())
 
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -63,6 +64,8 @@ fun ResNameScreen(
 
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastName by rememberSaveable { mutableStateOf("") }
+
+    val isLoading by recetasViewModel.isLoading.observeAsState(false)
 
     val context = LocalContext.current
     val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
@@ -88,7 +91,7 @@ fun ResNameScreen(
         // Solo ejecutar si ha cambiado realmente
         if(nombreReceta != lastName) {
             Log.d("ResNameSearch", "name a buscar: $nombreReceta")
-            recetasViewModel.obtenerRecetasPorNombre(nombreReceta)
+            recetasViewModel.obtenerRecetasPorNombre(nombreReceta, userId.toString())
             lastName = nombreReceta // Actualiza el estado
         }
     }
@@ -114,122 +117,140 @@ fun ResNameScreen(
                 .padding(16.dp)
                 .padding(bottom = 16.dp)
         ) {
-            if (recetas.isEmpty()) {
-                Text(
-                    text = "No results available"
-                )
-            } else {
-                // Carrusel de recetas
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(bottom = 16.dp) // Agregar espacio al final de la lista
-                ) {
-                    item{
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp), // Espaciado entre los botones
-                            verticalAlignment = Alignment.CenterVertically, // Alineación vertical
-                            modifier = Modifier.fillMaxWidth() // Ocupa tdo el ancho disponible
-                        ) {
-                            // Botón de Filtros
-                            Button(
-                                enabled = isConnected,
-                                onClick = { showBottomSheet = true },
-                                modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
-                                shape = RoundedCornerShape(12.dp), // Bordes redondeados
-                                colors = ButtonDefaults.buttonColors(containerColor = Cherry)
-                            ) {
-                                Icon(Icons.Default.FilterList, contentDescription = "Filtros", modifier = Modifier.padding(end = 8.dp))
-                                Text("Filter by", style = MaterialTheme.typography.bodyMedium)
-                            }
-
-                            // Botón de Ordenar
-                            Button(
-                                enabled = isConnected,
-                                onClick = { showOrderBottomSheet = true },
-                                modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
-                                shape = RoundedCornerShape(12.dp), // Bordes redondeados
-                                colors = ButtonDefaults.buttonColors(containerColor = Cherry)
-                            ) {
-                                Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Ordenar", modifier = Modifier.padding(end = 8.dp))
-                                Text("Order by", style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-
-
-                        // Mostrar el dialog de ordenar si es necesario
-                        if (showOrderBottomSheet) {
-                            OrderBottomSheet(
-                                recetasViewModel = recetasViewModel,
-                                busquedaMisRecetas = false,
-                                onDismiss = { showOrderBottomSheet = false },
-                                filtrosViewModel = filtrosViewModel
-                            )
-                        }
-
-                        // Mostrar el dialog de filtros si es necesario
-                        if (showBottomSheet) {
-                            FiltroBottomSheet(
-                                onDismiss = { showBottomSheet = false },
-                                onApplyFilters = { maxTiempo, maxIngredientes, maxFaltantes, maxPasos, tipoPlato, tipoDieta ->
-                                    // Aplicar los filtros seleccionados
-                                    filtrosViewModel.aplicarFiltros(
-                                        tiempo = maxTiempo,
-                                        ingredientes = maxIngredientes,
-                                        faltantes = maxFaltantes,
-                                        pasos = maxPasos,
-                                        plato = tipoPlato,
-                                        dietas = tipoDieta
-
-                                    )
-                                    // Aplica los filtros a las recetas
-                                    recetasViewModel.filtrarRecetas(
-                                        tiempoFiltro = maxTiempo,
-                                        maxIngredientesFiltro = maxIngredientes,
-                                        maxFaltantesFiltro = maxFaltantes,
-                                        maxPasosFiltro = maxPasos,
-                                        tipoPlatoFiltro = tipoPlato,
-                                        tipoDietaFiltro = tipoDieta
-                                    )
-
-                                    showBottomSheet = false
-
-                                },
-                                filtrosViewModel = filtrosViewModel,
-                                recetasViewModel = recetasViewModel,
-                                busquedaPorNombre = true
-                            )
-                        }
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
+                }
 
-                    // Mostrar recetas solo si hay conexión
-                    if (isConnected) {
-                        items(recetas) { receta ->
-                            RecetaCard(receta, navController, usersViewModel)
-                        }
+                recetas.isEmpty() -> {
+                    Text(
+                        text = "No results found",
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
+                else -> {
+                    // Carrusel de recetas
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(bottom = 16.dp) // Agregar espacio al final de la lista
+                    ) {
                         item {
-                            if (recetas.isNotEmpty()) {
-                                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                            }
-                        }
-                    } else {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillParentMaxSize(), // Usa tdo el espacio disponible dentro del LazyColumn
-                                contentAlignment = Alignment.Center
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp), // Espaciado entre los botones
+                                verticalAlignment = Alignment.CenterVertically, // Alineación vertical
+                                modifier = Modifier.fillMaxWidth() // Ocupa tdo el ancho disponible
                             ) {
-                                Text(
-                                    text = "No internet. Please check your connection.",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp)
+                                // Botón de Filtros
+                                Button(
+                                    enabled = isConnected,
+                                    onClick = { showBottomSheet = true },
+                                    modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
+                                    shape = RoundedCornerShape(12.dp), // Bordes redondeados
+                                    colors = ButtonDefaults.buttonColors(containerColor = Cherry)
+                                ) {
+                                    Icon(
+                                        Icons.Default.FilterList,
+                                        contentDescription = "Filtros",
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text("Filter by", style = MaterialTheme.typography.bodyMedium)
+                                }
+
+                                // Botón de Ordenar
+                                Button(
+                                    enabled = isConnected,
+                                    onClick = { showOrderBottomSheet = true },
+                                    modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
+                                    shape = RoundedCornerShape(12.dp), // Bordes redondeados
+                                    colors = ButtonDefaults.buttonColors(containerColor = Cherry)
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.Sort,
+                                        contentDescription = "Ordenar",
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text("Order by", style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+
+
+                            // Mostrar el dialog de ordenar si es necesario
+                            if (showOrderBottomSheet) {
+                                OrderBottomSheet(
+                                    recetasViewModel = recetasViewModel,
+                                    busquedaMisRecetas = false,
+                                    onDismiss = { showOrderBottomSheet = false },
+                                    filtrosViewModel = filtrosViewModel
+                                )
+                            }
+
+                            // Mostrar el dialog de filtros si es necesario
+                            if (showBottomSheet) {
+                                FiltroBottomSheet(
+                                    onDismiss = { showBottomSheet = false },
+                                    onApplyFilters = { maxTiempo, maxIngredientes, maxFaltantes, maxPasos, tipoPlato, tipoDieta ->
+                                        // Aplicar los filtros seleccionados
+                                        filtrosViewModel.aplicarFiltros(
+                                            tiempo = maxTiempo,
+                                            ingredientes = maxIngredientes,
+                                            faltantes = maxFaltantes,
+                                            pasos = maxPasos,
+                                            plato = tipoPlato,
+                                            dietas = tipoDieta
+
+                                        )
+                                        // Aplica los filtros a las recetas
+                                        recetasViewModel.filtrarRecetas(
+                                            tiempoFiltro = maxTiempo,
+                                            maxIngredientesFiltro = maxIngredientes,
+                                            maxFaltantesFiltro = maxFaltantes,
+                                            maxPasosFiltro = maxPasos,
+                                            tipoPlatoFiltro = tipoPlato,
+                                            tipoDietaFiltro = tipoDieta
+                                        )
+
+                                        showBottomSheet = false
+
+                                    },
+                                    filtrosViewModel = filtrosViewModel,
+                                    recetasViewModel = recetasViewModel,
+                                    busquedaPorNombre = true
                                 )
                             }
                         }
 
+                        // Mostrar recetas solo si hay conexión
+                        if (isConnected) {
+                            items(recetas) { receta ->
+                                RecetaCard(receta, navController, usersViewModel)
+                            }
+                        } else {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillParentMaxSize(), // Usa tdo el espacio disponible dentro del LazyColumn
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No internet. Please check your connection.",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp)
+                                    )
+                                }
+                            }
+
+                        }
                     }
                 }
             }

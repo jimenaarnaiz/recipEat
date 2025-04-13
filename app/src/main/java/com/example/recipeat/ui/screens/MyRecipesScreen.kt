@@ -23,9 +23,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -100,7 +98,7 @@ fun MyRecipesScreen(navController: NavHostController, recetasViewModel: RecetasV
         floatingActionButton = {
             if (isConnected) { //solo se muestra si hay conexión
                 FloatingActionButton(
-                    onClick = { navController.navigate("debug")  }, //TODO cambiar a add_reicpe
+                    onClick = { navController.navigate("add_recipe")  },
                     containerColor = Cherry,
                     modifier = Modifier
                         .padding(bottom = 80.dp) // padding debajo para q no quede opacado por la bottom bar

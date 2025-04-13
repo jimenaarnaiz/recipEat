@@ -2,6 +2,7 @@ package com.example.recipeat.ui.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.IngredienteSimple
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +41,9 @@ class IngredientesViewModel : ViewModel() {
         // Limpiar la lista de ingredientes seleccionados
         _ingredientes.value = emptyList()
     }
+
+
+
 
     /**
      * Si no existe la colección ingredientes, se guardan los ingredientes

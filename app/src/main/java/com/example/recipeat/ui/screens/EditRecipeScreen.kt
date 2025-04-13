@@ -95,7 +95,6 @@ fun EditRecipeScreen(
             imageUri = imageUri2.toString()
             usersViewModel.saveImageLocally(context, uri, recetaId = idReceta )
             bitmap = usersViewModel.loadImageFromFile(context, idReceta)
-            //newImage = uri.toString()
         } else {
             Log.d("PhotoPicker", "No media selected")
         }
@@ -154,7 +153,7 @@ fun EditRecipeScreen(
         ) {
 
             item {
-                ImageSection(imageUri.toUri(), pickMedia)  //TODO
+                ImageSection(imageUri.toUri(), pickMedia)
             }
             item {
                 SectionHeader("Recipe Details")
@@ -192,11 +191,11 @@ fun EditRecipeScreen(
                     onNameChange = { ingredientName = it; validateIngredient(it) },
                     onAmountChange = { amount = it },
                     onUnitChange = { unit = it },
-                    onAddIngredient = {
+                    onAddIngredient = { localIngredientImage ->
                         if (isIngredientValid && amount.isNotEmpty() && unit.isNotEmpty()) {
                             val newIngredient = Ingrediente(
                                 name = ingredientName,
-                                image = "https://img.spoonacular.com/ingredients_100x100/${ingredientImage}",
+                                image = localIngredientImage,
                                 amount = amount.toDouble(),
                                 unit = unit,
                                 aisle = ""

@@ -19,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.R
 import com.example.recipeat.ui.components.AppBar
@@ -67,7 +67,7 @@ fun DetailsScreen(
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-        // Registrar el callback para el estado de la red
+    // Registrar el callback para el estado de la red
     LaunchedEffect(true) {
         networkConnectivityManager.registerNetworkCallback()
     }
@@ -124,15 +124,6 @@ fun DetailsScreen(
                     .padding(bottom = 16.dp)
             ) {
 
-                // Cargar la imagen de la receta con esquinas redondeadas y sin padding
-                // Para el caso de carga remota
-//                var imagen by remember { mutableStateOf("") }
-//                imagen = if (recetaDetalle.image?.isNotBlank() == true) {
-//                    recetaDetalle.image
-//                } else {
-//                    "android.resource://com.example.recipeat/${R.drawable.food_placeholder}"
-//                }
-
                 // Determinamos el painter según esDeUser
                 val painter = if (esDeUser) {
                     if (recetaDetalle.image.toString().isBlank() || bitmap == null) {
@@ -180,7 +171,7 @@ fun DetailsScreen(
                                         userReceta = receta!!.userId
                                     )
                                 }
-                                if (esFavorito == false) { // si no es fav, se añade al Room con true
+                                if (esFavorito == false) { // si no es fav, se añade al Room con true en esFav
                                     receta!!.esFavorita = true
                                     roomViewModel.insertReceta(receta!!)
                                 }else{
@@ -246,30 +237,28 @@ fun DetailsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 recetaDetalle.ingredients.forEach { ingredient ->
-                    Text(
-                        text = "- ${ingredient.name} (${ingredient.amount} ${ingredient.unit})",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ) {
+                        AsyncImage(
+                            model = "https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}",
+                            error = painterResource(R.drawable.ingredient_placeholder),
+                            contentDescription = ingredient.name,
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .size(40.dp)
+                        )
+                        Text(
+                            text = " ${ingredient.name} (${ingredient.amount} ${ingredient.unit})",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-//                Text(
-//                    text = "Steps:",
-//                    style = MaterialTheme.typography.headlineSmall,
-//                    modifier = Modifier.padding(horizontal = 16.dp)
-//                )
-//
-//                Spacer(modifier = Modifier.height(8.dp))
-
-                //RecetaStepsWithButton(recetaDetalle)
-//                var currentStepIndex by remember { mutableStateOf(0) } // Índice del paso actual
-//                var isStepsVisible by remember { mutableStateOf(false) } // Estado que controla si los pasos son visibles
-//                val totalSteps = recetaDetalle.steps.size // Número total de pasos
-//
-//                // Barra de progreso que indica cuántos pasos faltan
-//                val progress = if (totalSteps > 0) currentStepIndex / totalSteps.toFloat() else 0f
 
                 Column(
                     modifier = Modifier
@@ -288,120 +277,14 @@ fun DetailsScreen(
                     ) {
                         Text("Show steps")
                     }
-
                     Spacer(modifier = Modifier.height(16.dp))
-
-//                    // Si los pasos están visibles, mostramos el paso actual
-//                    if (isStepsVisible) {
-//                        // Barra de progreso
-//                        LinearProgressIndicator(
-//                            progress = { progress },
-//                            modifier = Modifier.fillMaxWidth(),
-//                            color = Cherry,
-//                        )
-//
-//                        Spacer(modifier = Modifier.height(16.dp))
-//
-//                        // Mostrar el paso actual
-//                        if (currentStepIndex < totalSteps) {
-//                            Text(
-//                                text = "${currentStepIndex + 1}. ${recetaDetalle.steps[currentStepIndex]}",
-//                                style = MaterialTheme.typography.bodyMedium,
-//                                modifier = Modifier.padding(vertical = 8.dp)
-//                            )
-//                        }
-//
-//                        Row(
-//                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(top = 16.dp)
-//                        ) {
-//                            // Botón para retroceder al paso anterior
-//                            if (currentStepIndex > 0 && !cocinado) {
-//                                Button(
-//                                    onClick = { currentStepIndex-- },
-//                                    modifier = if (currentStepIndex == totalSteps - 1) Modifier.weight(
-//                                        0.8f
-//                                    ) else Modifier.weight(1f),
-//                                    colors = ButtonDefaults.buttonColors(
-//                                        containerColor = LightYellow,
-//                                        contentColor = Color.Black
-//                                    )
-//                                ) {
-//                                    Text("Back")
-//                                }
-//                            }
-//
-//                            // Botón para adelantar al siguiente paso
-//                            if (currentStepIndex < totalSteps - 1) {
-//                                Button(
-//                                    onClick = { currentStepIndex++ },
-//                                    modifier = Modifier.weight(1f),
-//                                    colors = ButtonDefaults.buttonColors(
-//                                        containerColor = LightYellow,
-//                                        contentColor = Color.Black
-//                                    )
-//                                ) {
-//                                    Text("Next")
-//                                }
-//                            } else {
-//                                Button(
-//                                    onClick = {
-//                                        if (!cocinado) {
-//                                            receta!!.image?.let {
-//                                                recetasViewModel.añadirHistorial(
-//                                                    uid = uid.toString(),
-//                                                    userReceta = receta!!.userId,
-//                                                    recetaId = idReceta,
-//                                                    title = receta!!.title,
-//                                                    image = it,
-//                                                )
-//                                            }
-//                                            cocinado = true
-//                                        }
-//                                    },
-//                                    modifier = Modifier
-//                                        .fillMaxWidth()
-//                                        //.padding(horizontal = 16.dp)
-//                                        .weight(1f),
-//                                    colors = ButtonDefaults.buttonColors(
-//                                        containerColor = if (!cocinado) LightYellow else Cherry
-//                                    ),
-//                                    //enabled = !cocinado
-//                                ) {
-//
-//                                    val color = if (!cocinado) Color.DarkGray else Color.White
-//                                    if (cocinado) {
-//                                        Icon(
-//                                            imageVector = Icons.Filled.Check,
-//                                            contentDescription = "Cooked",
-//                                            tint = color
-//                                        )
-//                                        Spacer(modifier = Modifier.width(8.dp))
-//                                    }
-//                                    Text(
-//                                        text = if (cocinado) "Cooked!" else "Cook",
-//                                        color = color
-//                                    )
-//                                }
-//
-//                            }
-//                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
             }
-        } ?: run {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
         }
-    }
 
     // AlertDialog de confirmación de eliminación
     if (showDialog) {
@@ -453,83 +336,4 @@ fun DetailsScreen(
     }
 }
 
-
-//@Composable
-//fun RecetaStepsWithButton(recetaDetalle: Receta) {
-//    var currentStepIndex by remember { mutableStateOf(0) } // Índice del paso actual
-//    var isStepsVisible by remember { mutableStateOf(false) } // Estado que controla si los pasos son visibles
-//    val totalSteps = recetaDetalle.steps.size // Número total de pasos
-//
-//    // Barra de progreso que indica cuántos pasos faltan
-//    val progress = if (totalSteps > 0) currentStepIndex / totalSteps.toFloat() else 0f
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(16.dp)
-//    ) {
-//        // Botón para mostrar los pasos
-//        Button(
-//            onClick = { isStepsVisible = true },
-//            modifier = Modifier.fillMaxWidth(),
-//            enabled = !isStepsVisible // Habilitar solo si los pasos no están visibles
-//        ) {
-//            Text("Show steps")
-//        }
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        // Si los pasos están visibles, mostramos el paso actual
-//        if (isStepsVisible) {
-//            // Barra de progreso
-//            LinearProgressIndicator(
-//                progress = { progress },
-//                modifier = Modifier.fillMaxWidth(),
-//                color = LightYellow,
-//            )
-//
-//            Spacer(modifier = Modifier.height(16.dp))
-//
-//            // Mostrar el paso actual
-//            if (currentStepIndex < totalSteps) {
-//                Text(
-//                    text = "${currentStepIndex + 1}. ${recetaDetalle.steps[currentStepIndex]}",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    modifier = Modifier.padding(vertical = 8.dp)
-//                )
-//            }
-//
-//            // Botón para retroceder al paso anterior
-//            if (currentStepIndex > 0) {
-//                Button(
-//                    onClick = { currentStepIndex-- },
-//                    modifier = Modifier.padding(top = 16.dp)
-//                ) {
-//                    Text("Back")
-//                }
-//            }
-//
-//            // Botón para adelantar al siguiente paso
-//            if (currentStepIndex < totalSteps - 1) {
-//                Button(
-//                    onClick = { currentStepIndex++ },
-//                    modifier = Modifier.padding(top = 16.dp)
-//                ) {
-//                    Text("Next")
-//                }
-//            } else {
-//                // Si ya se han mostrado todos los pasos, botón de reiniciar
-//                Button(
-//                    onClick = {
-//                        currentStepIndex = 0 // Resetear los pasos
-//                        isStepsVisible = false // Ocultar los pasos
-//                    },
-//                    modifier = Modifier.padding(top = 16.dp)
-//                ) {
-//                    Text("Empezar de nuevo")
-//                }
-//            }
-//        }
-//    }
-//}
 

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -67,6 +68,7 @@ import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager
 
 @Composable
@@ -74,9 +76,11 @@ fun ResIngredientsScreen(
     navController: NavController,
     recetasViewModel: RecetasViewModel,
     ingredientesViewModel: IngredientesViewModel,
-    filtrosViewModel: FiltrosViewModel
+    filtrosViewModel: FiltrosViewModel,
+    usersViewModel: UsersViewModel
 ) {
 
+    val uid = usersViewModel.getUidValue()
     val ingredientes by ingredientesViewModel.ingredientes.collectAsState(emptyList())
     val recetas by recetasViewModel.recetas.observeAsState(emptyList())
 
@@ -85,6 +89,8 @@ fun ResIngredientsScreen(
 
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastIngredientes by rememberSaveable { mutableStateOf<List<IngredienteSimple>>(emptyList()) }
+
+    val isLoading by recetasViewModel.isLoading.observeAsState(false)
 
     val context = LocalContext.current
     val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
@@ -109,7 +115,7 @@ fun ResIngredientsScreen(
         // Solo ejecutar si los ingredientes han cambiado
         if (ingredientes != lastIngredientes) {
             Log.d("ResultadosIngredientsSearch", "ingredientes a buscar: $ingredientes")
-            recetasViewModel.buscarRecetasPorIngredientes(ingredientes)
+            recetasViewModel.buscarRecetasPorIngredientes(ingredientes, uid.toString())
             lastIngredientes = ingredientes // Actualiza el estado con los nuevos ingredientes
         }
     }
@@ -136,11 +142,26 @@ fun ResIngredientsScreen(
                 .padding(bottom = 16.dp)
         ) {
 
-            if (recetas.isEmpty()) {
-                Text(
-                    text = "No results available"
-                )
-            } else {
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                recetas.isEmpty() -> {
+                    Text(
+                        text = "No results found",
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                else -> {
                 // Carrusel de recetas
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
@@ -245,6 +266,7 @@ fun ResIngredientsScreen(
                     }
                 }
             }
+        }
         }
     }
 }

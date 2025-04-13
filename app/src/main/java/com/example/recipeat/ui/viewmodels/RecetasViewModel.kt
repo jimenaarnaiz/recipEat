@@ -83,6 +83,9 @@ class RecetasViewModel : ViewModel() {
     private val _equipmentSteps =  MutableLiveData<List<List<String>>>(emptyList())
     val equipmentSteps: LiveData<List<List<String>>> = _equipmentSteps
 
+    //para resultados
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> get() = _isLoading
 
 
     fun verificarRecetasGuardadasApi() {
@@ -667,124 +670,103 @@ class RecetasViewModel : ViewModel() {
 
 
 
-
     /**
-     * Devuelve las recetas que contienen todos o algunos de los ingredientes a buscar
-     * Por defecto salen las rcetas con más coincidencias de ingredientes buscados
-     */
-    fun buscarRecetasPorIngredientes(ingredientes: List<IngredienteSimple>) {
-        // Convertir la lista de ingredientes a minúsculas para hacer la búsqueda insensible a mayúsculas/minúsculas
-        //val ingredientesNormalizados = ingredientes.map { it.lowercase() }
+     * Devuelve las recetas (tanto las de Firebase como las creadas por el usuario) que contienen todos o algunos de los ingredientes a buscar
+     * Por defecto salen las rcetas con más coincidencias de ingredientes buscados, 1º las de
+     * firebase y luego las del user.
+     **/
+    fun buscarRecetasPorIngredientes(ingredientes: List<IngredienteSimple>, userId: String) {
+        _isLoading.value = true
+        val recetasCoincidentesTotales = mutableListOf<Receta>()
+        val recetasCoincidentesParciales = mutableListOf<Pair<Receta, Int>>()
 
-        db.collection("bulkRecetas")
-            .get()
-            .addOnSuccessListener { result ->
-                val recetasCoincidentesTotales = mutableListOf<Receta>()
-                val recetasCoincidentesParciales = mutableListOf<Pair<Receta, Int>>()
+        val procesarDocumentos: (List<DocumentSnapshot>) -> Unit = { documentos ->
+            for (document in documentos) {
+                val recetaNombre = document.getString("title")
+                val recetaIngredientes = document.get("ingredients") as? List<Map<String, Any>>
 
-                for (document in result) {
-                    val recetaNombre = document.getString("title")
-                    val recetaIngredientes = document.get("ingredients") as? List<Map<String, Any>>
+                if (recetaNombre != null && recetaIngredientes != null) {
+                    val ingredientesReceta = recetaIngredientes.map {
+                        Ingrediente(
+                            name = (it["name"] as? String)?.lowercase() ?: "",
+                            image = it["image"] as? String ?: "",
+                            amount = (it["amount"] as? Double) ?: 0.0,
+                            unit = it["unit"] as? String ?: "",
+                            aisle = it["aisle"] as? String ?: "",
+                        )
+                    }
 
-                    // Si la receta tiene ingredientes y el nombre de la receta no es nulo
-                    if (recetaNombre != null && recetaIngredientes != null) {
-                        // Obtener los ingredientes de la receta
-                        val ingredientesReceta = recetaIngredientes.map {
-                            Ingrediente(
-                                name = (it["name"] as? String)?.lowercase() ?: "",
-                                image = it["image"] as? String ?: "",
-                                amount = (it["amount"] as? Double) ?: 0.0,
-                                unit = it["unit"] as? String ?: "",
-                                aisle = it["aisle"] as? String ?: "",
-                            )
-                        }
+                    val missingIngredients = ingredientesReceta.filterNot { ingrediente ->
+                        ingredientes.any { it.name == ingrediente.name }
+                    }
 
-                        // Calcular los ingredientes faltantes (missing)
-                        val missingIngredients = ingredientesReceta.filterNot { ingrediente ->
-                            ingredientes.any { it.name == ingrediente.name }
-                        }
+                    val unusedIngredients = ingredientes.filterNot { ingrediente ->
+                        ingredientesReceta.any { it.name == ingrediente.name }
+                    }
 
+                    val coincidencias = ingredientes.count { ingrediente ->
+                        ingredientesReceta.any { it.name == ingrediente.name }
+                    }
 
-                        // Crear la lista de ingredientes no utilizados (unused)
-                        val unusedIngredients = ingredientes.filterNot { ingrediente ->
-                            ingredientesReceta.any { it.name == ingrediente.name }
-                        }
+                    val receta = Receta(
+                        id = document.id,
+                        title = recetaNombre,
+                        image = document.getString("image"),
+                        servings = document.getLong("servings")?.toInt() ?: 0,
+                        ingredients = ingredientesReceta,
+                        steps = document.get("steps") as? List<String> ?: emptyList(),
+                        time = document.getLong("time")?.toInt() ?: 0,
+                        dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
+                        userId = document.getString("userId") ?: "",
+                        unusedIngredients = unusedIngredients,
+                        missingIngredientCount = missingIngredients.size,
+                        unusedIngredientCount = unusedIngredients.size,
+                        glutenFree = document.getBoolean("glutenFree") ?: false,
+                        vegan = document.getBoolean("vegan") ?: false,
+                        vegetarian = document.getBoolean("vegetarian") ?: false,
+                        date = document.getLong("date") ?: System.currentTimeMillis(),
+                        esFavorita = null,
+                    )
 
-
-                        // Contar cuántos ingredientes de la receta coinciden con los ingredientes proporcionados
-                        val coincidencias = ingredientes.count { ingrediente ->
-                            ingredientesReceta.any { it.name == ingrediente.name }
-                        }
-
-                        // Calcular los campos relacionados con los ingredientes no utilizados y faltantes
-                        val unusedIngredientCount = unusedIngredients.size
-                        val missingIngredientCount = missingIngredients.size
-
-                        // Si la receta contiene todos los ingredientes proporcionados, se agrega a la lista total
-                        if (coincidencias == ingredientes.size) {
-                            val receta = Receta(
-                                id = document.id,
-                                title = recetaNombre,
-                                image = document.getString("image"),
-                                servings = document.getLong("servings")?.toInt() ?: 0,
-                                ingredients = ingredientesReceta,
-                                steps = document.get("steps") as? List<String> ?: emptyList(),
-                                time = document.getLong("time")?.toInt() ?: 0,
-                                dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
-                                userId = document.getString("userId") ?: "",
-                                //usedIngredientCount = coincidencias,
-                                unusedIngredients = unusedIngredients, // Ingredientes no utilizados del usuario
-                                missingIngredientCount = missingIngredientCount, // Ingredientes faltantes de la receta
-                                unusedIngredientCount = unusedIngredientCount, // Contamos los ingredientes no utilizados del usuario
-                                glutenFree = document.getBoolean("glutenFree") ?: false,
-                                vegan = document.getBoolean("vegan") ?: false,
-                                vegetarian = document.getBoolean("vegetarian") ?: false,
-                                date = document.getLong("date") ?: System.currentTimeMillis(),
-                                esFavorita = null,
-                            )
-                            recetasCoincidentesTotales.add(receta)
-                        } else if (coincidencias > 0) {
-                            // Si no contiene todos, pero tiene algunas coincidencias, se guarda con el número de coincidencias
-                            val receta = Receta(
-                                id = document.id,
-                                title = recetaNombre,
-                                image = document.getString("image"),
-                                servings = document.getLong("servings")?.toInt() ?: 0,
-                                ingredients = ingredientesReceta,
-                                steps = document.get("steps") as? List<String> ?: emptyList(),
-                                time = document.getLong("time")?.toInt() ?: 0,
-                                dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
-                                userId = document.getString("userId") ?: "",
-                                //usedIngredientCount = coincidencias,
-                                unusedIngredients = unusedIngredients,
-                                missingIngredientCount = missingIngredientCount,
-                                unusedIngredientCount = unusedIngredientCount,
-                                glutenFree = document.getBoolean("glutenFree") ?: false,
-                                vegan = document.getBoolean("vegan") ?: false,
-                                vegetarian = document.getBoolean("vegetarian") ?: false,
-                                date = document.getLong("date") ?: System.currentTimeMillis(),
-                                esFavorita = null,
-                            )
-                            recetasCoincidentesParciales.add(Pair(receta, coincidencias))
-                        }
+                    if (coincidencias == ingredientes.size) {
+                        recetasCoincidentesTotales.add(receta)
+                    } else if (coincidencias > 0) {
+                        recetasCoincidentesParciales.add(Pair(receta, coincidencias))
                     }
                 }
-
-                // Ordenar las recetas parciales por el número de coincidencias, de mayor a menor
-                val recetasOrdenadas = recetasCoincidentesParciales
-                    .sortedByDescending { it.second }
-                    .map { it.first }
-
-                // Unir las recetas totales (con todos los ingredientes) con las parciales (con mayor número de coincidencias)
-                val recetasFinales = recetasCoincidentesTotales + recetasOrdenadas
-
-                // Actualizar el LiveData con las recetas
-                _recetas.value = recetasFinales
-                _recetasOriginales.value = recetasFinales
-                Log.d("buscarRecetasPorIngredientes()", "$recetasFinales")
             }
-            .addOnFailureListener { exception ->
-                Log.e("Firebase", "Error al obtener recetas por ingredientes: ", exception)
+
+            val recetasOrdenadas = recetasCoincidentesParciales
+                .sortedByDescending { it.second }
+                .map { it.first }
+
+            val recetasFinales = recetasCoincidentesTotales + recetasOrdenadas
+            _recetas.value = recetasFinales
+            _recetasOriginales.value = recetasFinales
+            Log.d("buscarRecetasPorIngredientes()", "$recetasFinales")
+        }
+
+        // Obtener recetas públicas y del usuario
+        db.collection("bulkRecetas").get()
+            .addOnSuccessListener { result1 ->
+                db.collection("my_recipes")
+                    .document(userId)
+                    .collection("recipes")
+                    .get()
+                    .addOnSuccessListener { result2 ->
+                        val todosLosDocumentos = result1.documents + result2.documents
+                        procesarDocumentos(todosLosDocumentos)
+                        _isLoading.value = false
+                    }
+                    .addOnFailureListener {
+                        _isLoading.value = false
+                        Log.e("Firebase", "Error al obtener recetas personales", it)
+                        procesarDocumentos(result1.documents) // Solo públicas si falla
+                    }
+            }
+            .addOnFailureListener {
+                _isLoading.value = false
+                Log.e("Firebase", "Error al obtener recetas públicas", it)
             }
     }
 
@@ -823,70 +805,96 @@ class RecetasViewModel : ViewModel() {
             }
     }
 
-    // Recetas que contengan al menos una palabra
-    fun obtenerRecetasPorNombre(prefix: String) {
+
+    /**
+     * Se hace una doble consulta: primero a bulkRecetas, luego a my_recipes/userId/recipes.
+     * Ambas listas se combinan (documents + documents) y se procesan con la misma lógica.
+     * Si una receta tiene al menos una palabra coincidente, se añade a los resultados.
+     *
+     * Las recetas del user vna al final
+     **/
+    fun obtenerRecetasPorNombre(prefix: String, userId: String) {
+        _isLoading.value = true
+
         val palabrasClave = prefix.lowercase().split(" ")
             .filter { it.isNotBlank() && it !in listOf("and", "with", "all") }
 
         if (palabrasClave.isEmpty()) return
 
+        // Obtener recetas de bulkRecetas
         db.collection("bulkRecetas")
             .get()
-            .addOnSuccessListener { result ->
-                val resultados = mutableListOf<Receta>()
+            .addOnSuccessListener { result1 ->
+                // Obtener recetas personales del usuario
+                db.collection("my_recipes")
+                    .document(userId)
+                    .collection("recipes")
+                    .get()
+                    .addOnSuccessListener { result2 ->
 
-                for (document in result) {
-                    val recetaId = document.id
-                    val recetaNombre = document.getString("title")?.lowercase()
+                        val resultados = mutableListOf<Receta>()
+                        val todosLosDocumentos = result1.documents + result2.documents
 
-                    recetaNombre?.let { nombre ->
-                        val coincidencias = palabrasClave.count { palabra -> nombre.contains(palabra) }
+                        for (document in todosLosDocumentos) {
+                            val recetaId = document.id
+                            val recetaNombre = document.getString("title")?.lowercase()
 
-                        if (coincidencias > 0) {
-                            val receta = Receta(
-                                id = recetaId,
-                                title = document.getString("title") ?: "",
-                                image = document.getString("image"),
-                                servings = document.getLong("servings")?.toInt() ?: 0,
-                                ingredients = (document.get("ingredients") as? List<Map<String, Any>>)?.map { ingrediente ->
-                                    Ingrediente(
-                                        name = (ingrediente["name"] as? String) ?: "",
-                                        image = ingrediente["image"] as? String ?: "",
-                                        amount = (ingrediente["amount"] as? Double) ?: 0.0,
-                                        unit = ingrediente["unit"] as? String ?: "",
-                                        aisle = ingrediente["aisle"] as? String ?: ""
+                            recetaNombre?.let { nombre ->
+                                val coincidencias = palabrasClave.count { palabra -> nombre.contains(palabra) }
+
+                                if (coincidencias > 0) {
+                                    val receta = Receta(
+                                        id = recetaId,
+                                        title = document.getString("title") ?: "",
+                                        image = document.getString("image"),
+                                        servings = document.getLong("servings")?.toInt() ?: 0,
+                                        ingredients = (document.get("ingredients") as? List<Map<String, Any>>)?.map { ingrediente ->
+                                            Ingrediente(
+                                                name = (ingrediente["name"] as? String) ?: "",
+                                                image = ingrediente["image"] as? String ?: "",
+                                                amount = (ingrediente["amount"] as? Double) ?: 0.0,
+                                                unit = ingrediente["unit"] as? String ?: "",
+                                                aisle = ingrediente["aisle"] as? String ?: ""
+                                            )
+                                        } ?: emptyList(),
+                                        steps = document.get("steps") as? List<String> ?: emptyList(),
+                                        time = document.getLong("time")?.toInt() ?: 0,
+                                        dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
+                                        userId = document.getString("userId") ?: "",
+                                        glutenFree = document.getBoolean("glutenFree") ?: false,
+                                        vegan = document.getBoolean("vegan") ?: false,
+                                        vegetarian = document.getBoolean("vegetarian") ?: false,
+                                        date = document.getLong("date") ?: System.currentTimeMillis(),
+                                        unusedIngredients = emptyList(),
+                                        missingIngredientCount = 0,
+                                        unusedIngredientCount = 0,
+                                        esFavorita = null,
                                     )
-                                } ?: emptyList(),
-                                steps = document.get("steps") as? List<String> ?: emptyList(),
-                                time = document.getLong("time")?.toInt() ?: 0,
-                                dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
-                                userId = document.getString("userId") ?: "",
-                                glutenFree = document.getBoolean("glutenFree") ?: false,
-                                vegan = document.getBoolean("vegan") ?: false,
-                                vegetarian = document.getBoolean("vegetarian") ?: false,
-                                date = document.getLong("date") ?: System.currentTimeMillis(),
-                                unusedIngredients = emptyList(),
-                                missingIngredientCount = 0,
-                                unusedIngredientCount = 0,
-                                esFavorita = null,
-                            )
 
-                            resultados.add(receta)
-                            Log.d("RecetasViewModel", "Receta añadida a sugerencias: ${receta.title}")
+                                    resultados.add(receta)
+                                    Log.d("RecetasViewModel", "Receta añadida a sugerencias: ${receta.title}")
+                                }
+                            }
                         }
-                    }
-                }
 
-                // Prioriza recetas con más palabras coincidentes
-                _recetas.value = resultados.sortedByDescending { receta ->
-                    palabrasClave.count { palabra -> receta.title.lowercase().contains(palabra) }
-                }
-                _recetasOriginales.value = _recetas.value
+                        // Prioriza recetas con más palabras clave coincidentes
+                        _recetas.value = resultados.sortedByDescending { receta ->
+                            palabrasClave.count { palabra -> receta.title.lowercase().contains(palabra) }
+                        }
+                        _recetasOriginales.value = _recetas.value
+                        _isLoading.value = false
+                    }
+                    .addOnFailureListener { exception ->
+                        _isLoading.value = false
+                        Log.e("Firebase", "Error al obtener recetas de my_recipes: ", exception)
+                    }
             }
             .addOnFailureListener { exception ->
-                Log.e("Firebase", "Error al obtener sugerencias de recetas: ", exception)
+                _isLoading.value = false
+                Log.e("Firebase", "Error al obtener recetas de bulkRecetas: ", exception)
             }
     }
+
 
 
     // Definir la función de filtro
