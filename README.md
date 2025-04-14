@@ -42,8 +42,7 @@ haya conexión disponible.
 - `Plan semanal`: La aplicación generará un plan semanal de comidas,
 asignando recetas de desayuno, almuerzo y cena a cada día de la
 semana, y actualizándose automáticamente cada lunes mediante un
-worker. El plan se basa en los ingredientes disponibles y las preferencias
-del usuario, asegurando que no se repitan recetas de la semana anterior.
+worker. El plan se asegura de que no se repitan recetas de la semana anterior ni de la actual y de no comer más de 3 días carne ni pasta, asegurando una variedad en la dieta. También registra qué "aisle" se usa en cada comida para intentar no repetir en un mismo día un tipo de ingrediente.
  
 ## 💻Tecnologías utilizadas
 
