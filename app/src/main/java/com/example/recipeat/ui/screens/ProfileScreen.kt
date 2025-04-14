@@ -69,7 +69,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
     LaunchedEffect(Unit) {
         Log.d("ProfileScreen", "uid = ${uid}")
         if (usernameState.isNullOrBlank()) {
-            usersViewModel.obtenerUsuarioCompleto(uid.toString()) { username, profileImageUrl, email ->
+            usersViewModel.obtenerUsuarioCompletoPorCampos(uid.toString()) { username, profileImageUrl, email ->
                 usernameState = username
                 profileImageState = profileImageUrl
             }

@@ -104,5 +104,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)// Esto es necesario si usas Kotlin
     // Si usas coroutines con Room
     implementation(libs.androidx.room.ktx)  // Opcional, pero útil si usas coroutines
+    testImplementation(libs.mockk) //para mockear test
+
 
 }

@@ -26,10 +26,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.example.recipeat.R
 import com.example.recipeat.data.model.User
 import com.example.recipeat.ui.components.AppBar
@@ -68,7 +66,6 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
                 bitmap = usersViewModel.loadImageFromFile(context, null)
             }
         }
-
     }
 
     // Photo picker (1 pic)
@@ -179,7 +176,6 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
                 onClick = {
                     if (uid != null) {
                         usersViewModel.actualizarUserProfile(
-                            uid = uid,
                             newUsername = newUsername,
                             newProfileImage = newImage,
                             onResult = { success ->

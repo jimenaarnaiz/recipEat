@@ -66,7 +66,6 @@ fun RegisterScreen(
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
 
-    val context = LocalContext.current
     var errorMessage by rememberSaveable { mutableStateOf("") }
 
     val configuration = LocalConfiguration.current
@@ -293,7 +292,7 @@ fun Buttons(
                             if (uid != null) {
                                 //recetasViewModel.verificarRecetasGuardadasApi()
                                 //ingredientesViewModel.extraerIngredientesYGuardar()
-                                planViewModel.iniciarGeneracionPlanSemanalIncial(uid.toString())
+                                planViewModel.iniciarGeneracionPlanSemanalInicial(uid.toString())
                             }
                             onErrorMessageChange("")
                             Toast.makeText(

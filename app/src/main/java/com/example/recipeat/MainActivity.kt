@@ -17,7 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
 import com.example.recipeat.data.database.AppDatabase
-import com.example.recipeat.data.model.PlanSemanalWorker
+import com.example.recipeat.utils.PlanSemanalWorker
 import com.example.recipeat.data.repository.RecetaRepository
 import com.example.recipeat.ui.components.BottomNavBar
 import com.example.recipeat.ui.theme.RecipEatTheme

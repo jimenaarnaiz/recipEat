@@ -6,6 +6,9 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -50,99 +53,109 @@ fun NavigationGraph(
     val filtrosViewModel: FiltrosViewModel = viewModel()
     val planViewModel: PlanViewModel = viewModel()
 
+    val startDestination = remember { mutableStateOf<String?>(null) }
+
+    // si hay una sesión activa, no se va a login
+    LaunchedEffect(Unit) {
+        usersViewModel.isSessionActive { isActive ->
+            startDestination.value = if (isActive) "home" else "login"
+        }
+    }
 
     Scaffold { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = if (usersViewModel.isSessionActive()) "home" else "login" // Verifica si la sesión está activa
-            //modifier = Modifier.padding(padding) AÑADE PADDING INNECESARIO ARRIBA
-        ) {
-            composable("login") {
-                LoginScreen(navController, usersViewModel, recetasViewModel, roomViewModel, planViewModel) // Login
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("register") {
-                RegisterScreen(navController, usersViewModel, recetasViewModel, ingredientesViewModel, planViewModel) // Registro
-                onBottomBarVisibilityChanged(false)
-            }
-            composable(BottomNavItem.Home.route) {
-                HomeScreen(navController, usersViewModel, recetasViewModel)   // Home
-                onBottomBarVisibilityChanged(true)
-            }
-            composable(BottomNavItem.MyRecipes.route) {
-                MyRecipesScreen(navController, recetasViewModel, roomViewModel, usersViewModel)   //
-                onBottomBarVisibilityChanged(true)
-            }
-            composable(BottomNavItem.Profile.route) {
-                ProfileScreen(navController, usersViewModel) // Perfil
-                onBottomBarVisibilityChanged(true)
-            }
-            composable("resultados/{query}") { backStackEntry ->
-                val query = backStackEntry.arguments?.getString("query") ?: ""
-                ResNameScreen(nombreReceta = query, navController = navController, recetasViewModel, filtrosViewModel, usersViewModel)
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("detalles/{idReceta}/{deUser}") { backStackEntry ->
-                val idReceta = backStackEntry.arguments?.getString("idReceta") ?: ""
-                val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
+        startDestination.value?.let {
+            NavHost(
+                navController = navController,
+                startDestination = it// Verifica si la sesión está activa
+                //modifier = Modifier.padding(padding) AÑADE PADDING INNECESARIO ARRIBA
+            ) {
+                composable("login") {
+                    LoginScreen(navController, usersViewModel, recetasViewModel, roomViewModel, planViewModel) // Login
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("register") {
+                    RegisterScreen(navController, usersViewModel, recetasViewModel, ingredientesViewModel, planViewModel) // Registro
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable(BottomNavItem.Home.route) {
+                    HomeScreen(navController, usersViewModel, recetasViewModel)   // Home
+                    onBottomBarVisibilityChanged(true)
+                }
+                composable(BottomNavItem.MyRecipes.route) {
+                    MyRecipesScreen(navController, recetasViewModel, roomViewModel, usersViewModel)   //
+                    onBottomBarVisibilityChanged(true)
+                }
+                composable(BottomNavItem.Profile.route) {
+                    ProfileScreen(navController, usersViewModel) // Perfil
+                    onBottomBarVisibilityChanged(true)
+                }
+                composable("resultados/{query}") { backStackEntry ->
+                    val query = backStackEntry.arguments?.getString("query") ?: ""
+                    ResNameScreen(nombreReceta = query, navController = navController, recetasViewModel, filtrosViewModel, usersViewModel)
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("detalles/{idReceta}/{deUser}") { backStackEntry ->
+                    val idReceta = backStackEntry.arguments?.getString("idReceta") ?: ""
+                    val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
 
-                // Verifica que se haya obtenido el valor correctamente
-                Log.d("DetailsScreen", "Valor de deUser: $deUser")
+                    // Verifica que se haya obtenido el valor correctamente
+                    Log.d("DetailsScreen", "Valor de deUser: $deUser")
 
-                // Ahora pasamos el parámetro 'deUser' a la pantalla de detalles
-                DetailsScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, esDeUser = deUser, roomViewModel, usersViewModel)
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("search") {
-                UnifiedSearchScreen(navController, recetasViewModel, ingredientesViewModel) // Búsqueda por nombre
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("resultadosIngredientes") {
-                ResIngredientsScreen(navController, recetasViewModel, ingredientesViewModel, filtrosViewModel, usersViewModel)
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("add_recipe") {
-                AddRecipe(navController, recetasViewModel, ingredientesViewModel, roomViewModel, usersViewModel)   //
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("favoritos") {
-                FavoritesScreen(navController, recetasViewModel, roomViewModel, usersViewModel)   //
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("historial") {
-                HistoryScreen(navController, recetasViewModel, usersViewModel)   //
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("editarPerfil") {
-                EditProfileScreen(navController, usersViewModel)
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("editRecipe/{idReceta}/{deUser}") { backStackEntry ->
-                val idReceta = backStackEntry.arguments?.getString("idReceta") ?: ""
-                val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
-                // Ahora pasamos 'deUser' a la pantalla
-                EditRecipeScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, ingredientesViewModel, deUser = deUser, usersViewModel)
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("steps/{idReceta}/{deUser}") { backStackEntry ->
-                val id = backStackEntry.arguments?.getString("idReceta") ?: ""
-                val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
-                StepsScreen(idReceta = id, navController = navController, recetasViewModel, deUser = deUser)
-                onBottomBarVisibilityChanged(false)
-            }
-            composable(BottomNavItem.Plan.route) {
-                WeeklyPlanScreen(navController, planViewModel, usersViewModel)
-                onBottomBarVisibilityChanged(true)
-            }
-            composable("listaCompra") {
-                ShoppingListScreen(navController, usersViewModel, planViewModel)
-                onBottomBarVisibilityChanged(false)
-            }
-            composable("debug") {
-                DebugScreen()
-                onBottomBarVisibilityChanged(true)
-            }
+                    // Ahora pasamos el parámetro 'deUser' a la pantalla de detalles
+                    DetailsScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, esDeUser = deUser, roomViewModel, usersViewModel)
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("search") {
+                    UnifiedSearchScreen(navController, recetasViewModel, ingredientesViewModel) // Búsqueda por nombre
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("resultadosIngredientes") {
+                    ResIngredientsScreen(navController, recetasViewModel, ingredientesViewModel, filtrosViewModel, usersViewModel)
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("add_recipe") {
+                    AddRecipe(navController, recetasViewModel, ingredientesViewModel, roomViewModel, usersViewModel)   //
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("favoritos") {
+                    FavoritesScreen(navController, recetasViewModel, roomViewModel, usersViewModel)   //
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("historial") {
+                    HistoryScreen(navController, recetasViewModel, usersViewModel)   //
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("editarPerfil") {
+                    EditProfileScreen(navController, usersViewModel)
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("editRecipe/{idReceta}/{deUser}") { backStackEntry ->
+                    val idReceta = backStackEntry.arguments?.getString("idReceta") ?: ""
+                    val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
+                    // Ahora pasamos 'deUser' a la pantalla
+                    EditRecipeScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, ingredientesViewModel, deUser = deUser, usersViewModel)
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("steps/{idReceta}/{deUser}") { backStackEntry ->
+                    val id = backStackEntry.arguments?.getString("idReceta") ?: ""
+                    val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
+                    StepsScreen(idReceta = id, navController = navController, recetasViewModel, deUser = deUser)
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable(BottomNavItem.Plan.route) {
+                    WeeklyPlanScreen(navController, planViewModel, usersViewModel)
+                    onBottomBarVisibilityChanged(true)
+                }
+                composable("listaCompra") {
+                    ShoppingListScreen(navController, usersViewModel, planViewModel)
+                    onBottomBarVisibilityChanged(false)
+                }
+                composable("debug") {
+                    DebugScreen()
+                    onBottomBarVisibilityChanged(true)
+                }
 
+            }
         }
     }
 }

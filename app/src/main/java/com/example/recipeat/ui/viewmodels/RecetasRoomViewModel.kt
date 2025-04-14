@@ -23,28 +23,6 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
     val userRecipesRoom: LiveData<List<Receta>> get() = _userRecipesRoom
 
 
-//    // Función para convertir Receta a RecetaRoom dentro del ViewModel
-//    fun toRecetaRoom(receta: Receta, esFavorita: Boolean = false): RecetaRoom {
-//        return RecetaRoom(
-//            id = receta.id,
-//            title = receta.title,
-//            image = receta.image ?: "",
-//            servings = receta.servings,
-//            ingredients = receta.ingredients,
-//            steps = receta.steps,
-//            time = receta.time,
-//            dishTypes = receta.dishTypes,
-//            userId = receta.userId,
-//            usedIngredientCount = receta.usedIngredientCount,
-//            glutenFree = receta.glutenFree,
-//            vegan = receta.vegan,
-//            vegetarian = receta.vegetarian,
-//            date = receta.date,
-//            esFavorita = esFavorita
-//        )
-//    }
-
-
     // Obtener todas las recetas
     fun getAllRecetas() {
         viewModelScope.launch {
