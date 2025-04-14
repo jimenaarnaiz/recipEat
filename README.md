@@ -10,7 +10,14 @@
     <img src="https://sonarcloud.io/api/project_badges/measure?project=jimenaarnaiz_recipEat&metric=ncloc" alt="Code Lines"/>
     <img src="https://sonarcloud.io/api/project_badges/measure?project=jimenaarnaiz_recipEat&metric=coverage" alt="Coverage"/>
     <img src="https://sonarcloud.io/api/project_badges/measure?project=jimenaarnaiz_recipEat&metric=reliability_rating" alt="Code Lines"/>
-
-
   </a>
 </p>
+
+<h1 align="center"> recipEat </h1>
+Decidir qué cocinar cada día puede ser una tarea complicada. recipEat es una aplicación móvil para Android que nace con el objetivo de facilitar esta tarea
+al proporcionar una manera rápida y eficiente de encontrar recetas basadas
+en ingredientes, simplificando la planificación de comidas y reduciendo el
+desperdicio de alimentos.
+ 
+
+
