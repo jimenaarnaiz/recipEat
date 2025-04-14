@@ -37,7 +37,7 @@ podrán crear sus propias recetas, incluyendo imagen, tiempo de preparación, ra
 ser editadas o eliminadas.
 - `Modo offline`: La aplicación permitirá a los usuarios acceder a sus
 recetas y recetas favoritas sin necesidad de estar conectados a Internet.
-Estos datos serán almacenados localmente y sincronizados cuando
+Estos datos serán almacenados localmente utilizando Room y sincronizados cuando
 haya conexión disponible.
 - `Plan semanal`: La aplicación generará un plan semanal de comidas,
 asignando recetas de desayuno, almuerzo y cena a cada día de la
