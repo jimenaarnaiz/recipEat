@@ -13,11 +13,37 @@
   </a>
 </p>
 
-<h1 align="center"> recipEat </h1>
+<h1 align="center"> :fork_and_knife:recipEat:fork_and_knife: </h1>
 Decidir qué cocinar cada día puede ser una tarea complicada. recipEat es una aplicación móvil para Android que nace con el objetivo de facilitar esta tarea
 al proporcionar una manera rápida y eficiente de encontrar recetas basadas
 en ingredientes, simplificando la planificación de comidas y reduciendo el
 desperdicio de alimentos.
- 
 
+## 🔨Funcionalidades del proyecto
+
+- `Gestión de recetas`: Los usuarios pueden explorar recetas en la
+pantalla de inicio, buscar recetas filtradas por ingredientes o por título
+y ver los detalles de cada receta. También pueden agregar recetas a
+sus favoritos y añadirlas al historial de cocina.
+- `Historial de cocina`: La aplicación permitirá registrar las recetas
+cocinadas por el usuario, permitiendo visualizar las recetas cocinadas
+en los últimos 7 o 30 días, facilitando el acceso rápido a las recetas
+más recientes.
+- `Búsqueda de ingredientes`: Se incluirá una funcionalidad de búsqueda de ingredientes con autocompletado, permitiendo a los usuarios
+seleccionar varios ingredientes y obtener recetas que contengan esos
+ingredientes (todos o algunos de esos ingredientes).
+- `Creación y gestión de recetas personalizadas`: Los usuarios
+podrán crear sus propias recetas, incluyendo imagen, tiempo de preparación, raciones, ingredientes, pasos y ocasión. Estas recetas podrán
+ser editadas o eliminadas.
+- `Modo offline`: La aplicación permitirá a los usuarios acceder a sus
+recetas y recetas favoritas sin necesidad de estar conectados a Internet.
+Estos datos serán almacenados localmente y sincronizados cuando
+haya conexión disponible.
+- `Plan semanal`: La aplicación generará un plan semanal de comidas,
+asignando recetas de desayuno, almuerzo y cena a cada día de la
+semana, y actualizándose automáticamente cada lunes mediante un
+worker. El plan se basa en los ingredientes disponibles y las preferencias
+del usuario, asegurando que no se repitan recetas de la semana anterior.
+ 
+## 💻Tecnologías utilizadas
 
