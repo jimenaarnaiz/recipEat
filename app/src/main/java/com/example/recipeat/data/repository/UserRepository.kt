@@ -194,7 +194,7 @@ class UserRepository(context: Context) {
     // cambia el username y la foto
     suspend fun actualizarUserProfile(newUsername: String?, newProfileImage: String?): Boolean {
         try {
-            val userRef = db.collection("users").document(_uid.toString())
+            val userRef = db.collection("users").document(_uid.value.toString())
             val updatedData = mutableMapOf<String, Any>()
 
             newUsername?.let { updatedData["username"] = it }

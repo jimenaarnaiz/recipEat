@@ -109,9 +109,10 @@ fun MyRecipesScreen(navController: NavHostController, recetasViewModel: RecetasV
         }
     ) { paddingValues ->
 
+        // Mostrar las recetas alamcenadas localmente o las de firebase según la conexión
         val recetas = if (isConnected) recetasUser else recetasRoomUser
         val txtEmpty =  if (isConnected) "Add your first recipe!" else
-        "Wait until you have internet to add your first recipe."
+        "Wait until you have internet to add your first recipe!"
 
         Column(
             modifier = Modifier
@@ -141,7 +142,7 @@ fun MyRecipesScreen(navController: NavHostController, recetasViewModel: RecetasV
                         RecetaCard(receta, navController, usersViewModel)
                     }
                     //estado de carga
-                    if (isLoadingMore) {
+                    if (isLoadingMore && isConnected) {
                         item {
                             CircularProgressIndicator(
                                 modifier = Modifier
@@ -151,7 +152,6 @@ fun MyRecipesScreen(navController: NavHostController, recetasViewModel: RecetasV
                             )
                         }
                     }
-
                 }
             }
         }

@@ -1,6 +1,8 @@
 package com.example.recipeat.ui.viewmodels
 
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -18,10 +20,11 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
     private var _recipeRoom = MutableLiveData<Receta>()
     val recipeRoom: LiveData<Receta> get() = _recipeRoom
 
-
     private val _userRecipesRoom = MutableLiveData<List<Receta>>()
     val userRecipesRoom: LiveData<List<Receta>> get() = _userRecipesRoom
 
+    private val _homeRecipesRoom = MutableLiveData<List<Receta>>()
+    val homeRecipesRoom: LiveData<List<Receta>> get() = _homeRecipesRoom
 
     // Obtener todas las recetas
     fun getAllRecetas() {
@@ -64,7 +67,6 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
     }
 
 
-
     // Insertar receta
     fun insertReceta(receta: Receta) {
         viewModelScope.launch {
@@ -80,6 +82,29 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
     }
 
 
+    fun guardarPrimeras15RecetasSiNoEstan(context: Context, recetas: List<Receta>, userId: String) {
+        val prefs = context.getSharedPreferences("prefs_recetas", Context.MODE_PRIVATE)
+        val key = "recetas_home_guardadas_$userId"
+        val yaGuardadas = prefs.getBoolean(key, false)
+
+        Log.d("RecetasRoomViewModel", "Recetas size: ${recetas.size} | yaGuardadas: $yaGuardadas para userId: $userId")
+        if (!yaGuardadas && recetas.size >= 15) {
+            viewModelScope.launch {
+                try {
+                    recetaRepository.insertRecetas(recetas.take(15))
+                    prefs.edit().putBoolean(key, true).apply()
+                    Log.d("RecetasRoomViewModel", "Primeras 15 recetas guardadas en Room para el usuario $userId.")
+                } catch (e: Exception) {
+                    Log.e("RecetasRoomViewModel", "Error al guardar recetas en Room: ${e.message}", e)
+                }
+            }
+        } else {
+            Log.d("RecetasRoomViewModel", "Ya guardadas o no hay suficientes recetas para $userId.")
+        }
+    }
+
+
+
     // Eliminar receta
     fun deleteReceta(receta: Receta) {
         viewModelScope.launch {
@@ -92,6 +117,14 @@ class RoomViewModel(private val recetaRepository: RecetaRepository) : ViewModel(
         viewModelScope.launch {
             val recetasFavoritas = recetaRepository.getRecetasFavoritas()
             _favoriteRecipesRoom.postValue(recetasFavoritas)
+        }
+    }
+
+    // Obtener recetas favoritas
+    fun getRecetasHome() {
+        viewModelScope.launch {
+            val recetasHome = recetaRepository.getRecetasHome()
+            _homeRecipesRoom.postValue(recetasHome)
         }
     }
 

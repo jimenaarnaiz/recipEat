@@ -78,7 +78,7 @@ fun NavigationGraph(
                     onBottomBarVisibilityChanged(false)
                 }
                 composable(BottomNavItem.Home.route) {
-                    HomeScreen(navController, usersViewModel, recetasViewModel)   // Home
+                    HomeScreen(navController, usersViewModel, recetasViewModel, roomViewModel)   // Home
                     onBottomBarVisibilityChanged(true)
                 }
                 composable(BottomNavItem.MyRecipes.route) {

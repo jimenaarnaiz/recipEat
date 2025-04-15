@@ -35,15 +35,20 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.ui.components.RecetaCard
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel, recetasViewModel: RecetasViewModel) {
+fun HomeScreen(
+    navController: NavHostController, usersViewModel: UsersViewModel,
+    recetasViewModel: RecetasViewModel, roomViewModel: RoomViewModel
+) {
     val recetasState by recetasViewModel.recetasHome.observeAsState(emptyList())
     val isLoadingMore by recetasViewModel.isLoadingMore.observeAsState(false)
+    val recetasHomeRoom by roomViewModel.homeRecipesRoom.observeAsState(emptyList())
 
     var username by rememberSaveable { mutableStateOf<String?>(null) }
     val uid = usersViewModel.getUidValue()
@@ -70,6 +75,15 @@ fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel,
 
         if (recetasState.isEmpty()) {
             recetasViewModel.obtenerRecetasHome(limpiarLista = true)
+        }
+    }
+
+    LaunchedEffect(recetasState) {
+        //el segundo isEmpty hace que solo cargue al abrir la app las recetas favs,
+        //si abres, das fav, y vuelves a home, no se mostrarán esas nuevas recetas (offline) en home hasta q vuelvas a salir y entrar
+        if (recetasState.isNotEmpty() && recetasHomeRoom.isEmpty()) {
+            roomViewModel.guardarPrimeras15RecetasSiNoEstan(context, recetasState, uid.toString())
+            roomViewModel.getRecetasHome()
         }
     }
 
@@ -118,31 +132,46 @@ fun HomeScreen(navController: NavHostController, usersViewModel: UsersViewModel,
                 .padding(bottom = 16.dp)
         ) {}
 
-        if (recetasState.isEmpty()) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-        } else {
+        if (isConnected) {
+            if (recetasState.isEmpty()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+
+                    items(recetasState) { receta ->
+                        RecetaCard(receta = receta, navController, usersViewModel)
+                    }
+
+                    if (isLoadingMore) {
+                        item {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp)
+                                    .align(Alignment.CenterHorizontally)
+                            )
+                        }
+                    }
+                }
+            }
+        }else {
             LazyColumn(
                 state = listState,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             ) {
-                items(recetasState) { receta ->
+                items(recetasHomeRoom) { receta ->
                     RecetaCard(receta = receta, navController, usersViewModel)
-                }
-
-                if (isLoadingMore) {
-                    item {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp)
-                                .align(Alignment.CenterHorizontally)
-                        )
-                    }
                 }
             }
         }
+
     }
 }
 

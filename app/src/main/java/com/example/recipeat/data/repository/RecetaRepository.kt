@@ -15,6 +15,10 @@ class RecetaRepository(private val recetaDao: RecetaDao) {
         recetaDao.insertReceta(receta)
     }
 
+    suspend fun insertRecetas(recetas: List<Receta>){
+        recetaDao.insertRecetas(recetas)
+    }
+
     // Eliminar receta
     suspend fun deleteReceta(receta: Receta) {
         recetaDao.deleteReceta(receta)
@@ -45,6 +49,10 @@ class RecetaRepository(private val recetaDao: RecetaDao) {
 
     suspend fun getRecetasUser(userId: String): List<Receta>{
         return recetaDao.getRecetasUser(userId = userId)
+    }
+
+    suspend fun getRecetasHome(): List<Receta> {
+        return recetaDao.getRecetasHome()
     }
 
 }

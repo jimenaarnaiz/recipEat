@@ -8,7 +8,7 @@ import com.example.recipeat.data.model.converters.StepsTypeDishListConverter
 import com.google.firebase.Timestamp
 
 
-@Entity(tableName = "recetas")
+@Entity(tableName = "recetas") //para recetas del user y favs
 // Receta almacenada en Firebase
 data class Receta(
     @PrimaryKey val id: String,
@@ -35,8 +35,6 @@ data class SugerenciaReceta(val id: String, val titulo: String, val coincidencia
 
 // para mostrar en favs e historial
 data class RecetaSimple(val id: String, val userReceta: String, val title: String, val image: String, val date: Timestamp)
-
-data class Equipment(val name: String, val imageUrl: String)
 
 // Para las recetas que crea localmente el user
 enum class DishTypes {

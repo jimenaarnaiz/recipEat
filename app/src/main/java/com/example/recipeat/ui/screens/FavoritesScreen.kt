@@ -120,7 +120,7 @@ fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasV
                         RecetaSimpleCardItem(
                             recetaId = receta.id,
                             title = receta.title,
-                            image = receta.image!!, // ojo
+                            image = receta.image ?: "", // ojo antes era .image!!
                             navController = navController,
                             esDeUser = receta.userId.isNotBlank(),
                             usersViewModel = usersViewModel
