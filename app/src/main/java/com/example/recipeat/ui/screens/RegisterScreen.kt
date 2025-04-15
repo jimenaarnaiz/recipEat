@@ -286,8 +286,8 @@ fun Buttons(
                 onErrorMessageChange("Complete all the fields")
             } else {
                 usersViewModel.register(username, email, password,
-                    onResult = { success ->
-                        if (success) {
+                    onResult = { result ->
+                        if (result == "success") {
                             val uid = FirebaseAuth.getInstance().currentUser?.uid
                             if (uid != null) {
                                 //recetasViewModel.verificarRecetasGuardadasApi()
@@ -297,12 +297,12 @@ fun Buttons(
                             onErrorMessageChange("")
                             Toast.makeText(
                                 context,
-                                "Register successful",
+                                "Registration successful",
                                 Toast.LENGTH_SHORT
                             ).show()
                             navController.navigate("login")
                         } else {
-                            onErrorMessageChange("Register failed")
+                            onErrorMessageChange(result) // aquí mostrará el mensaje de error correspondiente
                         }
                     }
                 )

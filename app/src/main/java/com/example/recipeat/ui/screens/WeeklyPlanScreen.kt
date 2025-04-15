@@ -22,9 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +47,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,22 +90,48 @@ fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewMo
         }
     }
 
-    // Verificar si hay conexión y ajustar el ícono de favoritos
     val isConnected = networkConnectivityManager.isConnected.value
+    val planSemanal by planViewModel.planSemanal.observeAsState()
 
-    // Llamar al iniciar
-    //if (isConnected) {
-        LaunchedEffect(uid) {
-            planViewModel.obtenerPlanSemanal(uid.toString())
-            Log.d("WeeklyPlanScreen", "obteniendo lista de la compra...")
-            planViewModel.obtenerListaDeLaCompraDeFirebase(uid.toString())
+    // Mostrar loading mientras carga o error si no hay conexión
+    when {
+        !isConnected -> {
+            // Mostrar mensaje de error
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No internet. Please, check your connection.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+            }
+            return
         }
-    //}
 
-    //TODO: TARDA EN ESTA INSTRUCCION CUANDO NO HAY CONEXION NS POR Q!!!!
-    val planSemanal by planViewModel.planSemanal.observeAsState() //debe ir después del launched, si no, no mostrará nada
-    // Verifica que el plan semanal no sea nulo antes de usarlo
-    val weeklyPlan = planSemanal?.weekMeals ?: return
+        planSemanal == null -> {
+            // Mostrar indicador de carga
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+
+            // Solo intentar cargar el plan si hay conexión y no se ha cargado aún
+            LaunchedEffect(uid) {
+                planViewModel.obtenerPlanSemanal(uid.toString())
+                planViewModel.obtenerListaDeLaCompraDeFirebase(uid.toString())
+            }
+            return
+        }
+    }
+
+    val weeklyPlan = planSemanal!!.weekMeals
 
     Column(
         modifier = Modifier
@@ -160,7 +186,7 @@ fun WeeklyPlanScreen(navController: NavHostController, planViewModel: PlanViewMo
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No internet. Please check your connection.",
+                    text = "No internet. Please, check your connection.",
                     style = MaterialTheme.typography.bodyLarge,
                     //color = MaterialTheme.colorScheme.error
                 )

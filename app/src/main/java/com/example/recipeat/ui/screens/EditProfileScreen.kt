@@ -35,6 +35,7 @@ import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 
 
 @Composable
@@ -52,6 +53,13 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
     var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
+
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
+    // Registrar el callback de conexión
+    LaunchedEffect(true) { networkConnectivityManager.registerNetworkCallback() }
+    DisposableEffect(context) { onDispose { networkConnectivityManager.unregisterNetworkCallback() } }
+
+    val isConnected = networkConnectivityManager.isConnected.value
 
 
     // Obtener los datos desde Firestore cuando la pantalla esté lanzada
@@ -132,6 +140,7 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
 
             // Botón para elegir una nueva imagen de perfil
             Button(
+                enabled = isConnected,
                 onClick = {
                 pickMedia.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -151,7 +160,8 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
                 value = newUsername,
                 onValueChange = { newUsername = it },
                 label = { Text("Username") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isConnected
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -173,6 +183,7 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
             val context = LocalContext.current
             //Botón para guardar los cambios
             Button(
+                enabled = isConnected,
                 onClick = {
                     if (uid != null) {
                         usersViewModel.actualizarUserProfile(

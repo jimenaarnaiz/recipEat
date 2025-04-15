@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -34,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,6 +50,7 @@ import com.example.recipeat.ui.components.RecetaSimpleCardItem
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.example.recipeat.utils.NetworkConnectivityManager
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -90,6 +93,16 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
         }
     }
 
+
+    val context = LocalContext.current
+    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
+
+    // Registrar el callback de conexión
+    LaunchedEffect(true) { networkConnectivityManager.registerNetworkCallback() }
+    DisposableEffect(context) { onDispose { networkConnectivityManager.unregisterNetworkCallback() } }
+
+    val isConnected = networkConnectivityManager.isConnected.value
+
     val activity = LocalContext.current as Activity
     // Bloquear la rotación dentro de esta pantalla
     LaunchedEffect(true) {
@@ -119,7 +132,6 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
     }
 
 
-
     Scaffold(
         topBar = {
             AppBar(
@@ -131,8 +143,6 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
     ) { paddingValues ->
         Column(
             modifier = Modifier.padding(paddingValues)
-
-
         ) {
             Button(
                 onClick = {
@@ -152,7 +162,6 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
                     text = if (rango == 7) "View Last 30 Days" else "View Last 7 Days"
                 )
             }
-
             // Barra superior con los iconos para navegar entre los meses
             Row(
                 modifier = Modifier
@@ -185,7 +194,6 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
                 }
             }
 
-
             // Vista de calendario
             CalendarView(
                 viewMode = viewMode,
@@ -194,32 +202,45 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
                 recetasHistorial = recetasHistorial.value
             )
 
-            // Filtrar recetas según los días seleccionados
-            val filteredRecetas = recetasViewModel.filtrarRecetasPorDiaSelecc(selectedDate)
+            if (isConnected) {
+                // Filtrar recetas según los días seleccionados
+                val filteredRecetas = recetasViewModel.filtrarRecetasPorDiaSelecc(selectedDate)
 
-            if (filteredRecetas.isEmpty()) {
-                Text(
-                    text = "You haven't cooked on this day!",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .wrapContentSize(Alignment.Center)
-                )
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    items(filteredRecetas) { receta ->
-                        RecetaSimpleCardItem(
-                            recetaId = receta.id,
-                            title = receta.title,
-                            image = receta.image,
-                            navController = navController,
-                            esDeUser = receta.userReceta.isNotBlank(),
-                            usersViewModel = usersViewModel
-                        )
+                if (filteredRecetas.isEmpty()) {
+                    Text(
+                        text = "You haven't cooked on this day!",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize(Alignment.Center)
+                    )
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(16.dp),
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        items(filteredRecetas) { receta ->
+                            RecetaSimpleCardItem(
+                                recetaId = receta.id,
+                                title = receta.title,
+                                image = receta.image,
+                                navController = navController,
+                                esDeUser = receta.userReceta.isNotBlank(),
+                                usersViewModel = usersViewModel
+                            )
+                        }
                     }
+                }
+            } else {
+                // Si no hay conexión, muestra un mensaje de error centrado
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No internet. Please, check your connection.",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
                 }
             }
         }

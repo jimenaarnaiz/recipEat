@@ -60,17 +60,16 @@ class UsersViewModel(application: Application): AndroidViewModel(application){
 
 
     // Función para registrar un nuevo usuario
-    fun register(username: String, email: String, password: String, onResult: (Boolean) -> Unit) {
+    fun register(username: String, email: String, password: String, onResult: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val result = userRepository.register(username, email, password)
+                val resultMessage = userRepository.register(username, email, password)
                 // Llama al callback con el resultado
-                onResult(result)
-                Log.d("UserViewModel", "Register result: $result")
+                onResult(resultMessage)
+                Log.d("UserViewModel", "Register result: $resultMessage")
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error durante el registro", e)
-                // En caso de error, pasa 'false' al callback
-                onResult(false)
+                onResult("Unknown error during registration: ${e.localizedMessage}")
             }
         }
     }

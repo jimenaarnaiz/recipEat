@@ -6,7 +6,9 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import com.example.recipeat.data.model.User
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -101,28 +103,31 @@ class UserRepository(context: Context) {
         return@withContext sessionActive
     }
 
-
-    // Registro utilizando corutinas
-    suspend fun register(username: String, email: String, password: String): Boolean {
+    //con rutinas
+    suspend fun register(username: String, email: String, password: String): String {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val user = result.user
             if (user != null) {
                 val uid = user.uid
                 val userRef = db.collection("users").document(uid)
-                // Guardar el nuevo usuario en Firestore
                 userRef.set(mapOf("username" to username, "email" to email)).await()
                 Log.d("UsersRepository", "Usuario registrado exitosamente")
-                true
+                "success"
             } else {
                 Log.e("UsersRepository", "Usuario no autenticado después del registro.")
-                false
+                "Error: usuario no autenticado después del registro."
             }
         } catch (e: Exception) {
             Log.e("UsersRepository", "Error al registrar el usuario", e)
-            false
+            when (e) {
+                is FirebaseAuthUserCollisionException -> "This email is already in use by another account."
+                is FirebaseNetworkException -> "Network error. Please check your internet connection."
+                else -> "Registration error: ${e.localizedMessage}"
+            }
         }
     }
+
 
 
     suspend fun obtenerUsername(): String? {
