@@ -86,6 +86,7 @@ fun FiltroBottomSheet(
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = LightYellow, // fondo cuando está seleccionado
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            selectedLabelColor = Color.Black //texto
                         )
                     )
                 }

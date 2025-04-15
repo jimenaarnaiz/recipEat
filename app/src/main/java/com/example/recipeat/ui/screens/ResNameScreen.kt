@@ -41,6 +41,8 @@ import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.FiltroBottomSheet
 import com.example.recipeat.ui.components.OrderBottomSheet
 import com.example.recipeat.ui.components.RecetaCard
+import com.example.recipeat.ui.components.RecetasScreenWrapper
+import com.example.recipeat.ui.components.SinConexionTexto
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
@@ -89,172 +91,37 @@ fun ResNameScreen(
     // Función que busca recetas mientras se escribe en el input
     LaunchedEffect(nombreReceta) {
         // Solo ejecutar si ha cambiado realmente
-        if(nombreReceta != lastName) {
+        if (nombreReceta != lastName) {
             Log.d("ResNameSearch", "name a buscar: $nombreReceta")
             recetasViewModel.obtenerRecetasPorNombre(nombreReceta, userId.toString())
             lastName = nombreReceta // Actualiza el estado
         }
     }
 
-    Scaffold(
-        topBar = {
-            AppBar(
-                title = "",
-                navController = navController,
-                onBackPressed = {
-                    filtrosViewModel.restablecerFiltros()
-                    filtrosViewModel.restablecerOrden()
-                    navController.popBackStack()
+    RecetasScreenWrapper(
+        navController = navController,
+        isLoading = isLoading,
+        recetas = recetas,
+        isConnected = isConnected,
+        showBottomSheet = showBottomSheet,
+        showOrderBottomSheet = showOrderBottomSheet,
+        onShowBottomSheetChange = { showBottomSheet = it },
+        onShowOrderBottomSheetChange = { showOrderBottomSheet = it },
+        filtrosViewModel = filtrosViewModel,
+        recetasViewModel = recetasViewModel,
+        busquedaPorNombre = true,
+        content = {
+            if (isConnected) {
+                items(recetas) { receta ->
+                    RecetaCard(receta, navController, usersViewModel)
                 }
-            )
-        }
-    ) { paddingValues ->
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .padding(bottom = 16.dp)
-        ) {
-            when {
-                isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                recetas.isEmpty() -> {
-                    Text(
-                        text = "No results found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                else -> {
-                    // Carrusel de recetas
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(bottom = 16.dp) // Agregar espacio al final de la lista
-                    ) {
-                        item {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp), // Espaciado entre los botones
-                                verticalAlignment = Alignment.CenterVertically, // Alineación vertical
-                                modifier = Modifier.fillMaxWidth() // Ocupa tdo el ancho disponible
-                            ) {
-                                // Botón de Filtros
-                                Button(
-                                    enabled = isConnected,
-                                    onClick = { showBottomSheet = true },
-                                    modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
-                                    shape = RoundedCornerShape(12.dp), // Bordes redondeados
-                                    colors = ButtonDefaults.buttonColors(containerColor = Cherry)
-                                ) {
-                                    Icon(
-                                        Icons.Default.FilterList,
-                                        contentDescription = "Filtros",
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text("Filter by", style = MaterialTheme.typography.bodyMedium)
-                                }
-
-                                // Botón de Ordenar
-                                Button(
-                                    enabled = isConnected,
-                                    onClick = { showOrderBottomSheet = true },
-                                    modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
-                                    shape = RoundedCornerShape(12.dp), // Bordes redondeados
-                                    colors = ButtonDefaults.buttonColors(containerColor = Cherry)
-                                ) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.Sort,
-                                        contentDescription = "Ordenar",
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text("Order by", style = MaterialTheme.typography.bodyMedium)
-                                }
-                            }
-
-
-                            // Mostrar el dialog de ordenar si es necesario
-                            if (showOrderBottomSheet) {
-                                OrderBottomSheet(
-                                    recetasViewModel = recetasViewModel,
-                                    busquedaMisRecetas = false,
-                                    onDismiss = { showOrderBottomSheet = false },
-                                    filtrosViewModel = filtrosViewModel
-                                )
-                            }
-
-                            // Mostrar el dialog de filtros si es necesario
-                            if (showBottomSheet) {
-                                FiltroBottomSheet(
-                                    onDismiss = { showBottomSheet = false },
-                                    onApplyFilters = { maxTiempo, maxIngredientes, maxFaltantes, maxPasos, tipoPlato, tipoDieta ->
-                                        // Aplicar los filtros seleccionados
-                                        filtrosViewModel.aplicarFiltros(
-                                            tiempo = maxTiempo,
-                                            ingredientes = maxIngredientes,
-                                            faltantes = maxFaltantes,
-                                            pasos = maxPasos,
-                                            plato = tipoPlato,
-                                            dietas = tipoDieta
-
-                                        )
-                                        // Aplica los filtros a las recetas
-                                        recetasViewModel.filtrarRecetas(
-                                            tiempoFiltro = maxTiempo,
-                                            maxIngredientesFiltro = maxIngredientes,
-                                            maxFaltantesFiltro = maxFaltantes,
-                                            maxPasosFiltro = maxPasos,
-                                            tipoPlatoFiltro = tipoPlato,
-                                            tipoDietaFiltro = tipoDieta
-                                        )
-
-                                        showBottomSheet = false
-
-                                    },
-                                    filtrosViewModel = filtrosViewModel,
-                                    recetasViewModel = recetasViewModel,
-                                    busquedaPorNombre = true
-                                )
-                            }
-                        }
-
-                        // Mostrar recetas solo si hay conexión
-                        if (isConnected) {
-                            items(recetas) { receta ->
-                                RecetaCard(receta, navController, usersViewModel)
-                            }
-                        } else {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillParentMaxSize(), // Usa tdo el espacio disponible dentro del LazyColumn
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "No internet. Please check your connection.",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
-                                    )
-                                }
-                            }
-
-                        }
-                    }
+            } else {
+                item {
+                    SinConexionTexto()
                 }
             }
         }
-    }
+    )
 }
+
 

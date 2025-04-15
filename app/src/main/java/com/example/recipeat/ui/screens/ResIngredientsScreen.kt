@@ -416,7 +416,6 @@ fun RecetaCardRes2(receta: Receta, navController: NavController, ingredientes: L
                     }
                 }
             }
-
         }
     }
 }
