@@ -26,6 +26,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager
 import com.google.firebase.auth.FirebaseAuth
@@ -37,6 +38,7 @@ fun StepsScreen(
     navController: NavHostController,
     recetasViewModel: RecetasViewModel,
     deUser: Boolean,
+    connectivityViewModel: ConnectivityViewModel,
 ) {
     val receta by recetasViewModel.recetaSeleccionada.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
@@ -50,25 +52,8 @@ fun StepsScreen(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    // Instanciar el NetworkConnectivityManager
-    val context = LocalContext.current
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
-
-    // Registrar el callback para el estado de la red
-    LaunchedEffect(true) {
-        networkConnectivityManager.registerNetworkCallback()
-    }
-
-    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
-    DisposableEffect(context) {
-        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
-        onDispose {
-            networkConnectivityManager.unregisterNetworkCallback()
-        }
-    }
-
-    // Verificar si hay conexión
-    val isConnected = networkConnectivityManager.isConnected.value
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
 
     LaunchedEffect(navController) {

@@ -20,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.ui.components.RecetaCard
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
@@ -43,8 +43,11 @@ import com.example.recipeat.utils.NetworkConnectivityManager
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    navController: NavHostController, usersViewModel: UsersViewModel,
-    recetasViewModel: RecetasViewModel, roomViewModel: RoomViewModel
+    navController: NavHostController,
+    usersViewModel: UsersViewModel,
+    recetasViewModel: RecetasViewModel,
+    roomViewModel: RoomViewModel,
+    connectivityViewModel: ConnectivityViewModel
 ) {
     val recetasState by recetasViewModel.recetasHome.observeAsState(emptyList())
     val isLoadingMore by recetasViewModel.isLoadingMore.observeAsState(false)
@@ -57,13 +60,7 @@ fun HomeScreen(
     var isActive by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
-
-    // Registrar el callback de conexión
-    LaunchedEffect(true) { networkConnectivityManager.registerNetworkCallback() }
-    DisposableEffect(context) { onDispose { networkConnectivityManager.unregisterNetworkCallback() } }
-
-    val isConnected = networkConnectivityManager.isConnected.value
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
 
     // Cargar recetas al iniciar la pantalla

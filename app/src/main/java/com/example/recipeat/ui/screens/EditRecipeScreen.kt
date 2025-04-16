@@ -7,12 +7,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -22,8 +24,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation.NavHostController
@@ -31,6 +35,7 @@ import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.BottomNavItem
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
@@ -45,7 +50,8 @@ fun EditRecipeScreen(
     navController: NavHostController,
     recetasViewModel: RecetasViewModel,
     ingredientesViewModel: IngredientesViewModel, deUser: Boolean,
-    usersViewModel: UsersViewModel
+    usersViewModel: UsersViewModel,
+    connectivityViewModel: ConnectivityViewModel
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -80,6 +86,9 @@ fun EditRecipeScreen(
     var imageUri2 by rememberSaveable { mutableStateOf<Uri?>(null) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
+
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
     // Comprobar si el ingrediente ingresado es válido
     fun validateIngredient(input: String) {
@@ -142,163 +151,182 @@ fun EditRecipeScreen(
             )
         }
     ) { paddingValues ->
-        // Contenedor principal con LazyColumn para el scroll
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
 
-            item {
-                ImageSection(imageUri.toUri(), pickMedia)
-            }
-            item {
-                SectionHeader("Recipe Details")
-            }
-            item {
-                InputField(title, "Recipe Name") { title = it }
-            }
-
-            item {
-                // Fila para Servings y Time
-                NumericInputRow(
-                    value1 = servings,
-                    label1 = "Servings",
-                    value2 = time,
-                    label2 = "Time (min)",
-                    isUnit = false,
-                    onValueChange1 = { newServings -> servings = newServings },
-                    onValueChange2 = { newTime -> time = newTime }
+        if (!isConnected) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Network error. Please, check your internet connection.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 )
             }
+        } else { // Contenedor principal con LazyColumn para el scroll
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
 
-            // Sección de "Ingredientes"
-            item {
-                SectionHeader("Ingredients")
-            }
+                item {
+                    ImageSection(imageUri.toUri(), pickMedia)
+                }
+                item {
+                    SectionHeader("Recipe Details")
+                }
+                item {
+                    InputField(title, "Recipe Name") { title = it }
+                }
 
-            item {
-                IngredientField(
-                    ingredientName,
-                    ingredientImage,
-                    amount,
-                    unit,
-                    isIngredientValid,
-                    ingredientesValidos,
-                    onNameChange = { ingredientName = it; validateIngredient(it) },
-                    onAmountChange = { amount = it },
-                    onUnitChange = { unit = it },
-                    onAddIngredient = { localIngredientImage ->
-                        if (isIngredientValid && amount.isNotEmpty() && unit.isNotEmpty()) {
-                            val newIngredient = Ingrediente(
-                                name = ingredientName,
-                                image = localIngredientImage,
-                                amount = amount.toDouble(),
-                                unit = unit,
-                                aisle = ""
-                            )
-                            ingredients = ingredients + newIngredient
-                            ingredientName = ""
-                            ingredientImage = ""
-                            amount = ""
-                            unit = ""
+                item {
+                    // Fila para Servings y Time
+                    NumericInputRow(
+                        value1 = servings,
+                        label1 = "Servings",
+                        value2 = time,
+                        label2 = "Time (min)",
+                        isUnit = false,
+                        onValueChange1 = { newServings -> servings = newServings },
+                        onValueChange2 = { newTime -> time = newTime }
+                    )
+                }
+
+                // Sección de "Ingredientes"
+                item {
+                    SectionHeader("Ingredients")
+                }
+
+                item {
+                    IngredientField(
+                        ingredientName,
+                        ingredientImage,
+                        amount,
+                        unit,
+                        isIngredientValid,
+                        ingredientesValidos,
+                        onNameChange = { ingredientName = it; validateIngredient(it) },
+                        onAmountChange = { amount = it },
+                        onUnitChange = { unit = it },
+                        onAddIngredient = { localIngredientImage ->
+                            if (isIngredientValid && amount.isNotEmpty() && unit.isNotEmpty()) {
+                                val newIngredient = Ingrediente(
+                                    name = ingredientName,
+                                    image = localIngredientImage,
+                                    amount = amount.toDouble(),
+                                    unit = unit,
+                                    aisle = ""
+                                )
+                                ingredients = ingredients + newIngredient
+                                ingredientName = ""
+                                ingredientImage = ""
+                                amount = ""
+                                unit = ""
+                            }
                         }
-                    }
-                )
-            }
-            item {
-                IngredientList(
-                    ingredients = ingredients,
-                    onRemoveIngredient = { ingredientToRemove ->
-                        ingredients = ingredients.filter { it != ingredientToRemove }
-                    }
-                )
-            }
+                    )
+                }
+                item {
+                    IngredientList(
+                        ingredients = ingredients,
+                        onRemoveIngredient = { ingredientToRemove ->
+                            ingredients = ingredients.filter { it != ingredientToRemove }
+                        }
+                    )
+                }
 
-            // Sección de "Pasos"
-            item {
-                SectionHeader("Instructions")
-            }
+                // Sección de "Pasos"
+                item {
+                    SectionHeader("Instructions")
+                }
 
-            item {
-                InstructionsField(instructions, onInstructionChange = { instructions = it })
-            }
+                item {
+                    InstructionsField(instructions, onInstructionChange = { instructions = it })
+                }
 
-            // Sección de "Preferencias dietéticas"
-            item {
-                SectionHeader("Meal Type")
-            }
+                // Sección de "Preferencias dietéticas"
+                item {
+                    SectionHeader("Meal Type")
+                }
 
-            item {
-                OccasionButtons(
-                    occasions = selectedOccasion,
-                    onOccasionClicked = { newSelection ->
-                        selectedOccasion = newSelection
-                    }
-                )
-            }
-            // Sección de "Preferencias dietéticas"
-            item {
-                SectionHeader("Dietary Preferences")
-            }
+                item {
+                    OccasionButtons(
+                        occasions = selectedOccasion,
+                        onOccasionClicked = { newSelection ->
+                            selectedOccasion = newSelection
+                        }
+                    )
+                }
+                // Sección de "Preferencias dietéticas"
+                item {
+                    SectionHeader("Dietary Preferences")
+                }
 
-            item {
-                DietaryPreferenceButtons(isVegan, isVegetarian, isGlutenFree) { preference ->
-                    when (preference) {
-                        "Vegan" -> isVegan = !isVegan
-                        "Vegetarian" -> isVegetarian = !isVegetarian
-                        "Gluten-Free" -> isGlutenFree = !isGlutenFree
+                item {
+                    DietaryPreferenceButtons(isVegan, isVegetarian, isGlutenFree) { preference ->
+                        when (preference) {
+                            "Vegan" -> isVegan = !isVegan
+                            "Vegetarian" -> isVegetarian = !isVegetarian
+                            "Gluten-Free" -> isGlutenFree = !isGlutenFree
+                        }
                     }
                 }
-            }
 
-            item {
-                CreateRecipeButton(
-                    "Update Recipe",
-                    isValid,
-                    onClick = {
-                        val newReceta = Receta(
-                            id = idReceta,
-                            title = title,
-                            image = if (imageUri2 == null) imageUri else imageUri2.toString(), //imageUri2 es la nueva
-                            servings = servings.toInt(),
-                            ingredients = ingredients,
-                            steps = instructions,
-                            time = time.toInt(),
-                            dishTypes = selectedOccasion,
-                            userId = uid.toString(),
-                            usedIngredientCount = ingredients.size,
-                            glutenFree = isGlutenFree,
-                            vegan = isVegan,
-                            vegetarian = isVegetarian,
-                            date = System.currentTimeMillis(),
-                            unusedIngredients = emptyList(),
-                            missingIngredientCount = 0,
-                            unusedIngredientCount = 0,
-                            esFavorita = null,
-                        )
-                        recetasViewModel.editMyRecipe(
-                            uid.toString(), newReceta,
-                            onComplete = { success, error ->
-                                if (success) {
-                                    Log.d("EditRecipe", "Recipe was edited successfully!")
-                                    navController.navigate(BottomNavItem.MyRecipes.route)
-                                } else {
-                                    Log.e("EditRecipe", "Error editing recipe: $error")
+                item {
+                    CreateRecipeButton(
+                        "Update Recipe",
+                        isValid,
+                        onClick = {
+                            val newReceta = Receta(
+                                id = idReceta,
+                                title = title,
+                                image = if (imageUri2 == null) imageUri else imageUri2.toString(), //imageUri2 es la nueva
+                                servings = servings.toInt(),
+                                ingredients = ingredients,
+                                steps = instructions,
+                                time = time.toInt(),
+                                dishTypes = selectedOccasion,
+                                userId = uid.toString(),
+                                usedIngredientCount = ingredients.size,
+                                glutenFree = isGlutenFree,
+                                vegan = isVegan,
+                                vegetarian = isVegetarian,
+                                date = System.currentTimeMillis(),
+                                unusedIngredients = emptyList(),
+                                missingIngredientCount = 0,
+                                unusedIngredientCount = 0,
+                                esFavorita = null,
+                            )
+                            recetasViewModel.editMyRecipe(
+                                uid.toString(), newReceta,
+                                onComplete = { success, error ->
+                                    if (success) {
+                                        Log.d("EditRecipe", "Recipe was edited successfully!")
+                                        navController.navigate(BottomNavItem.MyRecipes.route)
+                                    } else {
+                                        Log.e("EditRecipe", "Error editing recipe: $error")
+                                    }
                                 }
+                            )
+
+                            // Guardar la imagen localmente si hay una seleccionada
+                            imageUri2?.let { uri ->
+                                usersViewModel.saveImageLocally(context, uri, recetaId = idReceta)
                             }
-                        )
 
-                        // Guardar la imagen localmente si hay una seleccionada
-                        imageUri2?.let { uri ->
-                            usersViewModel.saveImageLocally(context, uri, recetaId = idReceta)
                         }
-
-                    }
-                )
+                    )
+                }
             }
         }
     }

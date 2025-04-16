@@ -65,6 +65,7 @@ import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.FiltroBottomSheet
 import com.example.recipeat.ui.components.OrderBottomSheet
 import com.example.recipeat.ui.theme.Cherry
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
@@ -77,7 +78,8 @@ fun ResIngredientsScreen(
     recetasViewModel: RecetasViewModel,
     ingredientesViewModel: IngredientesViewModel,
     filtrosViewModel: FiltrosViewModel,
-    usersViewModel: UsersViewModel
+    usersViewModel: UsersViewModel,
+    connectivityViewModel: ConnectivityViewModel
 ) {
 
     val uid = usersViewModel.getUidValue()
@@ -92,24 +94,8 @@ fun ResIngredientsScreen(
 
     val isLoading by recetasViewModel.isLoading.observeAsState(false)
 
-    val context = LocalContext.current
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
-
-    // Registrar el callback para el estado de la red
-    LaunchedEffect(true) {
-        networkConnectivityManager.registerNetworkCallback()
-    }
-
-    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
-    DisposableEffect(context) {
-        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
-        onDispose {
-            networkConnectivityManager.unregisterNetworkCallback()
-        }
-    }
-
-    // Verificar si hay conexión y ajustar el ícono de favoritos
-    val isConnected = networkConnectivityManager.isConnected.value
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
     LaunchedEffect(ingredientes) {
         // Solo ejecutar si los ingredientes han cambiado

@@ -3,7 +3,6 @@ package com.example.recipeat.ui.components
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,6 +35,7 @@ import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 
+const val NUMBER_OF_INGREDIENTS = "Number of Ingredients"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +50,7 @@ fun OrderBottomSheet(
     var selectedOrder by rememberSaveable { mutableStateOf(filtrosViewModel.orden.value) }
     // Captura el valor inicial cada vez que se abre el sheet
     val initialOrder = filtrosViewModel.orden.value
+
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
@@ -68,8 +69,8 @@ fun OrderBottomSheet(
             OrderButton("Time", Icons.Filled.Timer, selectedOrder == "Time") {
                 selectedOrder = "Time"
             }
-            OrderButton("Number of Ingredients", Icons.Filled.RestaurantMenu, selectedOrder == "Number of Ingredients") {
-                selectedOrder = "Number of Ingredients"
+            OrderButton(NUMBER_OF_INGREDIENTS, Icons.Filled.RestaurantMenu, selectedOrder == NUMBER_OF_INGREDIENTS) {
+                selectedOrder = NUMBER_OF_INGREDIENTS
             }
             OrderButton("Alphabetical", Icons.Filled.SortByAlpha, selectedOrder == "Alphabetical") {
                 selectedOrder = "Alphabetical"

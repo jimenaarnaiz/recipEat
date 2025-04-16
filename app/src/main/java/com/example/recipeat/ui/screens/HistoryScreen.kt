@@ -35,7 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,16 +47,21 @@ import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.CalendarView
 import com.example.recipeat.ui.components.RecetaSimpleCardItem
 import com.example.recipeat.ui.theme.Cherry
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.example.recipeat.utils.NetworkConnectivityManager
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @SuppressLint("ContextCastToActivity")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasViewModel, usersViewModel: UsersViewModel) {
+fun HistoryScreen(
+    navController: NavHostController,
+    recetasViewModel: RecetasViewModel,
+    usersViewModel: UsersViewModel,
+    connectivityViewModel: ConnectivityViewModel
+) {
     val recetasHistorial = recetasViewModel.recetasHistorial.observeAsState(emptyList())
     val uid = usersViewModel.getUidValue()
 
@@ -93,15 +97,8 @@ fun HistoryScreen(navController: NavHostController, recetasViewModel: RecetasVie
         }
     }
 
-
-    val context = LocalContext.current
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
-
-    // Registrar el callback de conexión
-    LaunchedEffect(true) { networkConnectivityManager.registerNetworkCallback() }
-    DisposableEffect(context) { onDispose { networkConnectivityManager.unregisterNetworkCallback() } }
-
-    val isConnected = networkConnectivityManager.isConnected.value
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
     val activity = LocalContext.current as Activity
     // Bloquear la rotación dentro de esta pantalla

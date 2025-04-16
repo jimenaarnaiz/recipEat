@@ -8,6 +8,8 @@ import android.util.Log
 import com.example.recipeat.data.model.User
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +53,7 @@ class UserRepository(context: Context) {
     }
 
     // Login utilizando corrutinas
-    suspend fun login(email: String, password: String): Boolean {
+    suspend fun login(email: String, password: String): String {
         return try {
             val result = auth.signInWithEmailAndPassword(email, password).await()
             val user = result.user
@@ -67,20 +69,26 @@ class UserRepository(context: Context) {
                 if (document.exists()) {
                     sharedPreferences.edit().putBoolean(sessionIniciadaKey + uid, true).apply()
                     Log.d("UsersRepository", "Usuario $uid logueado exitosamente")
-                    true
+                    "success"
                 } else {
                     Log.e("UsersRepository", "No se encontró el usuario en Firestore.")
-                    false
+                    "Error: usuario no encontrado en Firestore."
                 }
             } else {
                 Log.e("UsersRepository", "Usuario no autenticado después del login.")
-                false
+                "Error: usuario no autenticado después del login."
             }
         } catch (e: Exception) {
             Log.e("UsersRepository", "Error al iniciar sesión", e)
-            false
+            when (e) {
+                is FirebaseAuthInvalidCredentialsException -> "Invalid credentials. Please, check your email or password."
+                is FirebaseAuthInvalidUserException -> "User does not exist. Please, check your email."
+                is FirebaseNetworkException -> "Network error. Please, check your internet connection."
+                else -> "Login error: ${e.localizedMessage}"
+            }
         }
     }
+
 
     fun logOut() {
         val currentUser = auth.currentUser

@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,12 +35,16 @@ import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.example.recipeat.utils.NetworkConnectivityManager
 
 
 @Composable
-fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewModel) {
+fun EditProfileScreen(
+    navController: NavController,
+    usersViewModel: UsersViewModel,
+    connectivityViewModel: ConnectivityViewModel
+) {
 
     val uid = usersViewModel.getUidValue()
 
@@ -54,12 +59,8 @@ fun EditProfileScreen(navController: NavController, usersViewModel: UsersViewMod
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
 
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
-    // Registrar el callback de conexión
-    LaunchedEffect(true) { networkConnectivityManager.registerNetworkCallback() }
-    DisposableEffect(context) { onDispose { networkConnectivityManager.unregisterNetworkCallback() } }
-
-    val isConnected = networkConnectivityManager.isConnected.value
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
 
     // Obtener los datos desde Firestore cuando la pantalla esté lanzada

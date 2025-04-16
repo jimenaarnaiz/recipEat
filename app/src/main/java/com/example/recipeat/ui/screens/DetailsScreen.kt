@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -38,10 +37,10 @@ import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.TopBarWithIcons
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.example.recipeat.utils.NetworkConnectivityManager
 
 @Composable
 fun DetailsScreen(
@@ -50,7 +49,8 @@ fun DetailsScreen(
     recetasViewModel: RecetasViewModel,
     esDeUser: Boolean,
     roomViewModel: RoomViewModel,
-    usersViewModel: UsersViewModel
+    usersViewModel: UsersViewModel,
+    connectivityViewModel: ConnectivityViewModel
 ) {
     val receta by recetasViewModel.recetaSeleccionada.observeAsState()
     val uid = usersViewModel.getUidValue()
@@ -59,29 +59,14 @@ fun DetailsScreen(
     // Estado para mostrar el AlertDialog de confirmación de eliminación
     var showDialog by remember { mutableStateOf(false) }
 
-    // Instanciar el NetworkConnectivityManager
     val context = LocalContext.current
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
 
    val recetaRoom by roomViewModel.recipeRoom.observeAsState()
 
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-    // Registrar el callback para el estado de la red
-    LaunchedEffect(true) {
-        networkConnectivityManager.registerNetworkCallback()
-    }
-
-    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
-    DisposableEffect(context) {
-        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
-        onDispose {
-            networkConnectivityManager.unregisterNetworkCallback()
-        }
-    }
-
-    // Verificar si hay conexión y ajustar el ícono de favoritos
-    val isConnected = networkConnectivityManager.isConnected.value
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
     LaunchedEffect(receta?.id) {
         Log.d("DetailsScreen","Llamando a obtenerRecetaPorId con recetaId: $idReceta deUser: $esDeUser")
@@ -112,7 +97,7 @@ fun DetailsScreen(
             }
         }
     ) { paddingValues ->
-        // Usamos receta si está conectados, si no, usamos recetaRoom
+        // Usamos receta si está conectado, si no, usamos recetaRoom
         val recetaShowed = if (isConnected && receta != null) receta else recetaRoom
 
         recetaShowed?.let { recetaDetalle ->

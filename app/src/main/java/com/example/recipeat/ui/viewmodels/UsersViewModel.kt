@@ -43,17 +43,17 @@ class UsersViewModel(application: Application): AndroidViewModel(application){
     }
 
     // Función para iniciar sesión
-    fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
+    fun login(email: String, password: String, onResult: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val result = userRepository.login(email, password)
+                val resultMessage = userRepository.login(email, password)
                 // Llama al callback con el resultado
-                onResult(result)
-                Log.d("UserViewModel", "Login result: $result")
+                onResult(resultMessage)
+                Log.d("UserViewModel", "Login result: $resultMessage")
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error durante el login", e)
                 // En caso de error, pasa 'false' al callback
-                onResult(false)
+                onResult("Unknown error during registration: ${e.localizedMessage}")
             }
         }
     }

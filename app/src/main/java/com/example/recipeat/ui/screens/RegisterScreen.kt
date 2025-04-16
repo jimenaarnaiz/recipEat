@@ -46,6 +46,7 @@ import com.example.recipeat.R
 import com.example.recipeat.ui.theme.Cherry
 
 import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
@@ -60,7 +61,8 @@ fun RegisterScreen(
     usersViewModel: UsersViewModel,
     recetasViewModel: RecetasViewModel,
     ingredientesViewModel: IngredientesViewModel,
-    planViewModel: PlanViewModel
+    planViewModel: PlanViewModel,
+    connectivityViewModel: ConnectivityViewModel
 ) {
     var username by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }

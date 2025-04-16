@@ -3,7 +3,6 @@ package com.example.recipeat.ui.screens
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -18,6 +17,7 @@ import com.example.recipeat.ui.theme.LightYellow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,17 +25,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -58,25 +56,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import com.example.recipeat.R
 import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.theme.Cherry
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
@@ -85,7 +82,8 @@ fun AddRecipe(
     recetasViewModel: RecetasViewModel,
     ingredientesViewModel: IngredientesViewModel,
     roomViewModel: RoomViewModel,
-    usersViewModel: UsersViewModel
+    usersViewModel: UsersViewModel,
+    connectivityViewModel: ConnectivityViewModel
 ) {
     val uid = usersViewModel.getUidValue()
 
@@ -139,6 +137,9 @@ fun AddRecipe(
         }
     }
 
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
+
 
     LaunchedEffect(navController) {
         Log.d("AddRecipe", "pueba; launched de cargar ingredientes")
@@ -162,153 +163,173 @@ fun AddRecipe(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            item {
-                ImageSection(imageUri2 ,pickMedia)
-            }
-            item {
-                SectionHeader("Recipe Details")
-            }
-            item {
-                InputField(title, "Recipe Name") { title = it }
-            }
-            item {
-                // Fila para Servings y Time
-                NumericInputRow(
-                    value1 = servings,
-                    label1 = "Servings",
-                    value2 = time,
-                    label2 = "Time (min)",
-                    isUnit = false,
-                    onValueChange1 = { newServings -> servings = newServings },
-                    onValueChange2 = { newTime -> time = newTime }
+
+        if (!isConnected) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Network error. Please, check your internet connection.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 )
             }
-            item {
-                SectionHeader("Ingredients")
-            }
-            item {
-                IngredientField(
-                    ingredientName,
-                    ingredientImage,
-                    amount,
-                    unit,
-                    isIngredientValid,
-                    ingredientesValidos,
-                    onNameChange = { ingredientName = it; validateIngredient(it) },
-                    onAmountChange = { amount = it },
-                    onUnitChange = { unit = it },
-                    onAddIngredient = { localIngredientImage ->
-                        if (isIngredientValid && amount.isNotEmpty() && unit.isNotEmpty()) {
-                            val newIngredient = Ingrediente(
-                                name = ingredientName,
-                                image = localIngredientImage,  // Usamos la imagen local pasada
-                                amount = amount.toDouble(),
-                                unit = unit,
-                                aisle = ""
-                            )
-                            ingredients = ingredients + newIngredient
-                            ingredientName = ""
-                            ingredientImage = ""  // Resetear la imagen local
-                            amount = ""
-                            unit = ""
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                item {
+                    ImageSection(imageUri2, pickMedia)
+                }
+                item {
+                    SectionHeader("Recipe Details")
+                }
+                item {
+                    InputField(title, "Recipe Name") { title = it }
+                }
+                item {
+                    // Fila para Servings y Time
+                    NumericInputRow(
+                        value1 = servings,
+                        label1 = "Servings",
+                        value2 = time,
+                        label2 = "Time (min)",
+                        isUnit = false,
+                        onValueChange1 = { newServings -> servings = newServings },
+                        onValueChange2 = { newTime -> time = newTime }
+                    )
+                }
+                item {
+                    SectionHeader("Ingredients")
+                }
+                item {
+                    IngredientField(
+                        ingredientName,
+                        ingredientImage,
+                        amount,
+                        unit,
+                        isIngredientValid,
+                        ingredientesValidos,
+                        onNameChange = { ingredientName = it; validateIngredient(it) },
+                        onAmountChange = { amount = it },
+                        onUnitChange = { unit = it },
+                        onAddIngredient = { localIngredientImage ->
+                            if (isIngredientValid && amount.isNotEmpty() && unit.isNotEmpty()) {
+                                val newIngredient = Ingrediente(
+                                    name = ingredientName,
+                                    image = localIngredientImage,  // Usamos la imagen local pasada
+                                    amount = amount.toDouble(),
+                                    unit = unit,
+                                    aisle = ""
+                                )
+                                ingredients = ingredients + newIngredient
+                                ingredientName = ""
+                                ingredientImage = ""  // Resetear la imagen local
+                                amount = ""
+                                unit = ""
+                            }
                         }
-                    }
-                )
-            }
-            item {
-                IngredientList(
-                    ingredients = ingredients,
-                    onRemoveIngredient = { ingredientToRemove ->
-                        ingredients = ingredients.filter { it != ingredientToRemove }
-                    }
-                )
-            }
-            item {
-                SectionHeader("Instructions")
-            }
-            item {
-                InstructionsField(instructions, onInstructionChange = { instructions = it })
-            }
-            item {
-                SectionHeader("Meal Type")
-            }
-            item {
-                OccasionButtons(
-                    occasions = selectedOccasion,
-                    onOccasionClicked = { newSelection ->
-                        selectedOccasion = newSelection
-                    }
-                )
-            }
-            item {
-                SectionHeader("Dietary Preferences")
-            }
-            item {
-                DietaryPreferenceButtons(isVegan, isVegetarian, isGlutenFree) { preference ->
-                    when (preference) {
-                        "Vegan" -> isVegan = !isVegan
-                        "Vegetarian" -> isVegetarian = !isVegetarian
-                        "Gluten-Free" -> isGlutenFree = !isGlutenFree
+                    )
+                }
+                item {
+                    IngredientList(
+                        ingredients = ingredients,
+                        onRemoveIngredient = { ingredientToRemove ->
+                            ingredients = ingredients.filter { it != ingredientToRemove }
+                        }
+                    )
+                }
+                item {
+                    SectionHeader("Instructions")
+                }
+                item {
+                    InstructionsField(instructions, onInstructionChange = { instructions = it })
+                }
+                item {
+                    SectionHeader("Meal Type")
+                }
+                item {
+                    OccasionButtons(
+                        occasions = selectedOccasion,
+                        onOccasionClicked = { newSelection ->
+                            selectedOccasion = newSelection
+                        }
+                    )
+                }
+                item {
+                    SectionHeader("Dietary Preferences")
+                }
+                item {
+                    DietaryPreferenceButtons(isVegan, isVegetarian, isGlutenFree) { preference ->
+                        when (preference) {
+                            "Vegan" -> isVegan = !isVegan
+                            "Vegetarian" -> isVegetarian = !isVegetarian
+                            "Gluten-Free" -> isGlutenFree = !isGlutenFree
+                        }
                     }
                 }
-            }
 
-            item {
-                CreateRecipeButton(
-                            "Create Recipe",
-                    isValid,
-                    onClick = {
-                        // Verificar que todos los campos necesarios tengan valores
-                        val newReceta = Receta(
-                            id = recetaId,
-                            title = title,
-                            image = if (imageUri2 != null) imageUri2.toString() else imageUri,
-                            servings = servings.toInt(),
-                            ingredients = ingredients,
-                            steps = instructions,
-                            time = time.toInt(),
-                            dishTypes = selectedOccasion,
-                            userId = uid.toString(),
-                            usedIngredientCount = ingredients.size,
-                            glutenFree = isGlutenFree,
-                            vegan = isVegan,
-                            vegetarian = isVegetarian,
-                            date = System.currentTimeMillis(),
-                            unusedIngredients = emptyList(),
-                            missingIngredientCount = 0,
-                            unusedIngredientCount = 0,
-                            esFavorita = null,
-                        )
-                        if (uid != null) {
-                            recetasViewModel.addMyRecipe(
-                                uid, newReceta,
-                                onComplete = { success, error ->
-                                    if (success) {
-                                        Log.d("AddRecipe", "Receta añadida correctamente")
-                                        navController.navigate(BottomNavItem.MyRecipes.route)
-                                    } else {
-                                        Log.e("AddRecipe", "Error al añadir receta: $error")
-                                    }
-                                }
+                item {
+                    CreateRecipeButton(
+                        "Create Recipe",
+                        isValid,
+                        onClick = {
+                            // Verificar que todos los campos necesarios tengan valores
+                            val newReceta = Receta(
+                                id = recetaId,
+                                title = title,
+                                image = if (imageUri2 != null) imageUri2.toString() else imageUri,
+                                servings = servings.toInt(),
+                                ingredients = ingredients,
+                                steps = instructions,
+                                time = time.toInt(),
+                                dishTypes = selectedOccasion,
+                                userId = uid.toString(),
+                                usedIngredientCount = ingredients.size,
+                                glutenFree = isGlutenFree,
+                                vegan = isVegan,
+                                vegetarian = isVegetarian,
+                                date = System.currentTimeMillis(),
+                                unusedIngredients = emptyList(),
+                                missingIngredientCount = 0,
+                                unusedIngredientCount = 0,
+                                esFavorita = null,
                             )
-                        }
-                        //añadir a Room
-                        roomViewModel.insertReceta(receta = newReceta)
+                            if (uid != null) {
+                                recetasViewModel.addMyRecipe(
+                                    uid, newReceta,
+                                    onComplete = { success, error ->
+                                        if (success) {
+                                            Log.d("AddRecipe", "Receta añadida correctamente")
+                                            navController.navigate(BottomNavItem.MyRecipes.route)
+                                        } else {
+                                            Log.e("AddRecipe", "Error al añadir receta: $error")
+                                        }
+                                    }
+                                )
+                            }
+                            //añadir a Room
+                            roomViewModel.insertReceta(receta = newReceta)
 
-                        // Guardar la imagen localmente si hay una seleccionada
-                        imageUri2?.let { uri ->
-                            usersViewModel.saveImageLocally(context, uri, recetaId = recetaId)
+                            // Guardar la imagen localmente si hay una seleccionada
+                            imageUri2?.let { uri ->
+                                usersViewModel.saveImageLocally(context, uri, recetaId = recetaId)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

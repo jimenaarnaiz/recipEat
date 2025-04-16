@@ -19,45 +19,40 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.ui.components.RecetaCard
 import com.example.recipeat.ui.theme.Cherry
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.example.recipeat.utils.NetworkConnectivityManager
 
 @Composable
-fun MyRecipesScreen(navController: NavHostController, recetasViewModel: RecetasViewModel, roomViewModel: RoomViewModel, usersViewModel: UsersViewModel) {
+fun MyRecipesScreen(
+    navController: NavHostController,
+    recetasViewModel: RecetasViewModel,
+    roomViewModel: RoomViewModel,
+    usersViewModel: UsersViewModel,
+    connectivityViewModel: ConnectivityViewModel
+) {
     val userId = usersViewModel.getUidValue()
     val recetasUser by recetasViewModel.recetasUser.observeAsState(emptyList())
-
-    // Instanciar el NetworkConnectivityManager
-    val context = LocalContext.current
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
-
     val recetasRoomUser by roomViewModel.userRecipesRoom.observeAsState(emptyList())
 
     val listState = rememberLazyListState()
     val isLoadingMore by recetasViewModel.isLoadingMore.observeAsState(false)
 
-    // Registrar el callback de conexión
-    LaunchedEffect(true) { networkConnectivityManager.registerNetworkCallback() }
-    DisposableEffect(context) { onDispose { networkConnectivityManager.unregisterNetworkCallback() } }
-
-    val isConnected = networkConnectivityManager.isConnected.value
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
 
     // Carga inicial de las recetas

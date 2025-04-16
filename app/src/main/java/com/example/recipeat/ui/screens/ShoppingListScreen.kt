@@ -17,14 +17,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,40 +29,24 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.recipeat.R
 import com.example.recipeat.ui.components.AppBar
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.example.recipeat.utils.NetworkConnectivityManager
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ShoppingListScreen(
     navController: NavHostController,
     usersViewModel: UsersViewModel,
-    planViewModel: PlanViewModel
+    planViewModel: PlanViewModel,
+    connectivityViewModel: ConnectivityViewModel
 ) {
 
     val uid = usersViewModel.getUidValue()
     // Observar los ingredientes agrupados desde el ViewModel
     val ingredienteslistaCompraState = planViewModel.listaCompra.observeAsState(emptyList())
-
-    val context = LocalContext.current
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
-
-    // Registrar el callback para el estado de la red
-    LaunchedEffect(true) {
-        networkConnectivityManager.registerNetworkCallback()
-    }
-
-    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
-    DisposableEffect(context) {
-        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
-        onDispose {
-            networkConnectivityManager.unregisterNetworkCallback()
-        }
-    }
-
-    // Verificar si hay conexión y ajustar el ícono de favoritos
-    val isConnected = networkConnectivityManager.isConnected.value
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
 
     Scaffold(

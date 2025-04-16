@@ -27,40 +27,30 @@ import androidx.navigation.NavHostController
 import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.RecetaSimpleCardItem
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.example.recipeat.utils.NetworkConnectivityManager
 
 @Composable
-fun FavoritesScreen(navController: NavHostController, recetasViewModel: RecetasViewModel, roomViewModel: RoomViewModel, usersViewModel: UsersViewModel) {
+fun FavoritesScreen(
+    navController: NavHostController,
+    recetasViewModel: RecetasViewModel,
+    roomViewModel: RoomViewModel,
+    usersViewModel: UsersViewModel,
+    connectivityViewModel: ConnectivityViewModel
+) {
     // Obtener las recetas favoritas del usuario desde el ViewModel
     val favoritas = recetasViewModel.recetasFavoritas.observeAsState(emptyList())
     val uid = usersViewModel.getUidValue()
     // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastFavs by rememberSaveable { mutableStateOf<List<RecetaSimple>>(emptyList()) }
 
-    // Instanciar el NetworkConnectivityManager
-    val context = LocalContext.current
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
-
     val favoritasRoom = roomViewModel.favoriteRecipesRoom.observeAsState(emptyList())
 
-    // Registrar el callback para el estado de la red
-    LaunchedEffect(true) {
-        networkConnectivityManager.registerNetworkCallback()
-    }
-
-    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
-    DisposableEffect(context) {
-        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
-        onDispose {
-            networkConnectivityManager.unregisterNetworkCallback()
-        }
-    }
-
-    // Verificar si hay conexión
-    val isConnected = networkConnectivityManager.isConnected.value
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
     LaunchedEffect (navController) {
        roomViewModel.getRecetasFavoritas()

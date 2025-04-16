@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +20,7 @@ import androidx.navigation.NavHostController
 import com.example.recipeat.R
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
@@ -31,7 +33,8 @@ fun LoginScreen(
     usersViewModel: UsersViewModel,
     recetasViewModel: RecetasViewModel,
     roomViewModel: RoomViewModel,
-    planViewModel: PlanViewModel
+    planViewModel: PlanViewModel,
+    connectivityViewModel: ConnectivityViewModel
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -42,25 +45,8 @@ fun LoginScreen(
 
     val fieldWidth = if (isLandscape) 0.5f else 0.8f  // Ajusta el ancho según orientación
 
-    // Instanciar el NetworkConnectivityManager
-    val context = LocalContext.current
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
-
-    // Registrar el callback para el estado de la red
-    LaunchedEffect(true) {
-        networkConnectivityManager.registerNetworkCallback()
-    }
-
-    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
-    DisposableEffect(context) {
-        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
-        onDispose {
-            networkConnectivityManager.unregisterNetworkCallback()
-        }
-    }
-
-    // Verificar si hay conexión y ajustar el ícono de favoritos
-    val isConnected = networkConnectivityManager.isConnected.value
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
 
     Box(
@@ -182,7 +168,13 @@ fun LoginForm(
         )
 
         if (localError.isNotEmpty()) {
-            Text(text = localError, color = Color.Red, style = MaterialTheme.typography.bodyMedium)
+            Text(text = localError,
+                color = Color.Red,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .fillMaxWidth(fieldWidth) // Mantener el mismo ancho
+                    .padding(start = 10.dp, top = 4.dp) // Añadir márgenes como el OutlinedTextField
+            )
         }
 
         Spacer(modifier = Modifier.width(5.dp))
@@ -209,13 +201,11 @@ fun LoginForm(
 //                    recetasViewModel.saveAllEquipmentImages()
                     //recetasViewModel.actualizarAisleEnRecetas()
                 } else {
-                    usersViewModel.login(localEmail, localPassword) { success ->
-                        if (success) {
+                    usersViewModel.login(localEmail, localPassword) { resultMsg ->
+                        if (resultMsg == "success") {
                             navController.navigate("home")
-                        } else if (!isConnected){
-                            localError = "Connection error"
                         }else{
-                            localError = "Incorrect email or password"
+                            localError = resultMsg
                         }
                         onInputChange(Triple(localEmail, localPassword, localError))
                     }

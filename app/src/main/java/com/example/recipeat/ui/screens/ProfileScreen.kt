@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,13 +34,17 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.recipeat.R
 import com.example.recipeat.ui.theme.LightYellow
+import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.example.recipeat.utils.NetworkConnectivityManager
 import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
-fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) {
+fun ProfileScreen(
+    navController: NavController,
+    usersViewModel: UsersViewModel,
+    connectivityViewModel: ConnectivityViewModel
+) {
     val uid = usersViewModel.getUidValue()
     var usernameState by rememberSaveable { mutableStateOf<String?>(null) }
     var profileImageState by rememberSaveable { mutableStateOf<String?>(null) }
@@ -47,23 +52,8 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
     var bitmap by rememberSaveable { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
 
-    val networkConnectivityManager = remember { NetworkConnectivityManager(context) }
-
-    // Registrar el callback para el estado de la red
-    LaunchedEffect(true) {
-        networkConnectivityManager.registerNetworkCallback()
-    }
-
-    // Usar DisposableEffect para desregistrar el callback cuando la pantalla se destruye
-    DisposableEffect(context) {
-        // Desregistrar el NetworkCallback cuando la pantalla deje de ser visible
-        onDispose {
-            networkConnectivityManager.unregisterNetworkCallback()
-        }
-    }
-
-    // Verificar si hay conexión y ajustar el ícono de favoritos
-    val isConnected = networkConnectivityManager.isConnected.value
+    // Observamos el estado de conectividad
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
     // Obtener los datos desde Firestore
     LaunchedEffect(Unit) {
@@ -180,7 +170,7 @@ fun ProfileScreen(navController: NavController, usersViewModel: UsersViewModel) 
                         },
                         backgroundColor = Color.Red,
                         textColor = Color.White,
-                        true
+                        isConnected
                     )
 
                 Spacer(modifier = Modifier.height(72.dp)) // Espacio inferior para q no lo opaque el bttom bar
