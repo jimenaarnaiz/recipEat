@@ -31,13 +31,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import com.example.recipeat.ui.components.RecetaCard
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
+import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.example.recipeat.utils.NetworkConnectivityManager
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,7 +50,8 @@ fun HomeScreen(
     usersViewModel: UsersViewModel,
     recetasViewModel: RecetasViewModel,
     roomViewModel: RoomViewModel,
-    connectivityViewModel: ConnectivityViewModel
+    connectivityViewModel: ConnectivityViewModel,
+    permissionsViewModel: PermissionsViewModel
 ) {
     val recetasState by recetasViewModel.recetasHome.observeAsState(emptyList())
     val isLoadingMore by recetasViewModel.isLoadingMore.observeAsState(false)
@@ -62,6 +66,24 @@ fun HomeScreen(
     val context = LocalContext.current
     val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Observamos cambios en el ciclo de vida
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Cuando vuelve la pantalla, actualiza el estado del permiso
+                permissionsViewModel.checkStoragePermission(context)
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
 
     // Cargar recetas al iniciar la pantalla
     LaunchedEffect(Unit) {
@@ -74,6 +96,7 @@ fun HomeScreen(
             recetasViewModel.obtenerRecetasHome(limpiarLista = true)
         }
     }
+
 
     LaunchedEffect(recetasState) {
         //el segundo isEmpty hace que solo cargue al abrir la app las recetas favs,

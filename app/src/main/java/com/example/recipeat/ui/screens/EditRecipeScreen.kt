@@ -37,12 +37,11 @@ import com.example.recipeat.ui.components.AppBar
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
+import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
-
-//TODO hacer las comprobaciones de los campos!!!
 
 @Composable
 fun EditRecipeScreen(
@@ -51,9 +50,11 @@ fun EditRecipeScreen(
     recetasViewModel: RecetasViewModel,
     ingredientesViewModel: IngredientesViewModel, deUser: Boolean,
     usersViewModel: UsersViewModel,
-    connectivityViewModel: ConnectivityViewModel
+    connectivityViewModel: ConnectivityViewModel,
+    permissionsViewModel: PermissionsViewModel
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val hasStoragePermission = permissionsViewModel.storagePermissionGranted.value
 
     val recetaEditarState by recetasViewModel.recetaSeleccionada.observeAsState()
 
@@ -89,6 +90,7 @@ fun EditRecipeScreen(
 
     // Observamos el estado de conectividad
     val isConnected by connectivityViewModel.isConnected.observeAsState(false)
+
 
     // Comprobar si el ingrediente ingresado es válido
     fun validateIngredient(input: String) {
@@ -180,7 +182,7 @@ fun EditRecipeScreen(
             ) {
 
                 item {
-                    ImageSection(imageUri.toUri(), pickMedia)
+                    ImageSection(imageUri.toUri(), pickMedia, hasStoragePermission)
                 }
                 item {
                     SectionHeader("Recipe Details")

@@ -4,11 +4,13 @@ package com.example.recipeat.ui.screens
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -28,6 +30,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.example.recipeat.R
 import com.example.recipeat.data.model.User
@@ -36,6 +41,7 @@ import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
+import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 
 
@@ -43,10 +49,12 @@ import com.example.recipeat.ui.viewmodels.UsersViewModel
 fun EditProfileScreen(
     navController: NavController,
     usersViewModel: UsersViewModel,
-    connectivityViewModel: ConnectivityViewModel
+    connectivityViewModel: ConnectivityViewModel,
+    permissionsViewModel: PermissionsViewModel
 ) {
 
     val uid = usersViewModel.getUidValue()
+    val hasStoragePermission = permissionsViewModel.storagePermissionGranted.value
 
     // Estado para almacenar el objeto User
     var userState by remember { mutableStateOf<User?>(null) }
@@ -61,7 +69,6 @@ fun EditProfileScreen(
 
     // Observamos el estado de conectividad
     val isConnected by connectivityViewModel.isConnected.observeAsState(false)
-
 
     // Obtener los datos desde Firestore cuando la pantalla esté lanzada
     LaunchedEffect(Unit) {
@@ -141,7 +148,7 @@ fun EditProfileScreen(
 
             // Botón para elegir una nueva imagen de perfil
             Button(
-                enabled = isConnected,
+                enabled = isConnected && hasStoragePermission, //si tiene conexion y permisos
                 onClick = {
                 pickMedia.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -152,6 +159,16 @@ fun EditProfileScreen(
                 )
             ) {
                 Text("Change Profile Picture")
+            }
+
+            // Mostrar mensaje si el permiso de almacenamiento no está concedido o es limitado
+            if (!hasStoragePermission) {
+                Text(
+                    text = "You need to grant storage permission to change your profile picture.",
+                    color = Color.Red,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))

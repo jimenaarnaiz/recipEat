@@ -21,11 +21,14 @@ import com.example.recipeat.utils.PlanSemanalWorker
 import com.example.recipeat.data.repository.RecetaRepository
 import com.example.recipeat.ui.components.BottomNavBar
 import com.example.recipeat.ui.theme.RecipEatTheme
+import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var permissionsViewModel: PermissionsViewModel
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +52,9 @@ class MainActivity : ComponentActivity() {
             Log.d("Main", "Se ejecutó el Worker")
         }
 
+        // Inicializar el ViewModel de permisos
+        permissionsViewModel = ViewModelProvider(this).get(PermissionsViewModel::class.java)
+
         setContent {
             RecipEatTheme {
                 val navController = rememberNavController() // Un solo NavController
@@ -57,7 +63,6 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     modifier = Modifier
-//                        .fillMaxSize(),
                         .statusBarsPadding(),
                     bottomBar = {
                         // Solo se muestra la barra de navegación si 'showBottomNav' es true
@@ -67,10 +72,9 @@ class MainActivity : ComponentActivity() {
                     }
                 ) { innerPadding ->
                     // Llamamos a NavigationGraph y pasamos la función para manejar la visibilidad de la barra
-                    NavigationGraph(navController, roomViewModel) { visible ->
+                    NavigationGraph(navController, roomViewModel, permissionsViewModel) { visible ->
                         showBottomNav.value = visible // Actualiza el estado de visibilidad
                     }
-                    //Modifier.padding(top = innerPadding.calculateTopPadding())
                 }
             }
         }
@@ -85,16 +89,6 @@ class MainActivity : ComponentActivity() {
     private fun requestNecessaryPermissions() {
         val permissionsToRequest = mutableListOf<String>()
 
-        // Permiso de cámara
-        if (ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            permissionsToRequest.add(android.Manifest.permission.CAMERA)
-        }
-
-        // Permisos para medios (Android 13+) o almacenamiento (Android < 13)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
@@ -103,7 +97,6 @@ class MainActivity : ComponentActivity() {
             ) {
                 permissionsToRequest.add(android.Manifest.permission.READ_MEDIA_IMAGES)
             }
-
         } else {
             // Para versiones anteriores a API 33
             if (ContextCompat.checkSelfPermission(
@@ -112,13 +105,6 @@ class MainActivity : ComponentActivity() {
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 permissionsToRequest.add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
-            }
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                permissionsToRequest.add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
         }
 
@@ -163,6 +149,11 @@ class MainActivity : ComponentActivity() {
                 Log.e("Permissions", "Permiso denegado: $permission")
             }
         }
+
+        // Actualiza el estado en el ViewModel según si los permisos fueron otorgados
+        permissionsViewModel.setStoragePermissionGranted(
+            permissions.all { it.value } // Si todos los permisos fueron otorgados
+        )
     }
 }
 

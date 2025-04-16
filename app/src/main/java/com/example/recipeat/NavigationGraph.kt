@@ -34,6 +34,7 @@ import com.example.recipeat.ui.screens.search.UnifiedSearchScreen
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
+import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
@@ -46,6 +47,7 @@ import com.example.recipeat.ui.viewmodels.UsersViewModel
 fun NavigationGraph(
     navController: NavHostController,
     roomViewModel: RoomViewModel,
+    permissionsViewModel: PermissionsViewModel,
     onBottomBarVisibilityChanged: (Boolean) -> Unit
 ) {
     val recetasViewModel: RecetasViewModel = viewModel()
@@ -79,7 +81,7 @@ fun NavigationGraph(
                     onBottomBarVisibilityChanged(false)
                 }
                 composable(BottomNavItem.Home.route) {
-                    HomeScreen(navController, usersViewModel, recetasViewModel, roomViewModel, connectivityViewModel)   // Home
+                    HomeScreen(navController, usersViewModel, recetasViewModel, roomViewModel, connectivityViewModel, permissionsViewModel)   // Home
                     onBottomBarVisibilityChanged(true)
                 }
                 composable(BottomNavItem.MyRecipes.route) {
@@ -115,7 +117,7 @@ fun NavigationGraph(
                     onBottomBarVisibilityChanged(false)
                 }
                 composable("add_recipe") {
-                    AddRecipe(navController, recetasViewModel, ingredientesViewModel, roomViewModel, usersViewModel, connectivityViewModel)   //
+                    AddRecipe(navController, recetasViewModel, ingredientesViewModel, roomViewModel, usersViewModel, connectivityViewModel, permissionsViewModel)   //
                     onBottomBarVisibilityChanged(false)
                 }
                 composable("favoritos") {
@@ -127,14 +129,14 @@ fun NavigationGraph(
                     onBottomBarVisibilityChanged(false)
                 }
                 composable("editarPerfil") {
-                    EditProfileScreen(navController, usersViewModel, connectivityViewModel)
+                    EditProfileScreen(navController, usersViewModel, connectivityViewModel, permissionsViewModel)
                     onBottomBarVisibilityChanged(false)
                 }
                 composable("editRecipe/{idReceta}/{deUser}") { backStackEntry ->
                     val idReceta = backStackEntry.arguments?.getString("idReceta") ?: ""
                     val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
                     // Ahora pasamos 'deUser' a la pantalla
-                    EditRecipeScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, ingredientesViewModel, deUser = deUser, usersViewModel, connectivityViewModel)
+                    EditRecipeScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, ingredientesViewModel, deUser = deUser, usersViewModel, connectivityViewModel, permissionsViewModel)
                     onBottomBarVisibilityChanged(false)
                 }
                 composable("steps/{idReceta}/{deUser}") { backStackEntry ->

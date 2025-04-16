@@ -71,6 +71,7 @@ import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
+import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
@@ -83,9 +84,11 @@ fun AddRecipe(
     ingredientesViewModel: IngredientesViewModel,
     roomViewModel: RoomViewModel,
     usersViewModel: UsersViewModel,
-    connectivityViewModel: ConnectivityViewModel
+    connectivityViewModel: ConnectivityViewModel,
+    permissionsViewModel: PermissionsViewModel
 ) {
     val uid = usersViewModel.getUidValue()
+    val hasStoragePermission = permissionsViewModel.storagePermissionGranted.value
 
     var title by rememberSaveable { mutableStateOf("") }
     var imageUri by rememberSaveable { mutableStateOf("") }
@@ -140,7 +143,6 @@ fun AddRecipe(
     // Observamos el estado de conectividad
     val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
-
     LaunchedEffect(navController) {
         Log.d("AddRecipe", "pueba; launched de cargar ingredientes")
         ingredientesViewModel.loadIngredientsFromFirebase()
@@ -154,6 +156,7 @@ fun AddRecipe(
                 instructions.all { it.isNotBlank() } && //comprobar q los steps no son ""
                 time.isNotBlank()
     }
+
 
     Scaffold(
         topBar = {
@@ -191,7 +194,7 @@ fun AddRecipe(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item {
-                    ImageSection(imageUri2, pickMedia)
+                    ImageSection(imageUri2, pickMedia, hasStoragePermission)
                 }
                 item {
                     SectionHeader("Recipe Details")
@@ -347,7 +350,7 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>) {
+fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>, hasStoragePermission: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
@@ -372,6 +375,7 @@ fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<Pick
             contentScale = ContentScale.Crop
         )
         Button(
+            enabled = hasStoragePermission,
             onClick = {
                 pickMedia.launch(
                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -381,6 +385,15 @@ fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<Pick
         ) {
             Text("Select image")
         }
+    }
+
+    // Mostrar mensaje si el permiso de almacenamiento no está concedido o es limitado
+    if (!hasStoragePermission) {
+        Text(
+            text = "You need to grant storage permission to change the recipe image.",
+            color = Color.Red,
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }
 
