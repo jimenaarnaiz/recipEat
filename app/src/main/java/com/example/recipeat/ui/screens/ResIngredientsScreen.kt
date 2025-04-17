@@ -106,6 +106,13 @@ fun ResIngredientsScreen(
         }
     }
 
+    LaunchedEffect(isConnected) {
+        if (!isConnected) {
+            showBottomSheet = false
+            showOrderBottomSheet = false
+        }
+    }
+
     Scaffold(
         topBar = {
             AppBar(

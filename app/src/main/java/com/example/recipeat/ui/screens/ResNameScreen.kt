@@ -56,6 +56,14 @@ fun ResNameScreen(
         }
     }
 
+    LaunchedEffect(isConnected) {
+        if (!isConnected) {
+            showBottomSheet = false
+            showOrderBottomSheet = false
+        }
+    }
+
+
     RecetasScreenWrapper(
         navController = navController,
         isLoading = isLoading,

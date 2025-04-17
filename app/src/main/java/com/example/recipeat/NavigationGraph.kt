@@ -136,7 +136,7 @@ fun NavigationGraph(
                     val idReceta = backStackEntry.arguments?.getString("idReceta") ?: ""
                     val deUser = backStackEntry.arguments?.getString("deUser")?.toBoolean() ?: false
                     // Ahora pasamos 'deUser' a la pantalla
-                    EditRecipeScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, ingredientesViewModel, deUser = deUser, usersViewModel, connectivityViewModel, permissionsViewModel)
+                    EditRecipeScreen(idReceta = idReceta, navController = navController, recetasViewModel = recetasViewModel, ingredientesViewModel, deUser = deUser, usersViewModel, connectivityViewModel, permissionsViewModel, roomViewModel)
                     onBottomBarVisibilityChanged(false)
                 }
                 composable("steps/{idReceta}/{deUser}") { backStackEntry ->

@@ -5,10 +5,11 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.recipeat.data.model.Receta
 
 @Dao
-interface RecetaDao {
+interface RecetaRoomDao {
 
     // Insertar una receta
     @Insert
@@ -17,19 +18,15 @@ interface RecetaDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE) // si una receta ya existe, se ignora y no genera error
     suspend fun insertRecetas(recetas: List<Receta>)
 
-    // Eliminar una receta por su ID
-    @Delete
-    suspend fun deleteReceta(receta: Receta)
-
     // Eliminar receta por su ID, de manera más explícita
     @Query("DELETE FROM recetas WHERE id = :recetaId")
     suspend fun deleteRecetaById(recetaId: String)
 
-    // Consultar todas las recetas (si es necesario)
+    // Consultar todas las recetas
     @Query("SELECT * FROM recetas")
     suspend fun getAllRecetas(): List<Receta>
 
-    // Consultar una receta por ID (si es necesario)
+    // Consultar una receta por ID
     @Query("SELECT * FROM recetas WHERE id = :recetaId")
     suspend fun getRecetaById(recetaId: String): Receta //antes era anullable
 
@@ -51,5 +48,8 @@ interface RecetaDao {
 
     @Query("SELECT * FROM recetas WHERE userId = '' ORDER BY date DESC")
     suspend fun getRecetasHome(): List<Receta>
+
+    @Update
+    suspend fun updateReceta(receta: Receta)
 }
 

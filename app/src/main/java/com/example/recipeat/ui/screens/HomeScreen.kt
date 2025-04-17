@@ -84,6 +84,10 @@ fun HomeScreen(
         }
     }
 
+//    roomViewModel.eliminarTodosLosFavoritos(uid.toString())
+//    roomViewModel.deleteAllRecetas()
+
+
 
     // Cargar recetas al iniciar la pantalla
     LaunchedEffect(Unit) {

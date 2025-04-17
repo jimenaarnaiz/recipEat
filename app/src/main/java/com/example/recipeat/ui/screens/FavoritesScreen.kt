@@ -48,8 +48,8 @@ fun FavoritesScreen(
     // Observamos el estado de conectividad
     val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
-    LaunchedEffect (navController) {
-       roomViewModel.getRecetasFavoritas()
+    LaunchedEffect (favoritasRoom) {
+       roomViewModel.getRecetasFavoritas(uid.toString())
     }
 
     LaunchedEffect(favoritas) {

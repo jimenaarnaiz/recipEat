@@ -81,6 +81,12 @@ fun DetailsScreen(
         bitmap = usersViewModel.loadImageFromFile(context, idReceta)
     }
 
+    LaunchedEffect(isConnected) {
+        if (!isConnected) {
+            showDialog= false
+        }
+    }
+
     Scaffold(
         topBar = {
             if (esDeUser && isConnected) { //si hay conexion y es de la api se puede eliminar y editar
@@ -156,14 +162,20 @@ fun DetailsScreen(
                                         userReceta = receta!!.userId
                                     )
                                 }
-                                if (esFavorito == false) { // si no es fav, se añade al Room con true en esFav
-                                    receta!!.esFavorita = true
+                                if (esFavorito == false) { // si no es fav, se añade al Room
+                                    //receta!!.esFavorita = true
                                     roomViewModel.insertReceta(receta!!)
+                                    roomViewModel.agregarFavorito(uid.toString(), idReceta)
                                 }else{
                                     if (esDeUser) { //si es creada por el user, solo pone a false favs
-                                        roomViewModel.setEsFavoritaToZero(idReceta)
+                                        roomViewModel.eliminarFavorito(uid.toString(), idReceta)
                                     }else{ // si es de la api, se elimina
-                                        roomViewModel.deleteReceta(receta!!)
+                                        roomViewModel.eliminarFavorito(uid.toString(), idReceta)
+
+                                        val esDelHome = roomViewModel.esRecetaDelHome(context, uid.toString(), idReceta)
+                                        if (!esDelHome) {
+                                            roomViewModel.deleteRecetaById(uid.toString(), idReceta)
+                                        }
                                     }
                                 }
 
@@ -297,11 +309,10 @@ fun DetailsScreen(
                             }
                             // eliminar de historial
                             recetasViewModel.eliminarRecetaDelHistorial(uid.toString(), recetaId = idReceta)
-                            //eliminar tb de Room
-                            roomViewModel.deleteRecetaById(idReceta)
+                            //eliminar tb de Room (recetas y favs)
+                            roomViewModel.deleteRecetaById(uid.toString(), idReceta)
                             //eliminar imagen de local
                             usersViewModel.deleteImage(context, idReceta)
-
                             // Cerrar el dialogo
                             showDialog = false
                             // Volver a la pantalla anterior

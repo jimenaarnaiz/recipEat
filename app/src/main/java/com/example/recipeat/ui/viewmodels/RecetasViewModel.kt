@@ -461,12 +461,29 @@ class RecetasViewModel : ViewModel() {
                     updatesMap["date"] = recetaModificada.date
                 }
 
-                // Verificar si hay cambios
+                // Verificar si hay cambios en los campos de la receta
                 if (updatesMap.isNotEmpty()) {
                     // Actualizar solo los campos modificados en Firestore
                     recipeRef.update(updatesMap)
                         .addOnSuccessListener {
-                            onComplete(true, null)
+                            // Ahora, actualizar la colección de favoritos (favs_hist/uid)
+                            val favoritoData = hashMapOf(
+                                "idReceta" to recetaModificada.id,
+                                "title" to recetaModificada.title,
+                                "image" to recetaModificada.image.toString(),
+                                "date" to Timestamp.now(),
+                                "user" to uid
+                            )
+
+                            // Actualizamos el favorito en la colección de favoritos
+                            val favHistRef = db.collection("favs_hist").document(uid).collection("favoritos").document(recetaModificada.id)
+                            favHistRef.set(favoritoData)
+                                .addOnSuccessListener {
+                                    onComplete(true, null)
+                                }
+                                .addOnFailureListener { e ->
+                                    onComplete(false, e.message)
+                                }
                         }
                         .addOnFailureListener { e ->
                             onComplete(false, e.message)
@@ -632,7 +649,8 @@ class RecetasViewModel : ViewModel() {
 
                 Log.d("RecetasViewModel", "Receta con ID: $recetaId eliminada exitosamente")
 
-                //_recetaSeleccionada.value = null
+                // Eliminar de la lista en memoria (LiveData)
+                _recetasUser.value = _recetasUser.value?.filterNot { it.id == recetaId }
 
             } catch (e: Exception) {
                 Log.e("RecetasViewModel", "Error al eliminar receta: ${e.message}")

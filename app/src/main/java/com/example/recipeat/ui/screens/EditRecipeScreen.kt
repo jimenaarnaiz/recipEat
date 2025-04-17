@@ -39,6 +39,7 @@ import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -51,7 +52,8 @@ fun EditRecipeScreen(
     ingredientesViewModel: IngredientesViewModel, deUser: Boolean,
     usersViewModel: UsersViewModel,
     connectivityViewModel: ConnectivityViewModel,
-    permissionsViewModel: PermissionsViewModel
+    permissionsViewModel: PermissionsViewModel,
+    roomViewModel: RoomViewModel
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid
     val hasStoragePermission = permissionsViewModel.storagePermissionGranted.value
@@ -314,6 +316,7 @@ fun EditRecipeScreen(
                                 onComplete = { success, error ->
                                     if (success) {
                                         Log.d("EditRecipe", "Recipe was edited successfully!")
+                                        roomViewModel.updateReceta(newReceta)
                                         navController.navigate(BottomNavItem.MyRecipes.route)
                                     } else {
                                         Log.e("EditRecipe", "Error editing recipe: $error")

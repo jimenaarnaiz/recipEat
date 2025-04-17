@@ -18,7 +18,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
 import com.example.recipeat.data.database.AppDatabase
 import com.example.recipeat.utils.PlanSemanalWorker
-import com.example.recipeat.data.repository.RecetaRepository
+import com.example.recipeat.data.repository.RecetaRoomRepository
 import com.example.recipeat.ui.components.BottomNavBar
 import com.example.recipeat.ui.theme.RecipEatTheme
 import com.example.recipeat.ui.viewmodels.PermissionsViewModel
@@ -36,10 +36,10 @@ class MainActivity : ComponentActivity() {
 
         // Inicializar Room Database
         val database = AppDatabase.getDatabase(this)
-        val recetaRepository = RecetaRepository(database.recetaDao())
+        val recetaRoomRepository = RecetaRoomRepository(database.recetaDao(), database.favoritoDao())
 
         // Crear ViewModel usando un Factory para poder pasar por param el repository en el viewModel
-        val roomViewModel = ViewModelProvider(this, RoomViewModelFactory(recetaRepository))
+        val roomViewModel = ViewModelProvider(this, RoomViewModelFactory(recetaRoomRepository))
             .get(RoomViewModel::class.java)
 
         // Verificar si el usuario está autenticado

@@ -2,13 +2,13 @@ package com.example.recipeat.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.recipeat.data.repository.RecetaRepository
+import com.example.recipeat.data.repository.RecetaRoomRepository
 
 /**
  * Fábrica personalizada para crear instancias de RoomViewModel
  * y proporcionarle la dependencia RecetaRepository.
  */
-class RoomViewModelFactory(private val recetaRepository: RecetaRepository) : ViewModelProvider.Factory {
+class RoomViewModelFactory(private val recetaRoomRepository: RecetaRoomRepository) : ViewModelProvider.Factory {
 
     /**
      * Métdo que crea el ViewModel, en este caso RoomViewModel.
@@ -22,7 +22,7 @@ class RoomViewModelFactory(private val recetaRepository: RecetaRepository) : Vie
         if (modelClass.isAssignableFrom(RoomViewModel::class.java)) {
             // Si es del tipo esperado, se crea el ViewModel y se le pasa el recetaRepository como dependencia.
             @Suppress("UNCHECKED_CAST")  // Suprime la advertencia de cast no comprobado.
-            return RoomViewModel(recetaRepository) as T
+            return RoomViewModel(recetaRoomRepository) as T
         }
 
         // Si el tipo del ViewModel no es compatible, lanza una excepción.
