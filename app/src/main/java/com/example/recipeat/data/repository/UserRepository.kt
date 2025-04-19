@@ -98,7 +98,7 @@ class UserRepository(
             // Cuando hacemos logout, eliminamos el estado de la sesión de ese UID
             sharedPreferences.edit().putBoolean(sessionIniciadaKey + currentUser.uid, false).apply()
         }
-        FirebaseAuth.getInstance().signOut()
+        auth.signOut()
         _uid.value = null
     }
 
@@ -151,7 +151,7 @@ class UserRepository(
                 null
             }
         } catch (e: Exception) {
-            Log.e("UserData", "Error al obtener el username", e)
+            Log.e("UserRepository", "Error al obtener el username", e)
             return null
         }
     }
@@ -176,7 +176,7 @@ class UserRepository(
                 null
             }
         } catch (e: Exception) {
-            Log.e("UserData", "Error al obtener el usuario completo", e)
+            Log.e("UserRepository", "Error al obtener el usuario completo", e)
             return null
         }
     }
@@ -211,10 +211,10 @@ class UserRepository(
             newProfileImage?.let { updatedData["image"] = it }
 
             userRef.update(updatedData).await()
-            Log.d("UpdateUser", "User data updated successfully in Firestore")
+            Log.d("UserRepository", "User data updated successfully in Firestore")
             return true
         } catch (e: Exception) {
-            Log.e("UpdateUser", "Failed to update user data in Firestore", e)
+            Log.e("UserRepository", "Failed to update user data in Firestore", e)
             return false
         }
     }
@@ -238,9 +238,9 @@ class UserRepository(
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
             }
             inputStream?.close()
-            Log.d("ImageSave", "Imagen guardada en: ${file.absolutePath}")
+            Log.d("UserRepository", "Imagen guardada en: ${file.absolutePath}")
         } catch (e: Exception) {
-            Log.e("ImageSaveError", "Error al guardar la imagen: ${e.message}")
+            Log.e("UserRepository", "Error al guardar la imagen: ${e.message}")
         }
     }
 
@@ -254,11 +254,13 @@ class UserRepository(
                 if (recetaId.isNullOrBlank()) "profile_image${_uid.value}.jpg" else "$recetaId.jpg"
             val file = File(context.filesDir, imagen)
             if (file.exists()) {
-                Log.d("ImageLoad", "Cargando Imagen de receta : ${file.absolutePath}")
+                Log.d("UserRepository", "Cargando Imagen de receta : ${file.absolutePath}")
                 return BitmapFactory.decodeFile(file.absolutePath)
+            }else{
+                Log.d("UserRepository", "Archivo no encontrado: ${file.absolutePath}")
             }
         } catch (e: Exception) {
-            Log.e("ImageLoad", "Error al cargar la imagen", e)
+            Log.e("UserRepository", "Error al cargar la imagen", e)
         }
         return null
     }
@@ -269,7 +271,7 @@ class UserRepository(
         val file = File(context.filesDir, "$recetaId.jpg")
         if (file.exists()) {
             file.delete()
-            Log.d("ImageDelete", "Imagen de receta eliminada: ${file.absolutePath}")
+            Log.d("UserRepository", "Imagen de receta eliminada: ${file.absolutePath}")
         }
     }
 

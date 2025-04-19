@@ -38,6 +38,7 @@ import com.example.recipeat.ui.screens.search.UnifiedSearchScreen
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
+import com.example.recipeat.ui.viewmodels.IngredientesViewModelFactory
 import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModelFactory
@@ -63,9 +64,6 @@ fun NavigationGraph(
 
 
     val recetasViewModel: RecetasViewModel = viewModel()
-
-    //val usersViewModel: UsersViewModel = viewModel()
-    // Definir SharedPreferences aquí
     val sharedPreferences = remember { navController.context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE) }
 
     // Crear la fábrica para UsersViewModel
@@ -74,8 +72,11 @@ fun NavigationGraph(
     // Usar la fábrica para obtener el ViewModel
     val usersViewModel: UsersViewModel = viewModel(factory = usersViewModelFactory)
 
+    // Crear la fábrica para IngredientsViewModel
+    val ingredientesViewModelFactory = IngredientesViewModelFactory()
+    // Usar la fábrica para obtener el ViewModel
+    val ingredientesViewModel: IngredientesViewModel = viewModel(factory = ingredientesViewModelFactory)
 
-    val ingredientesViewModel: IngredientesViewModel = viewModel()
     val filtrosViewModel: FiltrosViewModel = viewModel()
     //val planViewModel: PlanViewModel = viewModel()
     // Obtener el repository de alguna manera (ejemplo en este caso)

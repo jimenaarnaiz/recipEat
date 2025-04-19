@@ -18,7 +18,7 @@ class UsersViewModelFactory(
 ) : ViewModelProvider.Factory {
 
     /**
-     * Método que crea el ViewModel, en este caso UsersViewModel.
+     * Métdo que crea el ViewModel, en este caso UsersViewModel.
      *
      * @param modelClass La clase del ViewModel que se quiere crear.
      * @return Una instancia del ViewModel solicitada.

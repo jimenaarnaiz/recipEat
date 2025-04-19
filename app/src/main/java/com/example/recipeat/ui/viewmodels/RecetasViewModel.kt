@@ -64,6 +64,8 @@ class RecetasViewModel : ViewModel() {
 
     // para paginacion
     private var lastDocument: DocumentSnapshot? = null
+    // Variable para el último documento obtenido de las recetas del usuario
+    private var lastDocumentUser: DocumentSnapshot? = null
     private val _isLoadingMore = MutableLiveData(false)
     val isLoadingMore: LiveData<Boolean> get() = _isLoadingMore
 
@@ -226,10 +228,6 @@ class RecetasViewModel : ViewModel() {
 
 
 
-    // TODO REVISAR PAGINACION
-    // Variable para el último documento obtenido de las recetas del usuario
-    private var lastDocumentUser: DocumentSnapshot? = null
-
     // Función para obtener las recetas del usuario con paginación
     fun getRecetasUser(uid: String, limpiarLista: Boolean = true) {
         if (_isLoadingMore.value == true) return // Evita cargar más si ya se está cargando
@@ -336,35 +334,6 @@ class RecetasViewModel : ViewModel() {
             .addOnFailureListener { e ->
                 Log.e("RecetasViewModel", "Error al guardar receta ${receta.id} en Firestore: ${e.message}")
                 onComplete(false, e.message)
-            }
-    }
-
-    fun migrarCampoUserAUserId(uid: String) {
-        val recetasRef = db.collection("my_recipes").document(uid).collection("recipes")
-
-        recetasRef.get()
-            .addOnSuccessListener { documentos ->
-                for (document in documentos) {
-                    val userValue = document.getString("user") ?: continue
-
-                    // Actualizar el documento: eliminar "user", agregar "userId"
-                    recetasRef.document(document.id)
-                        .update(
-                            mapOf(
-                                "userId" to userValue,
-                                "user" to FieldValue.delete() // Elimina el campo antiguo
-                            )
-                        )
-                        .addOnSuccessListener {
-                            Log.d("Migracion", "Campo migrado correctamente en ${document.id}")
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("Migracion", "Error al migrar ${document.id}: ${e.message}")
-                        }
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("Migracion", "Error al obtener recetas: ${e.message}")
             }
     }
 
@@ -1735,9 +1704,6 @@ class RecetasViewModel : ViewModel() {
 
 
 
-
-
-    // TODO
     fun guardarRecetasBulk() {
         viewModelScope.launch {
             try {

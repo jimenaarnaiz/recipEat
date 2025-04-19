@@ -5,7 +5,6 @@ import com.example.recipeat.data.dao.FavoritoDao
 import com.example.recipeat.data.dao.RecetaRoomDao
 import com.example.recipeat.data.model.Favorito
 import com.example.recipeat.data.model.Receta
-import java.sql.SQLException
 import java.sql.Timestamp
 
 class RecetaRoomRepository(private val recetaRoomDao: RecetaRoomDao,  private val favoritoDao: FavoritoDao) {

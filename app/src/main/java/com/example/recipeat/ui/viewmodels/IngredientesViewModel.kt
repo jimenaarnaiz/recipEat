@@ -2,15 +2,12 @@ package com.example.recipeat.ui.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.IngredienteSimple
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class IngredientesViewModel : ViewModel() {
-
-    private val db = FirebaseFirestore.getInstance()
+class IngredientesViewModel(private val db: FirebaseFirestore = FirebaseFirestore.getInstance()) : ViewModel() {
 
     private val _ingredientesSugeridos = MutableStateFlow<List<IngredienteSimple>>(emptyList())
     val ingredientesSugeridos: MutableStateFlow<List<IngredienteSimple>> = _ingredientesSugeridos
