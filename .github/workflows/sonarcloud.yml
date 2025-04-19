@@ -22,6 +22,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Create local.properties
+        run: |
+            echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
       - name: Cache SonarCloud dependencies
         uses: actions/cache@v3
         with:
