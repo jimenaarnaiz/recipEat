@@ -24,7 +24,7 @@ jobs:
 
       - name: Create local.properties
         run: |
-            echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+            echo "sdk.dir=$ANDROID_SDK_ROOT" > recipEat/local.properties
 
       - name: Cache SonarCloud dependencies
         uses: actions/cache@v3
@@ -35,13 +35,15 @@ jobs:
             ${{ runner.os }}-sonar-
 
       - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+        run: chmod +x recipEat/gradlew
 
       - name: Build with Gradle
         run: ./gradlew build
+        working-directory: recipEat
 
       - name: Generate Jacoco report
         run: ./gradlew jacocoTestReport
+        working-directory: recipEat
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2.0
