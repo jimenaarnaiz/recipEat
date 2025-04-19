@@ -1,8 +1,9 @@
-package com.example.recipeat.ui.viewmodels
+package com.example.recipeat.ui.viewmodels.factories
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.recipeat.data.repository.RecetaRoomRepository
+import com.example.recipeat.ui.viewmodels.RoomViewModel
 
 /**
  * Fábrica personalizada para crear instancias de RoomViewModel

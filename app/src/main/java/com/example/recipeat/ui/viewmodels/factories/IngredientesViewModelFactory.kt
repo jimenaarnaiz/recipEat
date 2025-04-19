@@ -1,7 +1,8 @@
-package com.example.recipeat.ui.viewmodels
+package com.example.recipeat.ui.viewmodels.factories
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 
 class IngredientesViewModelFactory(

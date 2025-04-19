@@ -1,3 +1,5 @@
+package com.example.recipeat.ui.repositories
+
 import com.example.recipeat.data.repository.PlanRepository
 import io.mockk.*
 import kotlinx.coroutines.test.runTest

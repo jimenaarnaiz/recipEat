@@ -1,10 +1,11 @@
-package com.example.recipeat.ui.viewmodels
+package com.example.recipeat.ui.viewmodels.factories
 
 import android.app.Application
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.recipeat.data.repository.UserRepository
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 

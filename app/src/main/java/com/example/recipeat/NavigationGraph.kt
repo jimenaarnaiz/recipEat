@@ -38,14 +38,14 @@ import com.example.recipeat.ui.screens.search.UnifiedSearchScreen
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
-import com.example.recipeat.ui.viewmodels.IngredientesViewModelFactory
+import com.example.recipeat.ui.viewmodels.factories.IngredientesViewModelFactory
 import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
-import com.example.recipeat.ui.viewmodels.PlanViewModelFactory
+import com.example.recipeat.ui.viewmodels.factories.PlanViewModelFactory
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.example.recipeat.ui.viewmodels.UsersViewModelFactory
+import com.example.recipeat.ui.viewmodels.factories.UsersViewModelFactory
 
 
 // Función para definir el grafo de navegación

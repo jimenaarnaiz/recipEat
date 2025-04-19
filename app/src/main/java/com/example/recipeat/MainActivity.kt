@@ -23,7 +23,7 @@ import com.example.recipeat.ui.components.BottomNavBar
 import com.example.recipeat.ui.theme.RecipEatTheme
 import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
-import com.example.recipeat.ui.viewmodels.RoomViewModelFactory
+import com.example.recipeat.ui.viewmodels.factories.RoomViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {

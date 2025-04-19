@@ -1,10 +1,11 @@
-package com.example.recipeat.data.repository
+package com.example.recipeat.ui.repositories
 
 import android.util.Log
 import com.example.recipeat.data.dao.FavoritoDao
 import com.example.recipeat.data.dao.RecetaRoomDao
 import com.example.recipeat.data.model.Favorito
 import com.example.recipeat.data.model.Receta
+import com.example.recipeat.data.repository.RecetaRoomRepository
 import io.mockk.*
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
