@@ -25,6 +25,7 @@ jobs:
       - name: Create local.properties
         run: |
             echo "sdk.dir=$ANDROID_SDK_ROOT" > recipEat/local.properties
+        working-directory: recipEat
 
       - name: Cache SonarCloud dependencies
         uses: actions/cache@v3
