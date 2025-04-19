@@ -5,6 +5,7 @@ import com.example.recipeat.data.dao.FavoritoDao
 import com.example.recipeat.data.dao.RecetaRoomDao
 import com.example.recipeat.data.model.Favorito
 import com.example.recipeat.data.model.Receta
+import java.sql.SQLException
 import java.sql.Timestamp
 
 class RecetaRoomRepository(private val recetaRoomDao: RecetaRoomDao,  private val favoritoDao: FavoritoDao) {
@@ -28,20 +29,10 @@ class RecetaRoomRepository(private val recetaRoomDao: RecetaRoomDao,  private va
     suspend fun deleteRecetaById(recetaId: String) {
         recetaRoomDao.deleteRecetaById(recetaId)
     }
-
-//    // Obtener recetas favoritas
-//    suspend fun getRecetasFavoritas(): List<Receta> {
-//        return recetaRoomDao.getRecetasFavoritas()
-//    }
-
     // Obtener receta por ID
     suspend fun getRecetaById(recetaId: String): Receta {
         return recetaRoomDao.getRecetaById(recetaId)
     }
-
-//    suspend fun setEsFavoritaToZero(recetaId: String){
-//        return recetaRoomDao.setEsFavoritaToZero(recetaId)
-//    }
 
     suspend fun deleteAllRecetas(){
         return recetaRoomDao.deleteAllRecetas()
@@ -63,9 +54,22 @@ class RecetaRoomRepository(private val recetaRoomDao: RecetaRoomDao,  private va
     //FAVS BIEN
     // Agregar una receta a los favoritos
     suspend fun agregarFavorito(userId: String, recetaId: String) {
+        // Verificar si el favorito ya existe
+        val existeFavorito = favoritoDao.esFavorita(userId, recetaId) // Asumimos que este métdo existe en tu DAO para verificar si ya existe el favorito
+        if (existeFavorito != null) {
+            // Si el favorito ya existe, no hacemos nada
+            Log.e("RecetaRoomRepository", "El favorito ya existe")
+            return
+        }
+
+        // Crear el objeto Favorito
         val favorito = Favorito(userId = userId, recetaId = recetaId, date = Timestamp(System.currentTimeMillis()))
+
+        // Intentar agregar el favorito
         favoritoDao.agregarFavorito(favorito)
     }
+
+
 
     // Eliminar una receta de los favoritos
     suspend fun eliminarFavorito(userId: String, recetaId: String) {

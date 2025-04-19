@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.data.repository.RecetaRoomRepository
 import kotlinx.coroutines.launch
+import java.sql.SQLException
 
 class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : ViewModel() {
 
@@ -156,11 +157,14 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
                 Log.d("RoomViewModel", "Agregando receta a favoritos.")
                 recetaRoomRepository.agregarFavorito(userId, recetaId)
                 Log.d("RoomViewModel", "Receta agregada a favoritos exitosamente.")
+            } catch (e: SQLException) {
+                Log.e("RoomViewModel", "Error de base de datos al intentar agregar receta a favoritos: ${e.message}", e)
             } catch (e: Exception) {
                 Log.e("RoomViewModel", "Error al agregar receta a favoritos: ${e.message}", e)
             }
         }
     }
+
 
     // Eliminar receta de favoritos
     fun eliminarFavorito(userId: String, recetaId: String) {
@@ -218,19 +222,6 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
             }
         }
     }
-
-//    // Establecer esFavorita en 0
-//    fun setEsFavoritaToZero(recetaId: String) {
-//        viewModelScope.launch {
-//            try {
-//                Log.d("RoomViewModel", "Estableciendo esFavorita a 0 para receta con ID: $recetaId")
-//                recetaRoomRepository.setEsFavoritaToZero(recetaId)
-//                Log.d("RoomViewModel", "esFavorita establecido en 0 para receta con ID: $recetaId")
-//            } catch (e: Exception) {
-//                Log.e("RoomViewModel", "Error al establecer esFavorita a 0 para receta con ID $recetaId: ${e.message}", e)
-//            }
-//        }
-//    }
 
     // Función para actualizar la receta
     fun updateReceta(receta: Receta) {

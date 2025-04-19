@@ -1,6 +1,8 @@
 package com.example.recipeat
 
 import LoginScreen
+import android.app.Application
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -9,10 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.recipeat.data.repository.PlanRepository
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.AddRecipe
 import com.example.recipeat.ui.screens.DebugScreen
@@ -36,9 +40,11 @@ import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
+import com.example.recipeat.ui.viewmodels.PlanViewModelFactory
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import com.example.recipeat.ui.viewmodels.UsersViewModelFactory
 
 
 // Función para definir el grafo de navegación
@@ -50,11 +56,35 @@ fun NavigationGraph(
     permissionsViewModel: PermissionsViewModel,
     onBottomBarVisibilityChanged: (Boolean) -> Unit
 ) {
+
+    // Accedemos al application context
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+
+
     val recetasViewModel: RecetasViewModel = viewModel()
-    val usersViewModel: UsersViewModel = viewModel()
+
+    //val usersViewModel: UsersViewModel = viewModel()
+    // Definir SharedPreferences aquí
+    val sharedPreferences = remember { navController.context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE) }
+
+    // Crear la fábrica para UsersViewModel
+    val usersViewModelFactory = UsersViewModelFactory(application = LocalContext.current.applicationContext as Application, sharedPreferences = sharedPreferences)
+
+    // Usar la fábrica para obtener el ViewModel
+    val usersViewModel: UsersViewModel = viewModel(factory = usersViewModelFactory)
+
+
     val ingredientesViewModel: IngredientesViewModel = viewModel()
     val filtrosViewModel: FiltrosViewModel = viewModel()
-    val planViewModel: PlanViewModel = viewModel()
+    //val planViewModel: PlanViewModel = viewModel()
+    // Obtener el repository de alguna manera (ejemplo en este caso)
+    val planRepository = PlanRepository()
+    val planViewModel: PlanViewModel = viewModel(
+        factory = PlanViewModelFactory(application, planRepository)
+    )
+
+
     val connectivityViewModel: ConnectivityViewModel = viewModel()
 
     val startDestination = remember { mutableStateOf<String?>(null) }

@@ -13,15 +13,13 @@ import com.example.recipeat.data.model.PlanSemanal
 import com.example.recipeat.data.repository.PlanRepository
 import kotlinx.coroutines.launch
 
-class PlanViewModel(application: Application) : AndroidViewModel(application) {
+class PlanViewModel(application: Application, private val planRepository: PlanRepository) : AndroidViewModel(application) {
 
     private val _planSemanal = MutableLiveData<PlanSemanal?>()
     val planSemanal: MutableLiveData<PlanSemanal?> = _planSemanal
 
     private val _listaCompra = MutableLiveData<List<IngredienteCompra>>(emptyList())
     val listaCompra: LiveData<List<IngredienteCompra>> = _listaCompra
-
-    private val planRepository = PlanRepository()
 
 
     // Llamar a la función que genera el plan semanal si es lunes

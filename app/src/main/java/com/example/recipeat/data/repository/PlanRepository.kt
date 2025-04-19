@@ -20,8 +20,6 @@ import kotlin.coroutines.suspendCoroutine
 
 class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()) {
 
-    private val db = FirebaseFirestore.getInstance()
-
     /**
      * Calculamos el identificador de la semana actual en formato "día/mes"
      * El día es el lunes de la semana actual
@@ -134,7 +132,7 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
         }
 
         return suspendCoroutine { continuation ->
-            firestore.collection("planSemanal")
+            this.firestore.collection("planSemanal")
                 .document(uid)
                 .collection("listaCompra")
                 .document("listaCompraActual")
@@ -476,7 +474,7 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
 
         try {
             // Hacemos la consulta a Firebase de forma asincrónica usando await() en lugar de withContext
-            val documentSnapshot = db.collection("planSemanal")
+            val documentSnapshot = this.firestore.collection("planSemanal")
                 .document(userId) // Usamos el userId para identificar al usuario
                 .collection("semanas") // Subcolección para las semanas del usuario
                 .document(semanaAnteriorId) // El documento que contiene el plan de la semana anterior
@@ -515,7 +513,7 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
 
         try {
             // Primero, obtenemos el plan actual de Firestore
-            val document = db.collection("planSemanal")
+            val document = this.firestore.collection("planSemanal")
                 .document(userId)
                 .collection("semanas")
                 .document(semanaActualId)
@@ -527,7 +525,7 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
                 val planActualData = document.data ?: return
 
                 // Guardamos este plan como el plan de la semana anterior
-                db.collection("planSemanal")
+                this.firestore.collection("planSemanal")
                     .document(userId)
                     .collection("semanas")
                     .document(semanaAnteriorId)
@@ -545,7 +543,7 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
                 )
             }
 
-            db.collection("planSemanal")
+            this.firestore.collection("planSemanal")
                 .document(userId)
                 .collection("semanas")
                 .document(semanaActualId)
@@ -566,7 +564,7 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
 
         return try {
             // Obtener el documento de la semana actual
-            val document = db.collection("planSemanal")
+            val document = this.firestore.collection("planSemanal")
                 .document(userId)
                 .collection("semanas")
                 .document(semanaActualId)
@@ -623,7 +621,7 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
 
     suspend fun obtenerRecetaPorId(id: String): Receta? {
         return try {
-            val document = db.collection("bulkRecetas").document(id).get().await()
+            val document = this.firestore.collection("bulkRecetas").document(id).get().await()
             if (document.exists()) {
                 obtenerRecetaDesdeDocumentSnapshot(document)
             } else {
@@ -639,7 +637,7 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
     // Función suspendida para obtener las recetas desde Firebase
     suspend fun obtenerRecetasFirebase(): List<Receta> {
         return try {
-            val documents = firestore.collection("bulkRecetas").get().await()
+            val documents = this.firestore.collection("bulkRecetas").get().await()
             documents.mapNotNull { document ->
                 try {
                     obtenerRecetaDesdeDocumentSnapshot(document)

@@ -1,6 +1,7 @@
 package com.example.recipeat.data.repository
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -20,13 +21,13 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-class UserRepository(context: Context) {
+class UserRepository(
+    private val sharedPreferences: SharedPreferences,
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+) {
 
-    private val auth = FirebaseAuth.getInstance()
-    private val db = FirebaseFirestore.getInstance()
 
-    private val sharedPreferences =
-        context.getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
     private val sessionIniciadaKey = "sesionIniciada_"
 
     private val _uid = MutableStateFlow<String?>(null)
@@ -51,6 +52,7 @@ class UserRepository(context: Context) {
     fun getUidValue(): String? {
         return _uid.value
     }
+
 
     // Login utilizando corrutinas
     suspend fun login(email: String, password: String): String {

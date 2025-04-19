@@ -7,7 +7,9 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
     id("com.google.devtools.ksp")
+    id ("jacoco") //para coverage
 }
+
 
 val localProperties = Properties()
 localProperties.load(FileInputStream(rootProject.file("local.properties")))
@@ -37,6 +39,16 @@ android {
 
     }
 
+    //para tests
+    testOptions {
+        unitTests.all {
+            it.extensions.configure<JacocoTaskExtension> {
+                isIncludeNoLocationClasses = true
+                excludes = listOf("jdk.internal.*") // recomendado por Gradle
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -44,6 +56,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+
+        getByName("debug") {
+            enableUnitTestCoverage = true // permite cobertura en variantes de build
         }
     }
     compileOptions {
@@ -57,7 +73,10 @@ android {
         compose = true
         buildConfig = true  // Habilita BuildConfig para lo de las key
     }
+
+
 }
+
 
 dependencies {
 
@@ -88,7 +107,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     //new
-    //para imaágenes
+    //para imágenes
     implementation(libs.coil.compose)
     //para poder usar viewModel()
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -105,6 +124,37 @@ dependencies {
     // Si usas coroutines con Room
     implementation(libs.androidx.room.ktx)  // Opcional, pero útil si usas coroutines
     testImplementation(libs.mockk) //para mockear test
+    //org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3
+    testImplementation(libs.kotlinx.coroutines.test) //para corrutinas en tests
 
 
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest") // Asegura que se ejecuten los tests primero
+
+    reports {
+        xml.required.set(true) //necesario para sonarqube
+        html.required.set(true)
+    }
+
+    val fileFilter = listOf(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "**/Hilt*.*",
+        "**/di/**"
+    )
+
+    val buildDirPath = layout.buildDirectory.asFile.get()
+
+    val classDirs = fileTree(buildDirPath.resolve("tmp/kotlin-classes/debug")) {
+        exclude(fileFilter)
+    }
+
+    classDirectories.setFrom(classDirs)
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(files(buildDirPath.resolve("jacoco/testDebugUnitTest.exec")))
 }

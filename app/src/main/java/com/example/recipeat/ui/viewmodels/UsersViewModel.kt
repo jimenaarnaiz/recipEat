@@ -13,9 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class UsersViewModel(application: Application): AndroidViewModel(application){
-
-    private val userRepository = UserRepository(application)
+class UsersViewModel(application: Application, private val userRepository: UserRepository): AndroidViewModel(application){
 
     private val _uid = MutableStateFlow<String?>(null)
     val uid: StateFlow<String?> get() = _uid

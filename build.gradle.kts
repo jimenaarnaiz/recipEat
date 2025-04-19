@@ -6,8 +6,16 @@ plugins {
     alias(libs.plugins.google.gms.google.services) apply false
     id("org.sonarqube") version "3.3" apply true
     id("com.google.devtools.ksp") version "2.0.21-1.0.27" apply false
+
 }
 
+// Lee el archivo local.properties
+val localProperties = rootProject.file("local.properties")
+val properties = java.util.Properties()
+properties.load(localProperties.inputStream())
+
+// Obtén el token
+val sonarToken: String = properties.getProperty("SONARQUBE_TOKEN")
 
 sonarqube {
     properties {
@@ -15,7 +23,7 @@ sonarqube {
         property("sonar.projectKey", "com.example.recipeat")  // Mi proyecto
         property("sonar.projectName", "recipEat")
         property("sonar.projectVersion", "1.0")
-        property("sonar.token", "squ_09a517edb1ff9b3da62d7947a66f5b94fe80b5db")
+        property("sonar.token", sonarToken)
         property("sonar.sources", listOf("src/main/java"))  // O la ruta correspondiente a mi código
         property("sonar.tests", "src/androidTest/java")  // Rutas de tests
         property("sonar.java.binaries", "build/intermediates/classes/debug")  // Compilados del código
