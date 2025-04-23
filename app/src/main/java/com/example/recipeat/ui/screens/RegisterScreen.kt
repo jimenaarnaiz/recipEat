@@ -44,9 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.R
 import com.example.recipeat.ui.theme.Cherry
-
 import com.example.recipeat.ui.theme.LightYellow
-import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
@@ -61,8 +59,7 @@ fun RegisterScreen(
     usersViewModel: UsersViewModel,
     recetasViewModel: RecetasViewModel,
     ingredientesViewModel: IngredientesViewModel,
-    planViewModel: PlanViewModel,
-    connectivityViewModel: ConnectivityViewModel
+    planViewModel: PlanViewModel
 ) {
     var username by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }

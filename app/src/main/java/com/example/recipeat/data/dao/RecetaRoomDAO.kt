@@ -30,15 +30,6 @@ interface RecetaRoomDao {
     @Query("SELECT * FROM recetas WHERE id = :recetaId")
     suspend fun getRecetaById(recetaId: String): Receta //antes era anullable
 
-
-    // no soporta múltiples usuarios en el mismo dispositivo, porque no está filtrando por userId
-    @Query("SELECT * FROM recetas WHERE esFavorita = 1")
-    suspend fun getRecetasFavoritas(): List<Receta>
-
-    // Cambiar el valor de esFavorita a 0 de la receta solicitada
-    @Query("UPDATE recetas SET esFavorita = 0 WHERE id = :recetaId")
-    suspend fun setEsFavoritaToZero(recetaId: String)
-
     // Borrar todas las recetas (si es necesario)
     @Query("DELETE FROM recetas")
     suspend fun deleteAllRecetas()

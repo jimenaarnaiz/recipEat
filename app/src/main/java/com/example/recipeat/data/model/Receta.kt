@@ -28,13 +28,12 @@ data class Receta(
     val unusedIngredients: List<IngredienteSimple>, // nombre e imagen
     val missingIngredientCount: Int, // Número de ingredientes faltantes
     val unusedIngredientCount: Int, // Número de ingredientes no usados
-    var esFavorita: Boolean?
 )
 
 data class SugerenciaReceta(val id: String, val titulo: String, val coincidencias: Int)
 
 // para mostrar en favs e historial
-data class RecetaSimple(val id: String, val userReceta: String, val title: String, val image: String, val date: Timestamp)
+data class RecetaSimple(val id: String, val userId: String, val title: String, val image: String, val date: Timestamp)
 
 // Para las recetas que crea localmente el user
 enum class DishTypes {

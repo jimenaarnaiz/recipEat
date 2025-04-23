@@ -16,7 +16,6 @@ import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.data.model.SugerenciaReceta
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
@@ -152,7 +151,6 @@ class RecetasViewModel : ViewModel() {
                                             "steps" to receta.steps,
                                             "time" to receta.time,
                                             "dishTypes" to receta.dishTypes,
-                                            //"user" to receta.userId,
                                             "glutenFree" to receta.glutenFree,
                                             "vegan" to receta.vegan,
                                             "vegetarian" to receta.vegetarian
@@ -221,8 +219,7 @@ class RecetasViewModel : ViewModel() {
             date = (document.get("date") as? Long) ?: System.currentTimeMillis(),
             unusedIngredients = emptyList(),
             missingIngredientCount = 0,
-            unusedIngredientCount = 0,
-            esFavorita = null
+            unusedIngredientCount = 0
         )
     }
 
@@ -380,8 +377,7 @@ class RecetasViewModel : ViewModel() {
                     date = recetaOriginalData["date"] as Long,
                     unusedIngredients = emptyList(),
                     missingIngredientCount = 0,
-                    unusedIngredientCount = 0,
-                    esFavorita = null,
+                    unusedIngredientCount = 0
                 )
 
                 // Crear un mapa vacío para los cambios
@@ -508,8 +504,7 @@ class RecetasViewModel : ViewModel() {
             //usedIngredientCount = apiReceta.usedIngredientCount,
             unusedIngredients = emptyList(),
             missingIngredientCount = 0,
-            unusedIngredientCount = 0,
-            esFavorita = null,
+            unusedIngredientCount = 0
         )
     }
 
@@ -711,8 +706,7 @@ class RecetasViewModel : ViewModel() {
                         glutenFree = document.getBoolean("glutenFree") ?: false,
                         vegan = document.getBoolean("vegan") ?: false,
                         vegetarian = document.getBoolean("vegetarian") ?: false,
-                        date = document.getLong("date") ?: System.currentTimeMillis(),
-                        esFavorita = null,
+                        date = document.getLong("date") ?: System.currentTimeMillis()
                     )
 
                     if (coincidencias == ingredientes.size) {
@@ -854,8 +848,7 @@ class RecetasViewModel : ViewModel() {
                                         date = document.getLong("date") ?: System.currentTimeMillis(),
                                         unusedIngredients = emptyList(),
                                         missingIngredientCount = 0,
-                                        unusedIngredientCount = 0,
-                                        esFavorita = null,
+                                        unusedIngredientCount = 0
                                     )
 
                                     resultados.add(receta)
@@ -974,11 +967,11 @@ class RecetasViewModel : ViewModel() {
                 } else {
                     // Si no está en favoritos, lo añadimos con más información
                     val favoritoData = hashMapOf(
-                        "idReceta" to recetaId,
+                        "id" to recetaId,
                         "title" to title,
                         "image" to image,
                         "date" to Timestamp.now(),
-                        "user" to userReceta
+                        "userId" to userReceta
                     )
 
                     favoritosRef.document(recetaId).set(favoritoData)
@@ -1010,7 +1003,7 @@ class RecetasViewModel : ViewModel() {
             title = title,
             image = image,
             date = Timestamp.now(),
-            userReceta = userReceta
+            userId = userReceta
         )
 
         historialRef.add(historialEntry)
@@ -1049,12 +1042,12 @@ class RecetasViewModel : ViewModel() {
                         val title = document.getString("title")
                         val image = document.getString("image") ?: ""
                         val date = document.getTimestamp("date")
-                        val userId = document.getString("userReceta") ?: "" //OJO PORQUE ES userReceta
+                        val userId = document.getString("userId") ?: ""
 
                         Log.d("RecetasViewModel", "Receta encontrada: id=$recetaId, title=$title, date=$date, uid=$userId")
 
                         if (recetaId != null && title != null && date != null) {
-                            RecetaSimple(id = recetaId, title = title, image = image, date = date, userReceta = userId )
+                            RecetaSimple(id = recetaId, title = title, image = image, date = date, userId = userId )
                         } else null
                     }
                     _recetasHistorial.value = recetas
@@ -1089,11 +1082,11 @@ class RecetasViewModel : ViewModel() {
             .addOnSuccessListener { snapshot ->
                 if (!snapshot.isEmpty) {
                     val recetas = snapshot.documents.mapNotNull { document ->
-                        val recetaId = document.getString("idReceta")
+                        val recetaId = document.getString("id")
                         val title = document.getString("title")
                         val image = document.getString("image") ?: ""
                         val date = document.getTimestamp("date")
-                        val userId = document.getString("user") ?: ""
+                        val userId = document.getString("userId") ?: ""
 
                         if (recetaId != null && title != null && date != null) {
                             RecetaSimple(
@@ -1101,7 +1094,7 @@ class RecetasViewModel : ViewModel() {
                                 title = title,
                                 image = image,
                                 date = date,
-                                userReceta = userId
+                                userId = userId
                             )
                         } else {
                             null
@@ -1241,30 +1234,7 @@ class RecetasViewModel : ViewModel() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     //API
-
-    //borrar: olivas, mutton, surimi porq no hay recetas cone sos ingredientes
     val ingredients = "avocado,cayenne,cauliflower head,celery,carrots,celery stalk,cheddar,cherries," +
             "almond,cherry tomato,chickpea,chicken,chicken breast,chicken broth,chicken " +
             "sausage,chicken thigh,chili pepper,chocolate,baking powder,cilantro,cinnamon,cocoa powder," +
@@ -1273,14 +1243,14 @@ class RecetasViewModel : ViewModel() {
             "eggplant,chocolate chips,evaporated milk,extra virgin olive oil,feta cheese,firm brown sugar,fish sauce," +
             "flour,parsley,ginger,garlic,garlic powder,gelatin,goat cheese,gorgonzola,greek yogurt,green bean,ground beef," +
             "ground cinnamon,ground ginger,ground pepper,ground pork,ham,honey,jalapeño,rice,kidney beans,leek,lime,macaroni," +
-            "mascarpone,milk,mint,mushroom,mustard,mutton,navy beans,oats,oat,olive oil,onion,orange,lettuce," +
+            "mascarpone,milk,mint,mushroom,mustard,navy beans,oats,oat,olive oil,onion,orange,lettuce," +
             "oregano,breadcrumbs,parmesan cheese,peaches,pear,peas,pepper,pie crust,pineapple,banana,pork tenderloin,potato," +
             "powdered milk,prawns,bread,quinoa,radish,raisins,raspberry jam,red wine,salad oil,salmon,salt,sausage,scallion," +
             "shrimp,soy sauce,spinach,onion,squash,sugar,sundried tomatoes,sweet potato,tomato,tomato paste,tomato sauce," +
             "tuna,vanilla,vanilla extract,vegetable broth,vegetable oil,vinegar,nuts,water,white wine,bell pepper,yogurt," +
-            "lentils,corn,collard greens,olivas,zucchini,beef,apple,apples,hake,anchovies,cucumber,mayonnaise,ketchup," +
+            "lentils,corn,collard greens,zucchini,beef,apple,apples,hake,anchovies,cucumber,mayonnaise,ketchup," +
             "chard,pumpkin,lemon,cabbage,octopus,strawberries,squid,cod,trout,sea bream,sardines,white fish,smoked salmon," +
-            "surimi,clams,pork,lamb,turkey,quail,ground meat"
+            "clams,pork,lamb,turkey,quail,ground meat"
 
     fun eliminarRecetasNoExistentesEnBulkRecetas() {
         viewModelScope.launch {
@@ -1336,7 +1306,7 @@ class RecetasViewModel : ViewModel() {
             "eggplant", "evaporated milk", "extra virgin olive oil", "feta cheese", "firm brown sugar", "fish sauce", "flour", "parsley",
             "ginger", "garlic", "garlic powder", "gelatin", "goat cheese", "gorgonzola", "greek yogurt", "green bean", "ground beef",
             "ground cinnamon", "ground ginger", "ground pepper", "ground pork", "ham", "honey", "jalapeño", "rice", "kidney beans",
-            "leek", "lime", "macaroni", "mascarpone", "milk", "mint", "mushroom", "mustard", "mutton", "navy beans", "oats", "olive oil",
+            "leek", "lime", "macaroni", "mascarpone", "milk", "mint", "mushroom", "mustard", "navy beans", "oats", "olive oil",
             "onion", "orange", "lettuce", "oregano", "breadcrumbs", "parmesan cheese", "peaches", "pear", "peas", "pepper", "pie crust",
             "pineapple", "banana", "pork tenderloin", "potato", "powdered milk", "prawns", "bread", "quinoa", "radish", "raisins",
             "raspberry jam", "red wine", "salad oil", "salmon", "salt", "sausage", "scallion", "shrimp", "spinach", "squash", "sugar",
@@ -1344,7 +1314,7 @@ class RecetasViewModel : ViewModel() {
             "vegetable broth", "vegetable oil", "nuts", "water", "white wine", "bell pepper", "yogurt", "lentils", "corn", "collard greens",
             "olives", "zucchini", "beef", "apple", "apples", "hake", "anchovies", "cucumber", "mayonnaise", "ketchup", "chard", "pumpkin",
             "lemon", "cabbage", "octopus", "strawberries", "squid", "cod", "trout", "sea bream", "sardines", "white fish", "smoked salmon",
-            "surimi", "clams", "pork", "lamb", "turkey", "quail", "ground meat"
+            "clams", "pork", "lamb", "turkey", "quail", "ground meat"
         )
 
         db.collection("bulkRecetas").get().addOnSuccessListener { result ->

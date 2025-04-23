@@ -1,16 +1,12 @@
 package com.example.recipeat.ui.screens
 
-
-
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -30,9 +26,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.example.recipeat.R
 import com.example.recipeat.data.model.User
@@ -78,7 +71,6 @@ fun EditProfileScreen(
                 userState = user
                 newUsername = user?.username ?: ""
                 newEmail = user?.email ?: ""
-                //newImage = user?.image ?: ""
                 bitmap = usersViewModel.loadImageFromFile(context, null)
             }
         }
@@ -102,7 +94,6 @@ fun EditProfileScreen(
         topBar = {
             AppBar(
                 title = "",
-                navController = navController,
                 onBackPressed = { navController.popBackStack() }
             )
         }
@@ -198,7 +189,6 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val context = LocalContext.current
             //Botón para guardar los cambios
             Button(
                 enabled = isConnected,
@@ -214,7 +204,8 @@ fun EditProfileScreen(
                                         "Profile updated successfully!",
                                         Toast.LENGTH_SHORT
                                     ).show()
-                                    navController.navigate(BottomNavItem.Profile.route)
+                                    navController.popBackStack()
+                                    //navController.navigate(BottomNavItem.Profile.route)
                                 } else {
                                     Toast.makeText(
                                         context,

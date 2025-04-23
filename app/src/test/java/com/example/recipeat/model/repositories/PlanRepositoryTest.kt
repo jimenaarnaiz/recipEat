@@ -1,4 +1,4 @@
-package com.example.recipeat.ui.repositories
+package com.example.recipeat.model.repositories
 
 import com.example.recipeat.data.repository.PlanRepository
 import io.mockk.*

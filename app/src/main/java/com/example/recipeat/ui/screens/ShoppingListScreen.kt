@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -48,12 +49,10 @@ fun ShoppingListScreen(
     // Observamos el estado de conectividad
     val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
-
     Scaffold(
         topBar = {
             AppBar(
-                "Shopping List", navController,
-                onBackPressed = { navController.popBackStack() },
+                "Shopping List", onBackPressed = { navController.popBackStack() },
             )
         }
     ) { paddingValues ->

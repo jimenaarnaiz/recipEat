@@ -14,7 +14,7 @@ import com.example.recipeat.data.model.converters.IngredienteListConverter
 import com.example.recipeat.data.model.converters.StepsTypeDishListConverter
 import com.example.recipeat.data.model.converters.TimestampConverter
 
-@Database(entities = [Receta::class, Favorito::class], version = 7) //cambiar de vers si se cambia algo de la db
+@Database(entities = [Receta::class, Favorito::class], version = 8) //cambiar de vers si se cambia algo de la db
 @TypeConverters(IngredienteListConverter::class, StepsTypeDishListConverter::class, IngSimpleListConverter::class, TimestampConverter::class)
 
 abstract class AppDatabase : RoomDatabase() {

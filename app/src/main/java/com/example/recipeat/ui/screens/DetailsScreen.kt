@@ -97,8 +97,7 @@ fun DetailsScreen(
                 )
             } else {
                 AppBar(
-                    title = "", navController = navController,
-                    onBackPressed = { navController.popBackStack() }
+                    title = "", onBackPressed = { navController.popBackStack() }
                 )
             }
         }
@@ -145,7 +144,7 @@ fun DetailsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${recetaDetalle.title} ${recetaDetalle.esFavorita}",
+                        text = "${recetaDetalle.title}",
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.weight(1f)
                     )

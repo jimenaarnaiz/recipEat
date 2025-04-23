@@ -161,8 +161,7 @@ fun AddRecipe(
     Scaffold(
         topBar = {
             AppBar(
-                "Create your recipe", navController,
-                onBackPressed = { navController.popBackStack() },
+                "Create your recipe", onBackPressed = { navController.popBackStack() },
             )
         }
     ) { paddingValues ->
@@ -307,8 +306,7 @@ fun AddRecipe(
                                 date = System.currentTimeMillis(),
                                 unusedIngredients = emptyList(),
                                 missingIngredientCount = 0,
-                                unusedIngredientCount = 0,
-                                esFavorita = null,
+                                unusedIngredientCount = 0
                             )
                             if (uid != null) {
                                 recetasViewModel.addMyRecipe(

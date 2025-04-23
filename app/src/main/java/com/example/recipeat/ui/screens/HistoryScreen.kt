@@ -133,7 +133,6 @@ fun HistoryScreen(
         topBar = {
             AppBar(
                 title = "My Cook History",
-                navController = navController,
                 onBackPressed = { navController.popBackStack() }
             )
         }
@@ -222,7 +221,7 @@ fun HistoryScreen(
                                 title = receta.title,
                                 image = receta.image,
                                 navController = navController,
-                                esDeUser = receta.userReceta.isNotBlank(),
+                                esDeUser = receta.userId.isNotBlank(),
                                 usersViewModel = usersViewModel
                             )
                         }

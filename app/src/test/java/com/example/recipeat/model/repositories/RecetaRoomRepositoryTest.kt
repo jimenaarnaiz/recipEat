@@ -1,4 +1,4 @@
-package com.example.recipeat.ui.repositories
+package com.example.recipeat.model.repositories
 
 import android.util.Log
 import com.example.recipeat.data.dao.FavoritoDao

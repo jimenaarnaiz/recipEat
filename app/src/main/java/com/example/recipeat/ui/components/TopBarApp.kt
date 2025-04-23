@@ -18,12 +18,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.recipeat.ui.theme.LightYellow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppBar(title: String, navController: NavController, onBackPressed: () -> Unit ) {
+fun AppBar(title: String, onBackPressed: () -> Unit) {
     TopAppBar(
         title = {
             Box(

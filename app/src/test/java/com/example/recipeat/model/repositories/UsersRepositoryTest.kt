@@ -1,4 +1,4 @@
-package com.example.recipeat.ui.repositories
+package com.example.recipeat.model.repositories
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -70,9 +70,10 @@ class UserRepositoryTest {
     }
 
 
+    //tests del login
+
     @Test
     fun `login with valid credentials should return success`() = runTest {
-        // Arrange
         val validEmail = "test@example.com"
         val validPassword = "password123"
 
@@ -104,7 +105,7 @@ class UserRepositoryTest {
 
     @Test
     fun `login with empty password should return error message`() = runTest {
-        // Arrange
+
         val email = "test@example.com"
         val emptyPassword = ""
 
@@ -125,7 +126,7 @@ class UserRepositoryTest {
 
     @Test
     fun `login with empty email should return error message`() = runTest {
-        // Arrange
+
         val email = ""
         val emptyPassword = "12837hj"
 

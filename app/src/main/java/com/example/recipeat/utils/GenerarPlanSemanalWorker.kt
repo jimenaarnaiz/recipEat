@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.recipeat.data.repository.PlanRepository
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.util.concurrent.TimeUnit
@@ -27,33 +28,26 @@ class PlanSemanalWorker(
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
 
+    private val planRepository = PlanRepository() // Instancia del repositorio
 
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun doWork(): Result {
         Log.d("PlanSemanalWorker", "Worker ejecutado")
 
         // Verifica si el usuario está autenticado
-        val applicationContext = applicationContext as Application
+        //val applicationContext = applicationContext as Application
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure()
 
         Log.d("PlanSemanalWorker", "Usuario autenticado: $userId")
 
-        // Crea un ViewModelStore temporal para poder instanciar el ViewModel
-        val viewModelStore = ViewModelStore()
-
-        // Obtiene el PlanViewModel utilizando ViewModelProvider
-        val planViewModel = ViewModelProvider(
-            object : ViewModelStoreOwner {
-                override val viewModelStore: ViewModelStore
-                    get() = viewModelStore
-            },
-            ViewModelProvider.AndroidViewModelFactory.getInstance(applicationContext)
-        ).get(PlanViewModel::class.java)
-
-        Log.d("PlanSemanalWorker", "Iniciando generación del plan semanal")
-        planViewModel.iniciarGeneracionPlanSemanal(userId)
-
-        return Result.success() // Indica que el trabajo se completó exitosamente
+        // Llama al repositorio para generar el plan semanal
+        try {
+            planRepository.iniciarGeneracionPlanSemanal(userId)
+            return Result.success() // El trabajo fue exitoso
+        } catch (e: Exception) {
+            Log.e("PlanSemanalWorker", "Error generando el plan semanal", e)
+            return Result.failure() // Si algo sale mal, marca el worker como fallido
+        }
     }
 
 

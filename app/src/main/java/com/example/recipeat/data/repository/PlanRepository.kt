@@ -57,8 +57,8 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
     // Función que ejecuta el Worker cada lunes que genera el plan semanal
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun iniciarGeneracionPlanSemanal(userId: String) {
-        if (esLunes()) {
-            Log.d("PlanSemanal", "Hoy es lunes, actualizando el plan semanal...")
+        Log.d("PlanSemanal", "Worker...")
+            Log.d("PlanSemanal", "Actualizando el plan semanal")
             val recetas = obtenerRecetasFirebase()
             if (recetas.isNotEmpty()) {
                 val planSemanal = generarPlanSemanal(recetas, userId)
@@ -67,9 +67,6 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
             } else {
                 Log.e("PlanSemanal", "No se encontraron recetas para generar el plan")
             }
-        } else {
-            Log.d("PlanSemanal", "Hoy no es lunes. No se actualiza el plan semanal.")
-        }
     }
 
 
@@ -678,8 +675,7 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
             date = (document.get("date") as? Long) ?: System.currentTimeMillis(),
             unusedIngredients = emptyList(),
             missingIngredientCount = 0,
-            unusedIngredientCount = 0,
-            esFavorita = null,  // Aquí puedes cambiar según sea necesario
+            unusedIngredientCount = 0
         )
     }
 

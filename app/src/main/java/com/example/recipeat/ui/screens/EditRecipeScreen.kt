@@ -150,8 +150,7 @@ fun EditRecipeScreen(
     Scaffold(
         topBar = {
             AppBar(
-                "Edit your recipe", navController,
-                onBackPressed = { navController.popBackStack() },
+                "Edit your recipe", onBackPressed = { navController.popBackStack() },
             )
         }
     ) { paddingValues ->
@@ -308,8 +307,7 @@ fun EditRecipeScreen(
                                 date = System.currentTimeMillis(),
                                 unusedIngredients = emptyList(),
                                 missingIngredientCount = 0,
-                                unusedIngredientCount = 0,
-                                esFavorita = null,
+                                unusedIngredientCount = 0
                             )
                             recetasViewModel.editMyRecipe(
                                 uid.toString(), newReceta,
@@ -317,7 +315,8 @@ fun EditRecipeScreen(
                                     if (success) {
                                         Log.d("EditRecipe", "Recipe was edited successfully!")
                                         roomViewModel.updateReceta(newReceta)
-                                        navController.navigate(BottomNavItem.MyRecipes.route)
+                                        navController.popBackStack()
+                                        //navController.navigate(BottomNavItem.MyRecipes.route)
                                     } else {
                                         Log.e("EditRecipe", "Error editing recipe: $error")
                                     }

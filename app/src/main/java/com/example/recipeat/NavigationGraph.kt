@@ -108,7 +108,13 @@ fun NavigationGraph(
                     onBottomBarVisibilityChanged(false)
                 }
                 composable("register") {
-                    RegisterScreen(navController, usersViewModel, recetasViewModel, ingredientesViewModel, planViewModel, connectivityViewModel) // Registro
+                    RegisterScreen(
+                        navController,
+                        usersViewModel,
+                        recetasViewModel,
+                        ingredientesViewModel,
+                        planViewModel
+                    ) // Registro
                     onBottomBarVisibilityChanged(false)
                 }
                 composable(BottomNavItem.Home.route) {

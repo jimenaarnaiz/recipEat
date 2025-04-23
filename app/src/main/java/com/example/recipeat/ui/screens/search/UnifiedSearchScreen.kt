@@ -44,7 +44,6 @@ fun UnifiedSearchScreen(
         topBar = {
             AppBar(
                 title = "",
-                navController = navController,
                 onBackPressed = {
                     recetasViewModel.restablecerRecetasSugeridas()
                     ingredientesViewModel.clearIngredientes()

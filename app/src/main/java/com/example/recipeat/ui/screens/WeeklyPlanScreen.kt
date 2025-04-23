@@ -112,10 +112,20 @@ fun WeeklyPlanScreen(
             // Solo intentar cargar el plan si hay conexión y no se ha cargado aún
             LaunchedEffect(uid) {
                 planViewModel.obtenerPlanSemanal(uid.toString())
-                planViewModel.obtenerListaDeLaCompraDeFirebase(uid.toString())
             }
             return
         }
+    }
+
+    // TODO hacer q si se cmbia de user si q se vuelva a ctualziar el plan!!
+    // Solo intentar cargar el plan si hay conexión y no se ha cargado aún
+    LaunchedEffect(uid) {
+        planViewModel.obtenerPlanSemanal(uid.toString())
+    }
+
+    //para que se actualice el estado cuando vuelva a ir a la lista de la compra
+    LaunchedEffect(Unit) {
+        planViewModel.obtenerListaDeLaCompraDeFirebase(uid.toString())
     }
 
     val weeklyPlan = planSemanal!!.weekMeals

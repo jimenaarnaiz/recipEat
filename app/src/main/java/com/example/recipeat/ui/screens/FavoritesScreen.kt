@@ -68,7 +68,6 @@ fun FavoritesScreen(
         topBar = {
             AppBar(
                 title = "My Favorites",
-                navController = navController,
                 onBackPressed = { navController.popBackStack() }
             )
         }
@@ -96,7 +95,7 @@ fun FavoritesScreen(
                             title = receta.title,
                             image = receta.image,
                             navController = navController,
-                            esDeUser = receta.userReceta.isNotBlank(),
+                            esDeUser = receta.userId.isNotBlank(),
                             usersViewModel = usersViewModel
                         )
                     }

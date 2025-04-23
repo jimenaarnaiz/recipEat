@@ -164,12 +164,10 @@ class UserRepository(
 
             return if (document.exists()) {
                 val username = document.getString("username")
-                val profileImageUrl = document.getString("image")
                 val email = document.getString("email")
 
                 User(
                     username = username ?: "",
-                    image = profileImageUrl,
                     email = email ?: ""
                 )
             } else {
