@@ -4,8 +4,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 
 /**
  * Esta clase gestiona la conectividad de la red en la aplicación y proporciona un estado

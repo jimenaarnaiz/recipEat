@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.recipeat.data.repository.IngredienteRepository
 import com.example.recipeat.data.repository.PlanRepository
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.AddRecipe
@@ -38,7 +39,6 @@ import com.example.recipeat.ui.screens.search.UnifiedSearchScreen
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
-import com.example.recipeat.ui.viewmodels.factories.IngredientesViewModelFactory
 import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.factories.PlanViewModelFactory
@@ -72,10 +72,8 @@ fun NavigationGraph(
     // Usar la fábrica para obtener el ViewModel
     val usersViewModel: UsersViewModel = viewModel(factory = usersViewModelFactory)
 
-    // Crear la fábrica para IngredientsViewModel
-    val ingredientesViewModelFactory = IngredientesViewModelFactory()
-    // Usar la fábrica para obtener el ViewModel
-    val ingredientesViewModel: IngredientesViewModel = viewModel(factory = ingredientesViewModelFactory)
+    val ingredienteRepository = IngredienteRepository()
+    val ingredientesViewModel = IngredientesViewModel(ingredienteRepository)
 
     val filtrosViewModel: FiltrosViewModel = viewModel()
     //val planViewModel: PlanViewModel = viewModel()

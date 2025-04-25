@@ -46,14 +46,6 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
     }
 
 
-    // Función para verificar si es lunes para actualizar el plan
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun esLunes(): Boolean {
-        val hoy = LocalDate.now()
-        return hoy.dayOfWeek == DayOfWeek.MONDAY
-    }
-
-
     // Función que ejecuta el Worker cada lunes que genera el plan semanal
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun iniciarGeneracionPlanSemanal(userId: String) {
@@ -96,7 +88,6 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
                 ingredientesList.addAll(receta.ingredients)
             }
         }
-
         return ingredientesList
     }
 

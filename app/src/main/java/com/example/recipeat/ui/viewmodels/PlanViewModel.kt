@@ -22,14 +22,6 @@ class PlanViewModel(application: Application, private val planRepository: PlanRe
     val listaCompra: LiveData<List<IngredienteCompra>> = _listaCompra
 
 
-//    // Llamar a la función que genera el plan semanal si es lunes
-//    @RequiresApi(Build.VERSION_CODES.O)
-//    fun iniciarGeneracionPlanSemanal(userId: String) {
-//        viewModelScope.launch {
-//            planRepository.iniciarGeneracionPlanSemanal(userId)
-//        }
-//    }
-
     // Llamar a la función que genera el plan semanal inicial cuando es la primera vez (se registra) y no es lunes
     @RequiresApi(Build.VERSION_CODES.O)
     fun iniciarGeneracionPlanSemanalInicial(userId: String) {

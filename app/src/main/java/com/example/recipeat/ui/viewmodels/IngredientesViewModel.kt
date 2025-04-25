@@ -2,12 +2,14 @@ package com.example.recipeat.ui.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.recipeat.data.model.IngredienteSimple
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.recipeat.data.repository.IngredienteRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class IngredientesViewModel(private val db: FirebaseFirestore = FirebaseFirestore.getInstance()) : ViewModel() {
+class IngredientesViewModel(private val ingredienteRepository: IngredienteRepository) : ViewModel() {
 
     private val _ingredientesSugeridos = MutableStateFlow<List<IngredienteSimple>>(emptyList())
     val ingredientesSugeridos: MutableStateFlow<List<IngredienteSimple>> = _ingredientesSugeridos
@@ -46,125 +48,159 @@ class IngredientesViewModel(private val db: FirebaseFirestore = FirebaseFirestor
      * Si no existe la colección ingredientes, se guardan los ingredientes
      * obtenidos de las recetas en formato IngredienteSimple
     **/
+//    fun extraerIngredientesYGuardar() {
+//        val recetasCollection = db.collection("recetas")
+//        val ingredientesCollection = db.collection("ingredientes")
+//
+//        // Verificar cuántos documentos hay en "ingredientes" para numerar en orden
+//        ingredientesCollection.get()
+//            .addOnSuccessListener { ingredientesSnapshot ->
+//                if (!ingredientesSnapshot.isEmpty) {
+//                    Log.d("Firestore", "La colección 'ingredientes' ya contiene datos. No se ejecutará nuevamente.")
+//                    return@addOnSuccessListener // Salimos si ya hay datos
+//                }
+//
+//                // Obtener todas las recetas
+//                recetasCollection.get()
+//                    .addOnSuccessListener { recetasSnapshot ->
+//                        val ingredientesSet = mutableSetOf<IngredienteSimple>()
+//
+//                        // Extraer los ingredientes sin duplicados
+//                        for (document in recetasSnapshot.documents) {
+//                            val ingredientsList = document.get("ingredients") as? List<Map<String, Any>> ?: emptyList()
+//
+//                            for (ingredient in ingredientsList) {
+//                                val name = ingredient["name"] as? String ?: ""
+//                                val image = ingredient["image"] as? String ?: ""
+//
+//                                // Filtrar ingredientes cuyo nombre empieza con "add " o "all "
+//                                if (name.isNotEmpty() && !name.startsWith("add ", ignoreCase = true) && !name.startsWith("all ", ignoreCase = true)) {
+//                                    ingredientesSet.add(IngredienteSimple(name, image))
+//                                }
+//                            }
+//                        }
+//
+//                        // Si no hay ingredientes, terminamos aquí
+//                        if (ingredientesSet.isEmpty()) {
+//                            Log.d("Firestore", "No se encontraron ingredientes en las recetas.")
+//                            return@addOnSuccessListener
+//                        }
+//
+//                        // Obtener el número de documentos actuales (0 si la colección no existe aún)
+//                        val startingIndex = ingredientesSnapshot.size() + 1
+//
+//                        // Insertar los ingredientes en la colección con numeración ordenada
+//                        ingredientesSet.sortedBy { it.name }.forEachIndexed { index, ingrediente ->
+//                            val ingredienteData = mapOf(
+//                                "name" to ingrediente.name,
+//                                "image" to ingrediente.image
+//                            )
+//
+//                            val docId = (startingIndex + index).toString() // Mantiene orden sin saltos
+//
+//                            ingredientesCollection.document(docId).set(ingredienteData)
+//                                .addOnSuccessListener {
+//                                    Log.d("Firestore", "Ingrediente ${ingrediente.name} guardado correctamente con ID $docId")
+//                                }
+//                                .addOnFailureListener { e ->
+//                                    Log.e("Firestore", "Error guardando ingrediente ${ingrediente.name}", e)
+//                                }
+//                        }
+//                    }
+//                    .addOnFailureListener { e ->
+//                        Log.e("Firestore", "Error obteniendo recetas", e)
+//                    }
+//            }
+//            .addOnFailureListener { e ->
+//                Log.e("Firestore", "Error verificando colección de ingredientes", e)
+//            }
+//    }
+//
+//
+//    // Métdo para buscar los ingredientes en Firebase
+//    fun buscarIngredientes(terminoBusqueda: String) {
+//        val ingredientesCollection = db.collection("bulkIngredients")
+//
+//        // Filtrar ingredientes que contienen el término de búsqueda en su nombre
+//        ingredientesCollection
+//            .whereGreaterThanOrEqualTo("name", terminoBusqueda)
+//            .whereLessThanOrEqualTo("name", terminoBusqueda + "\uF8FF") // Búsqueda por prefijo
+//            .limit(9) // Limitar los resultados a 9
+//            .get()
+//            .addOnSuccessListener { querySnapshot ->
+//                val ingredientesEncontrados = mutableListOf<IngredienteSimple>()
+//
+//                for (document in querySnapshot.documents) {
+//                    val nombre = document.getString("name") ?: ""
+//                    val imagen = document.getString("image") ?: ""
+//                    // Crear el objeto Ingrediente y añadirlo a la lista
+//                    if (nombre.contains(terminoBusqueda, ignoreCase = true)) {
+//                        ingredientesEncontrados.add(IngredienteSimple(nombre, imagen )
+//                        )
+//                    }
+//                }
+//
+//                // Actualiza el StateFlow con los ingredientes encontrados
+//                _ingredientesSugeridos.value = ingredientesEncontrados
+//            }
+//            .addOnFailureListener { e ->
+//                Log.e("Firestore", "Error al buscar ingredientes", e)
+//                // En caso de error, puedes asignar una lista vacía o manejar el error de alguna manera
+//                _ingredientesSugeridos.value = emptyList()
+//            }
+//    }
+//
+//
+//
+//    fun loadIngredientsFromFirebase() {
+//        db.collection("bulkIngredients") // Suponiendo que la colección se llama 'ingredients'
+//            .get()
+//            .addOnSuccessListener { result ->
+//                // Mapear cada documento de Firebase a un objeto IngredienteSimple
+//                val ingredients = result.mapNotNull { document ->
+//                    val name = document.getString("name") ?: ""
+//                    val image = document.getString("image") ?: ""// Esto podría ser null si no está presente
+//                    IngredienteSimple(name, image)
+//                }
+//                _ingredientesValidos.value = ingredients
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.e("Firebase", "Error getting ingredients from firebase: ", exception)
+//            }
+//    }
+
+
     fun extraerIngredientesYGuardar() {
-        val recetasCollection = db.collection("recetas")
-        val ingredientesCollection = db.collection("ingredientes")
-
-        // Verificar cuántos documentos hay en "ingredientes" para numerar en orden
-        ingredientesCollection.get()
-            .addOnSuccessListener { ingredientesSnapshot ->
-                if (!ingredientesSnapshot.isEmpty) {
-                    Log.d("Firestore", "La colección 'ingredientes' ya contiene datos. No se ejecutará nuevamente.")
-                    return@addOnSuccessListener // Salimos si ya hay datos
-                }
-
-                // Obtener todas las recetas
-                recetasCollection.get()
-                    .addOnSuccessListener { recetasSnapshot ->
-                        val ingredientesSet = mutableSetOf<IngredienteSimple>()
-
-                        // Extraer los ingredientes sin duplicados
-                        for (document in recetasSnapshot.documents) {
-                            val ingredientsList = document.get("ingredients") as? List<Map<String, Any>> ?: emptyList()
-
-                            for (ingredient in ingredientsList) {
-                                val name = ingredient["name"] as? String ?: ""
-                                val image = ingredient["image"] as? String ?: ""
-
-                                // Filtrar ingredientes cuyo nombre empieza con "add " o "all "
-                                if (name.isNotEmpty() && !name.startsWith("add ", ignoreCase = true) && !name.startsWith("all ", ignoreCase = true)) {
-                                    ingredientesSet.add(IngredienteSimple(name, image))
-                                }
-                            }
-                        }
-
-                        // Si no hay ingredientes, terminamos aquí
-                        if (ingredientesSet.isEmpty()) {
-                            Log.d("Firestore", "No se encontraron ingredientes en las recetas.")
-                            return@addOnSuccessListener
-                        }
-
-                        // Obtener el número de documentos actuales (0 si la colección no existe aún)
-                        val startingIndex = ingredientesSnapshot.size() + 1
-
-                        // Insertar los ingredientes en la colección con numeración ordenada
-                        ingredientesSet.sortedBy { it.name }.forEachIndexed { index, ingrediente ->
-                            val ingredienteData = mapOf(
-                                "name" to ingrediente.name,
-                                "image" to ingrediente.image
-                            )
-
-                            val docId = (startingIndex + index).toString() // Mantiene orden sin saltos
-
-                            ingredientesCollection.document(docId).set(ingredienteData)
-                                .addOnSuccessListener {
-                                    Log.d("Firestore", "Ingrediente ${ingrediente.name} guardado correctamente con ID $docId")
-                                }
-                                .addOnFailureListener { e ->
-                                    Log.e("Firestore", "Error guardando ingrediente ${ingrediente.name}", e)
-                                }
-                        }
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e("Firestore", "Error obteniendo recetas", e)
-                    }
+        viewModelScope.launch {
+            try {
+                ingredienteRepository.extraerIngredientesYGuardar()
+            } catch (e: Exception) {
+                Log.e("ViewModel", "Error al extraer y guardar ingredientes", e)
             }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Error verificando colección de ingredientes", e)
-            }
+        }
     }
 
-
-    // Métdo para buscar los ingredientes en Firebase
     fun buscarIngredientes(terminoBusqueda: String) {
-        val ingredientesCollection = db.collection("bulkIngredients")
-
-        // Filtrar ingredientes que contienen el término de búsqueda en su nombre
-        ingredientesCollection
-            .whereGreaterThanOrEqualTo("name", terminoBusqueda)
-            .whereLessThanOrEqualTo("name", terminoBusqueda + "\uF8FF") // Búsqueda por prefijo
-            .limit(9) // Limitar los resultados a 9
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                val ingredientesEncontrados = mutableListOf<IngredienteSimple>()
-
-                for (document in querySnapshot.documents) {
-                    val nombre = document.getString("name") ?: ""
-                    val imagen = document.getString("image") ?: ""
-                    // Crear el objeto Ingrediente y añadirlo a la lista
-                    if (nombre.contains(terminoBusqueda, ignoreCase = true)) {
-                        ingredientesEncontrados.add(IngredienteSimple(nombre, imagen )
-                        )
-                    }
-                }
-
-                // Actualiza el StateFlow con los ingredientes encontrados
-                _ingredientesSugeridos.value = ingredientesEncontrados
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Error al buscar ingredientes", e)
-                // En caso de error, puedes asignar una lista vacía o manejar el error de alguna manera
+        viewModelScope.launch {
+            try {
+                val resultados = ingredienteRepository.buscarIngredientes(terminoBusqueda)
+                _ingredientesSugeridos.value = resultados
+            } catch (e: Exception) {
+                Log.e("ViewModel", "Error al buscar ingredientes", e)
                 _ingredientesSugeridos.value = emptyList()
             }
+        }
     }
 
-
-
     fun loadIngredientsFromFirebase() {
-        db.collection("bulkIngredients") // Suponiendo que la colección se llama 'ingredients'
-            .get()
-            .addOnSuccessListener { result ->
-                // Mapear cada documento de Firebase a un objeto IngredienteSimple
-                val ingredients = result.mapNotNull { document ->
-                    val name = document.getString("name") ?: ""
-                    val image = document.getString("image") ?: ""// Esto podría ser null si no está presente
-                    IngredienteSimple(name, image)
-                }
-                _ingredientesValidos.value = ingredients
+        viewModelScope.launch {
+            try {
+                val ingredientes = ingredienteRepository.loadIngredientsFromFirebase()
+                _ingredientesValidos.value = ingredientes
+            } catch (e: Exception) {
+                Log.e("ViewModel", "Error al cargar ingredientes válidos", e)
             }
-            .addOnFailureListener { exception ->
-                Log.e("Firebase", "Error getting ingredients from firebase: ", exception)
-            }
+        }
     }
 
 
