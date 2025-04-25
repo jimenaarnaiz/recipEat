@@ -1,9 +1,19 @@
 package com.example.recipeat.ui.viewmodels
 
+import android.util.Log
 import com.example.recipeat.data.model.IngredienteSimple
+import com.example.recipeat.data.repository.IngredienteRepository
 import com.google.firebase.firestore.FirebaseFirestore
+import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -12,11 +22,18 @@ class IngredientesViewModelTest {
 
     private lateinit var firestoreMock: FirebaseFirestore
     private lateinit var mockIngredientesViewModel: IngredientesViewModel
+    private lateinit var mockIngredientesRepository: IngredienteRepository
 
+    private val testDispatcher = StandardTestDispatcher()
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Before
     fun setUp() {
+        Dispatchers.setMain(testDispatcher)
         firestoreMock = mockk()
-        mockIngredientesViewModel = IngredientesViewModel(db = firestoreMock)
+        mockIngredientesRepository = mockk()
+        mockIngredientesViewModel = IngredientesViewModel(mockIngredientesRepository)
     }
 
     @Test
@@ -56,6 +73,48 @@ class IngredientesViewModelTest {
         mockIngredientesViewModel.clearIngredientesSugeridos()
 
         assertTrue(mockIngredientesViewModel.ingredientesSugeridos.value.isEmpty())
+    }
+
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `buscarIngredientes should update _ingredientesSugeridos with the result`() = runTest {
+        // Datos simulados de ingredientes
+        val ingredientesSimulados = listOf(
+            IngredienteSimple("tomato", "tomato_image"),
+            IngredienteSimple("toast", "toast_image")
+        )
+
+        // Simular el comportamiento del repositorio
+        coEvery { mockIngredientesRepository.buscarIngredientes("to") } returns ingredientesSimulados
+
+        // Llamar al métdo
+        mockIngredientesViewModel.buscarIngredientes("to")
+
+        advanceUntilIdle() // Esto avanza todas las tareas pendientes
+
+        // Verificar que el estado de ingredientesSugeridos se haya actualizado correctamente
+        assertEquals(ingredientesSimulados, mockIngredientesViewModel.ingredientesSugeridos.value)
+    }
+
+
+    @Test
+    fun `loadIngredientsFromFirebase should handle exception and set empty list on error`() = runTest {
+        // Mockear Log() para que no lance excepciones en las pruebas
+        mockkStatic(Log::class)
+        every { Log.d(any(), any()) } returns 0
+        every { Log.w(any<String>(), any<String>()) } returns 0
+        every { Log.e(any(), any()) } returns 0
+        every { Log.e(any(), any(), any()) } returns 0
+
+        // Simular que el repositorio lanza una excepción
+        coEvery { mockIngredientesRepository.loadIngredientsFromFirebase() } throws Exception("Error al cargar ingredientes")
+
+        mockIngredientesViewModel.loadIngredientsFromFirebase()
+
+        // Verificar que el estado de _ingredientesValidos se haya actualizado a una lista vacía
+        assertTrue(mockIngredientesViewModel.ingredientesValidos.value.isEmpty())
     }
 
 
