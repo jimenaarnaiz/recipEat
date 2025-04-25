@@ -21,7 +21,7 @@ desperdicio de alimentos.
 
 ## 🔨Funcionalidades del proyecto
 
-- `Gestión de recetas`: Los usuarios pueden explorar recetas en la pantalla de inicio, buscan recetas filtradas por ingredientes o por título y ven los detalles de cada receta. También pueden agregar recetas a sus favoritos y añadirlas al historial de cocina.
+- `Gestión de recetas`: Los usuarios pueden explorar recetas en la pantalla de inicio, buscan recetas filtradas por ingredientes o por título y ver los detalles de cada receta. También pueden agregar recetas a sus favoritos y añadirlas al historial de cocina.
 - `Historial de cocina`: La aplicación registra las recetas cocinadas por el usuario, mostrando las recetas cocinadas en los últimos 7 o 30 días, y facilitando el acceso rápido a las más recientes.
 - `Búsqueda por ingredientes`: Incluye una funcionalidad de búsqueda de ingredientes con autocompletado, que permite a los usuarios seleccionar varios ingredientes y obtener recetas que contengan esos ingredientes (todos o algunos de ellos).
 - `Creación y gestión de recetas personalizadas`: Los usuarios pueden crear sus propias recetas, agregando imagen, tiempo de preparación, raciones, ingredientes, pasos y ocasión. Además, pueden editar o eliminar estas recetas.
