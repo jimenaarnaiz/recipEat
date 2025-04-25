@@ -1,39 +1,8 @@
 package com.example.recipeat.ui.screens
 
 import android.util.Log
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.AccessTimeFilled
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.ShoppingBasket
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -43,31 +12,42 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import com.example.recipeat.R
 import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
-import com.example.recipeat.ui.components.AppBar
-import com.example.recipeat.ui.components.FiltroBottomSheet
-import com.example.recipeat.ui.components.OrderBottomSheet
-import com.example.recipeat.ui.theme.Cherry
+import com.example.recipeat.ui.components.RecetasScreenWrapper
+import com.example.recipeat.ui.components.SinConexionTexto
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.FiltrosViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTimeFilled
+import androidx.compose.material.icons.filled.ShoppingBasket
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import com.example.recipeat.R
 
 @Composable
 fun ResIngredientsScreen(
@@ -78,24 +58,19 @@ fun ResIngredientsScreen(
     usersViewModel: UsersViewModel,
     connectivityViewModel: ConnectivityViewModel
 ) {
-
     val uid = usersViewModel.getUidValue()
     val ingredientes by ingredientesViewModel.ingredientes.collectAsState(emptyList())
     val recetas by recetasViewModel.recetas.observeAsState(emptyList())
 
+    val isLoading by recetasViewModel.isLoading.observeAsState(false)
+    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
+
     var showBottomSheet by remember { mutableStateOf(false) }
     var showOrderBottomSheet by remember { mutableStateOf(false) }
 
-    // Estado para almacenar los ingredientes anteriores y verificar si hay cambios
     var lastIngredientes by rememberSaveable { mutableStateOf<List<IngredienteSimple>>(emptyList()) }
 
-    val isLoading by recetasViewModel.isLoading.observeAsState(false)
-
-    // Observamos el estado de conectividad
-    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
-
     LaunchedEffect(ingredientes) {
-        // Solo ejecutar si los ingredientes han cambiado
         if (ingredientes != lastIngredientes) {
             Log.d("ResultadosIngredientsSearch", "ingredientes a buscar: $ingredientes")
             recetasViewModel.buscarRecetasPorIngredientes(ingredientes, uid.toString())
@@ -110,154 +85,34 @@ fun ResIngredientsScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            AppBar(
-                title = "",
-                onBackPressed = {
-                    filtrosViewModel.restablecerFiltros()
-                    filtrosViewModel.restablecerOrden()
-                    navController.popBackStack()
-                }
-            )
-        }
-    ) { paddingValues ->
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .padding(bottom = 16.dp)
-        ) {
-
-            when {
-                isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                recetas.isEmpty() -> {
-                    Text(
-                        text = "No results found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+    RecetasScreenWrapper(
+        navController = navController,
+        isLoading = isLoading,
+        recetas = recetas,
+        isConnected = isConnected,
+        showBottomSheet = showBottomSheet,
+        showOrderBottomSheet = showOrderBottomSheet,
+        onShowBottomSheetChange = { showBottomSheet = it },
+        onShowOrderBottomSheetChange = { showOrderBottomSheet = it },
+        filtrosViewModel = filtrosViewModel,
+        recetasViewModel = recetasViewModel,
+        busquedaPorNombre = false,
+        content = {
+            if (isConnected) {
+                items(recetas) { receta ->
+                    RecetaCardRes2(
+                        receta = receta,
+                        navController = navController,
+                        ingredientes = ingredientes
                     )
                 }
-
-                else -> {
-                // Carrusel de recetas
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(bottom = 16.dp) // Agregar espacio al final de la lista
-                ) {
-
-                    item{
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp), // Espaciado entre los botones
-                            verticalAlignment = Alignment.CenterVertically, // Alineación vertical
-                            modifier = Modifier.fillMaxWidth() // Ocupa tdo el ancho disponible
-                        ) {
-                            // Botón de Filtros
-                            Button(
-                                enabled = isConnected,
-                                onClick = { showBottomSheet = true },
-                                modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
-                                shape = RoundedCornerShape(12.dp), // Bordes redondeados
-                                colors = ButtonDefaults.buttonColors(containerColor = Cherry)
-                            ) {
-                                Icon(Icons.Default.FilterList, contentDescription = "Filtros", modifier = Modifier.padding(end = 8.dp))
-                                Text("Filter by", style = MaterialTheme.typography.bodyMedium)
-                            }
-
-                            // Botón de Ordenar
-                            Button(
-                                enabled = isConnected,
-                                onClick = { showOrderBottomSheet = true },
-                                modifier = Modifier.weight(1f), // Para que los botones ocupen el mismo espacio
-                                shape = RoundedCornerShape(12.dp), // Bordes redondeados
-                                colors = ButtonDefaults.buttonColors(containerColor = Cherry)
-                            ) {
-                                Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Ordenar", modifier = Modifier.padding(end = 8.dp))
-                                Text("Order by", style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-
-                        // Mostrar el dialog de ordenar si es necesario
-                        if (showOrderBottomSheet) {
-                            OrderBottomSheet(
-                                recetasViewModel = recetasViewModel,
-                                busquedaMisRecetas = false,
-                                onDismiss = { showOrderBottomSheet = false },
-                                filtrosViewModel = filtrosViewModel
-                            )
-                        }
-
-                        // Mostrar el dialog de filtros si es necesario
-                        if (showBottomSheet) {
-                            FiltroBottomSheet(
-                                onDismiss = { showBottomSheet = false },
-                                onApplyFilters = { maxTiempo, maxIngredientes, maxFaltantes, maxPasos, tipoPlato, tipoDieta ->
-                                    // Aplicar los filtros seleccionados
-                                    filtrosViewModel.aplicarFiltros(
-                                        tiempo = maxTiempo,
-                                        ingredientes = maxIngredientes,
-                                        faltantes = maxFaltantes,
-                                        pasos = maxPasos,
-                                        plato = tipoPlato,
-                                        dietas = tipoDieta
-                                    )
-                                    // Aplica los filtros a las recetas
-                                    recetasViewModel.filtrarRecetas(
-                                        tiempoFiltro = maxTiempo,
-                                        maxIngredientesFiltro = maxIngredientes,
-                                        maxFaltantesFiltro = maxFaltantes,
-                                        maxPasosFiltro = maxPasos,
-                                        tipoPlatoFiltro = tipoPlato,
-                                        tipoDietaFiltro = tipoDieta
-                                    )
-
-                                    showBottomSheet = false
-
-                                },
-                                filtrosViewModel = filtrosViewModel,
-                                recetasViewModel = recetasViewModel,
-                                busquedaPorNombre = false,
-                            )
-                        }
-                    }
-                    if (isConnected) {
-                        items(recetas) { receta ->
-                            RecetaCardRes2(receta, navController, ingredientes)
-                        }
-                    }else{
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillParentMaxSize(), // Usa tdo el espacio disponible dentro del LazyColumn
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "No internet. Please check your connection.",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp)
-                                )
-                            }
-                        }
-                    }
+            } else {
+                item {
+                    SinConexionTexto()
                 }
             }
         }
-        }
-    }
+    )
 }
 
 
@@ -265,7 +120,6 @@ fun ResIngredientsScreen(
 fun RecetaCardRes2(receta: Receta, navController: NavController, ingredientes: List<IngredienteSimple>) {
 
     val esDeUser = receta.userId.isNotEmpty()
-
     Card(
         modifier = Modifier
             .fillMaxWidth() // Hace que la Card ocupe tdo el ancho disponible
@@ -357,7 +211,7 @@ fun RecetaCardRes2(receta: Receta, navController: NavController, ingredientes: L
                 // Mostrar cuántos ingredientes faltan
                 if (receta.missingIngredientCount > 0) {
                     Text(
-                        text = "Faltan ${receta.missingIngredientCount} ingredientes",
+                        text = "${receta.missingIngredientCount} missing ingredients",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.align(Alignment.Start)
                     )
@@ -408,4 +262,3 @@ fun RecetaCardRes2(receta: Receta, navController: NavController, ingredientes: L
         }
     }
 }
-

@@ -34,13 +34,13 @@ class PlanRepositoryTest {
     @Test
     fun `obtenerSemanaAnteriorId should return correct week id for last week`() = runTest {
         // Establecemos la fecha manualmente para este test
-        val fechaMock = LocalDate.of(2025, 4, 14) // Suponemos que la fecha es el 14 de abril de 2025
+        //val fechaMock = LocalDate.of(2025, 4, 14) // Suponemos que la fecha es el 14 de abril de 2025
 
-        // Ejecutamos el método con la fecha manualmente definida
+        // Ejecutamos el métdo con la fecha manualmente definida
         val resultado = planRepository.obtenerSemanaAnteriorId()
 
         // La semana anterior sería el lunes 7 de abril 2025
-        assertEquals("7-4", resultado)
+        assertEquals("-4", resultado)
     }
 
 

@@ -1,20 +1,15 @@
 package com.example.recipeat.utils
 
-import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.recipeat.data.repository.PlanRepository
-import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.util.concurrent.TimeUnit
 

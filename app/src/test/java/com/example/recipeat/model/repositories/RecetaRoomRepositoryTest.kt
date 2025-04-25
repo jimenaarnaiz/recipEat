@@ -45,8 +45,7 @@ class RecetaRoomRepositoryTest {
         date = System.currentTimeMillis(),
         unusedIngredients = emptyList(),
         missingIngredientCount = 0,
-        unusedIngredientCount = 0,
-        esFavorita = false
+        unusedIngredientCount = 0
     )
     private val receta2 = Receta(
         id = "r2",
@@ -65,7 +64,6 @@ class RecetaRoomRepositoryTest {
         unusedIngredients = emptyList(),
         missingIngredientCount = 0,
         unusedIngredientCount = 0,
-        esFavorita = false
     )
 
     private val testDispatcher = StandardTestDispatcher()
