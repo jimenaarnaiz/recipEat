@@ -99,7 +99,8 @@ fun MyRecipesScreen(
             if (isConnected) { //solo se muestra si hay conexión
                 FloatingActionButton(
                     onClick = { navController.navigate("add_recipe")
-                        prefs.edit().remove("recetas_home_guardadas_${userId.toString()}").apply()}, //TODO QUITARLO AL ACABAR PRUEBAS
+                        //prefs.edit().remove("recetas_home_guardadas_${userId.toString()}").apply()
+                    },
                     containerColor = Cherry,
                     modifier = Modifier
                         .padding(bottom = 80.dp) // padding debajo para q no quede opacado por la bottom bar

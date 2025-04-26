@@ -20,12 +20,11 @@ interface RecienteDao {
 
 
     @Query("""
-    SELECT recetaId 
-    FROM recientes 
+    SELECT recetaId FROM recientes 
     WHERE userId = :userId 
     ORDER BY fechaVista ASC 
     LIMIT 1
-""")
+    """)
     suspend fun obtenerIdRecetaMasAntigua(userId: String): String?
 
 

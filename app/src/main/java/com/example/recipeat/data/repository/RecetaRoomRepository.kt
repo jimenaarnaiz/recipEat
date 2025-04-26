@@ -14,9 +14,7 @@ class RecetaRoomRepository(
     private val favoritoDao: FavoritoDao,
     private val recienteDao: RecienteDao
 ) {
-
     private val _limiteRecientes = 15
-
 
     // Obtener todas las recetas
     suspend fun getAllRecetas(): List<Receta> {

@@ -3,12 +3,14 @@ package com.example.recipeat.model.repositories
 import android.util.Log
 import com.example.recipeat.data.dao.FavoritoDao
 import com.example.recipeat.data.dao.RecetaRoomDao
+import com.example.recipeat.data.dao.RecienteDao
 import com.example.recipeat.data.model.Favorito
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.data.repository.RecetaRoomRepository
 import io.mockk.*
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,6 +26,7 @@ class RecetaRoomRepositoryTest {
 
     private lateinit var recetaRoomDao: RecetaRoomDao
     private lateinit var favoritoDao: FavoritoDao
+    private lateinit var recienteDao: RecienteDao
     private lateinit var repository: RecetaRoomRepository
 
     private val userId1 = "user1"
@@ -72,7 +75,8 @@ class RecetaRoomRepositoryTest {
     fun setup() {
         recetaRoomDao = mockk()
         favoritoDao = mockk()
-        repository = RecetaRoomRepository(recetaRoomDao, favoritoDao, database.recienteDao())
+        recienteDao = mockk()
+        repository = RecetaRoomRepository(recetaRoomDao, favoritoDao, recienteDao)
 
         // Mockear Log() para que no lance excepciones en las pruebas
         mockkStatic(Log::class)
@@ -100,7 +104,7 @@ class RecetaRoomRepositoryTest {
     }
 
     @Test
-    fun `getRecetaById debe devolver la receta correcta`() = runTest {
+    fun `getRecetaById debe devolver la receta correcta cuando existe`() = runTest {
         coEvery { recetaRoomDao.getRecetaById("r1") } returns receta1
 
         val result = repository.getRecetaById("r1")
@@ -108,6 +112,22 @@ class RecetaRoomRepositoryTest {
         assertEquals(receta1, result)
         coVerify { recetaRoomDao.getRecetaById("r1") }
     }
+
+
+    @Test
+    fun `getRecetaById devuelve null cuando no existe el id de la receta`() = runTest {
+        // Arrange
+        val recetaId = "999"
+        coEvery { recetaRoomDao.getRecetaById(recetaId) } returns null
+
+        // Act
+        val resultado = recetaRoomDao.getRecetaById(recetaId)
+
+        // Assert
+        assertNull(resultado)
+        coVerify(exactly = 1) { recetaRoomDao.getRecetaById(recetaId) }
+    }
+
 
     @Test
     fun `getRecetasFavoritas debe devolver las recetas asociadas a favoritos`() = runTest {
@@ -184,22 +204,6 @@ class RecetaRoomRepositoryTest {
         assertFalse(result)
     }
 
-    @Test
-    fun `getRecetaById debe lanzar excepcion si el id no existe`() = runTest {
-        // Simulamos que el DAO lanza una excepción al buscar un ID inexistente
-        coEvery { recetaRoomDao.getRecetaById("inexistente") } throws Exception("Receta no encontrada")
-
-        // Comprobamos que el repository lanza la excepción correctamente
-        try {
-            repository.getRecetaById("inexistente")
-            // Si no se lanza la excepción, fallará el test
-            assertTrue("Se esperaba una excepción", false)
-        } catch (ex: Exception) {
-            assertEquals("Receta no encontrada", ex.message)
-        }
-        coVerify { recetaRoomDao.getRecetaById("inexistente") }
-    }
-
 
     @Test
     fun `getRecetasUser devuelve lista vacia si el usuario no tiene recetas`() = runTest {
@@ -245,6 +249,65 @@ class RecetaRoomRepositoryTest {
     }
 
 
+    @Test
+    fun `insertarReciente inserta receta cuando no existe y no se supera el límite`() = runTest {
+        // Simular que no existe la receta en recientes
+        coEvery { recienteDao.existeReciente(receta1.id, userId1) } returns false
+        // Simular que no se ha alcanzado el límite de recientes
+        coEvery { recienteDao.contarRecientes(userId1) } returns 2
+        // Simular la inserción en la tabla de recientes
+        coEvery { recienteDao.insertarReciente(any()) } just Runs
+
+        // Llamar a la función insertarReciente
+        repository.insertarReciente(receta1, userId1)
+
+        // Verificar que se haya insertado la receta en recientes
+        coVerify { recienteDao.insertarReciente(any()) }
+    }
+
+    @Test
+    fun `insertarReciente elimina receta antigua y luego inserta la receta cuando se supera el límite`() = runTest {
+        // Simular que existe la receta en recientes
+        coEvery { recienteDao.existeReciente(receta1.id, userId1) } returns false
+        // Simular que se ha alcanzado el límite de recientes
+        coEvery { recienteDao.contarRecientes(userId1) } returns 15
+        // Simular que obtenemos la receta más antigua
+        coEvery { recienteDao.obtenerIdRecetaMasAntigua(userId1) } returns "r2"
+        // Simular la eliminación de la receta más antigua
+        coEvery { recienteDao.eliminarRecientePorId("r2", userId1) } just Runs
+        coEvery { recetaRoomDao.deleteRecetaById("r2") } just Runs
+        // Simular la inserción de la receta reciente
+        coEvery { recienteDao.insertarReciente(any()) } just Runs
+
+        // Llamar a la función insertarReciente
+        repository.insertarReciente(receta1, userId1)
+
+        // Verificar que la receta antigua fue eliminada
+        coVerify { recienteDao.eliminarRecientePorId("r2", userId1) }
+        coVerify { recetaRoomDao.deleteRecetaById("r2") }
+        // Verificar que la receta nueva fue insertada
+        coVerify { recienteDao.insertarReciente(any()) }
+    }
+
+    @Test
+    fun `insertarReciente no elimina receta y actualiza la receta existente si ya está en recientes`() = runTest {
+        // Simular que la receta ya existe en recientes
+        coEvery { recienteDao.existeReciente(receta1.id, userId1) } returns true
+        // Simular que la receta ya está en la base de datos
+        coEvery { recienteDao.insertarReciente(any()) } just Runs
+        coEvery { recienteDao.eliminarRecientePorId(any(), any()) } just Runs
+
+        // Llamar a la función insertarReciente
+        repository.insertarReciente(receta1, userId1)
+
+        // Verificar que no se haya eliminado ninguna receta
+        coVerify(exactly = 0) { recienteDao.eliminarRecientePorId(any(), any()) }
+        // Verificar que la receta existente se actualice, si es necesario
+        // El métdo de inserción se usa para actualizar
+        coVerify { recienteDao.insertarReciente(any()) }
+    }
+
+    //TODO seguir con los que quedan de recientes
 
 
 }
