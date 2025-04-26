@@ -7,23 +7,28 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.recipeat.data.model.Receta
+import com.example.recipeat.data.model.Reciente
 import com.example.recipeat.data.repository.RecetaRoomRepository
 import kotlinx.coroutines.launch
 import java.sql.SQLException
+import java.sql.Timestamp
 
 class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : ViewModel() {
 
     private val _favoriteRecipesRoom = MutableLiveData<List<Receta>>()
     val favoriteRecipesRoom: LiveData<List<Receta>> get() = _favoriteRecipesRoom
 
-    private var _recipeRoom = MutableLiveData<Receta>()
-    val recipeRoom: LiveData<Receta> get() = _recipeRoom
+    private var _recipeRoom = MutableLiveData<Receta?>()
+    val recipeRoom: LiveData<Receta?> get() = _recipeRoom
 
     private val _userRecipesRoom = MutableLiveData<List<Receta>>()
     val userRecipesRoom: LiveData<List<Receta>> get() = _userRecipesRoom
 
     private val _homeRecipesRoom = MutableLiveData<List<Receta>>()
     val homeRecipesRoom: LiveData<List<Receta>> get() = _homeRecipesRoom
+
+    private val _recientes = MutableLiveData<List<Receta>>()
+    val recientes: LiveData<List<Receta>> get() = _recientes
 
     // Obtener todas las recetas
     fun getAllRecetas() {
@@ -182,32 +187,54 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
     ///NEW
 
     // Obtener recetas para el home
-    fun getRecetasHome() {
+    fun getRecetasHome(context: Context, userId: String) {
         viewModelScope.launch {
             try {
-                Log.d("RoomViewModel", "Obteniendo recetas para el home.")
-                val recetasHome = recetaRoomRepository.getRecetasHome()
-                _homeRecipesRoom.postValue(recetasHome)
-                Log.d("RoomViewModel", "Recetas para el home obtenidas exitosamente.")
+                val prefs = context.getSharedPreferences("prefs_recetas", Context.MODE_PRIVATE)
+                val keyIds = "ids_recetas_home_$userId"
+                val idsGuardados = prefs.getStringSet(keyIds, emptySet())?.toList() ?: emptyList()
+
+                if (idsGuardados.isNotEmpty()) {
+                    Log.d("RoomViewModel", "Buscando recetas con IDs: $idsGuardados")
+                    val recetasHome = recetaRoomRepository.getRecetasHome(userId, idsGuardados)
+                    _homeRecipesRoom.postValue(recetasHome)
+                } else {
+                    Log.d("RoomViewModel", "No hay IDs guardados para el usuario $userId.")
+                    _homeRecipesRoom.postValue(emptyList())
+                }
             } catch (e: Exception) {
                 Log.e("RoomViewModel", "Error al obtener recetas para el home: ${e.message}", e)
             }
         }
     }
 
+
     // Obtener receta por ID
     fun getRecetaById(recetaId: String) {
         viewModelScope.launch {
             try {
                 Log.d("RoomViewModel", "Obteniendo receta por ID: $recetaId")
+
+                // Obtener receta desde el repositorio
                 val receta = recetaRoomRepository.getRecetaById(recetaId)
-                _recipeRoom.value = receta
-                Log.d("RoomViewModel", "Receta con ID $recetaId obtenida exitosamente.")
+
+                // Verificar si la receta existe
+                if (receta != null) {
+                    _recipeRoom.value = receta
+                    Log.d("RoomViewModel", "Receta con ID $recetaId obtenida exitosamente.")
+                } else {
+                    // Si la receta no existe, manejar el caso adecuadamente
+                    Log.e("RoomViewModel", "Receta con ID $recetaId no encontrada.")
+                    _recipeRoom.value = null // O puedes usar un valor predeterminado si es necesario
+                }
+
             } catch (e: Exception) {
                 Log.e("RoomViewModel", "Error al obtener receta por ID $recetaId: ${e.message}", e)
+                _recipeRoom.value = null // O un valor de error o un estado adecuado
             }
         }
     }
+
 
     // Eliminar receta por ID
     fun deleteRecetaById(userId: String, recetaId: String) {
@@ -238,4 +265,45 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
     }
 
 
+    // recientes
+
+    // Agregar receta al historial
+    fun agregarReciente(receta: Receta, userId: String) {
+        viewModelScope.launch {
+            // Verificar si la receta ya está en Room
+            val recetaExistente = recetaRoomRepository.getRecetaById(receta.id)
+
+            // Si no existe en Room, insertarla
+            if (recetaExistente == null) {
+                recetaRoomRepository.insertReceta(receta)
+            }
+
+            recetaRoomRepository.insertarReciente(receta, userId)
+        }
+    }
+
+
+    // Obtener recetas recientes
+    fun obtenerRecientes(userId: String) {
+        viewModelScope.launch {
+            val recetas = recetaRoomRepository.obtenerRecientes(userId)
+            _recientes.postValue(recetas)
+        }
+    }
+
+    // Eliminar todas las recetas recientes
+    fun eliminarRecientes(userId: String) {
+        viewModelScope.launch {
+            recetaRoomRepository.eliminarRecientes(userId)
+        }
+    }
+
+    // Eliminar una receta específica de las recientes
+    fun eliminarRecientePorId(recetaId: String, userId: String) {
+        viewModelScope.launch {
+            recetaRoomRepository.eliminarRecientePorId(recetaId, userId)
+        }
+    }
 }
+
+

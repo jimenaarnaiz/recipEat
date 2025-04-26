@@ -72,7 +72,7 @@ class RecetaRoomRepositoryTest {
     fun setup() {
         recetaRoomDao = mockk()
         favoritoDao = mockk()
-        repository = RecetaRoomRepository(recetaRoomDao, favoritoDao)
+        repository = RecetaRoomRepository(recetaRoomDao, favoritoDao, database.recienteDao())
 
         // Mockear Log() para que no lance excepciones en las pruebas
         mockkStatic(Log::class)

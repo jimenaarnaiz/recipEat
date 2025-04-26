@@ -17,7 +17,7 @@ interface RecetaRoomDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE) // si una receta ya existe, se ignora y no genera error
     suspend fun insertRecetas(recetas: List<Receta>)
 
-    // Eliminar receta por su ID, de manera más explícita
+    // Eliminar receta por su ID
     @Query("DELETE FROM recetas WHERE id = :recetaId")
     suspend fun deleteRecetaById(recetaId: String)
 
@@ -27,7 +27,7 @@ interface RecetaRoomDao {
 
     // Consultar una receta por ID
     @Query("SELECT * FROM recetas WHERE id = :recetaId")
-    suspend fun getRecetaById(recetaId: String): Receta //antes era anullable
+    suspend fun getRecetaById(recetaId: String): Receta? // nullable pq tiene q poder devolver null en caso de error
 
     // Borrar todas las recetas (si es necesario)
     @Query("DELETE FROM recetas")
@@ -35,9 +35,6 @@ interface RecetaRoomDao {
 
     @Query("SELECT * FROM recetas WHERE userId = :userId ORDER BY date DESC")
     suspend fun getRecetasUser(userId: String): List<Receta>
-
-    @Query("SELECT * FROM recetas WHERE userId = '' ORDER BY date DESC")
-    suspend fun getRecetasHome(): List<Receta>
 
     @Update
     suspend fun updateReceta(receta: Receta)

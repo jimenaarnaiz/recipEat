@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.recipeat.data.dao.RecienteDao
 import com.example.recipeat.data.repository.IngredienteRepository
 import com.example.recipeat.data.repository.PlanRepository
 import com.example.recipeat.ui.components.BottomNavItem
@@ -57,18 +58,15 @@ fun NavigationGraph(
     permissionsViewModel: PermissionsViewModel,
     onBottomBarVisibilityChanged: (Boolean) -> Unit
 ) {
-
     // Accedemos al application context
     val context = LocalContext.current
     val application = context.applicationContext as Application
-
 
     val recetasViewModel: RecetasViewModel = viewModel()
     val sharedPreferences = remember { navController.context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE) }
 
     // Crear la fábrica para UsersViewModel
     val usersViewModelFactory = UsersViewModelFactory(application = LocalContext.current.applicationContext as Application, sharedPreferences = sharedPreferences)
-
     // Usar la fábrica para obtener el ViewModel
     val usersViewModel: UsersViewModel = viewModel(factory = usersViewModelFactory)
 
@@ -76,18 +74,16 @@ fun NavigationGraph(
     val ingredientesViewModel = IngredientesViewModel(ingredienteRepository)
 
     val filtrosViewModel: FiltrosViewModel = viewModel()
-    //val planViewModel: PlanViewModel = viewModel()
+
     // Obtener el repository de alguna manera (ejemplo en este caso)
     val planRepository = PlanRepository()
     val planViewModel: PlanViewModel = viewModel(
         factory = PlanViewModelFactory(application, planRepository)
     )
 
-
     val connectivityViewModel: ConnectivityViewModel = viewModel()
 
     val startDestination = remember { mutableStateOf<String?>(null) }
-
     // si hay una sesión activa, no se va a login
     LaunchedEffect(Unit) {
         usersViewModel.isSessionActive { isActive ->

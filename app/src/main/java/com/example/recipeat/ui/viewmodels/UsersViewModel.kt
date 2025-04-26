@@ -86,7 +86,6 @@ class UsersViewModel(application: Application, private val userRepository: UserR
     }
 
 
-
     // Función para cerrar sesión
     fun logOut() {
         viewModelScope.launch {

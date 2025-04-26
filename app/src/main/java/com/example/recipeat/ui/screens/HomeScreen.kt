@@ -3,7 +3,9 @@ package com.example.recipeat.ui.screens
 import android.app.Activity
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -72,7 +74,7 @@ fun HomeScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                // Cuando vuelve la pantalla, actualiza el estado del permiso
+                // Cuando vuelve la pantalla, actualiza el estado del permiso de fotos
                 permissionsViewModel.checkStoragePermission(context)
             }
         }
@@ -83,10 +85,6 @@ fun HomeScreen(
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-
-//    roomViewModel.eliminarTodosLosFavoritos(uid.toString())
-//    roomViewModel.deleteAllRecetas()
-
 
 
     // Cargar recetas al iniciar la pantalla
@@ -104,10 +102,9 @@ fun HomeScreen(
 
     LaunchedEffect(recetasState) {
         //el segundo isEmpty hace que solo cargue al abrir la app las recetas favs,
-        //si abres, das fav, y vuelves a home, no se mostrarán esas nuevas recetas (offline) en home hasta q vuelvas a salir y entrar
         if (recetasState.isNotEmpty() && recetasHomeRoom.isEmpty()) {
             roomViewModel.guardarPrimeras15RecetasSiNoEstan(context, recetasState, uid.toString())
-            roomViewModel.getRecetasHome()
+            roomViewModel.getRecetasHome(context, uid.toString())
         }
     }
 
@@ -184,18 +181,29 @@ fun HomeScreen(
                 }
             }
         }else {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) {
-                items(recetasHomeRoom) { receta ->
-                    RecetaCard(receta = receta, navController, usersViewModel)
+            if (recetasHomeRoom.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center // Centrar horizontal y verticalmente
+                ) {
+                    Text(
+                        "No internet. Please check your connection."
+                    )
+                }
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+                    items(recetasHomeRoom) { receta ->
+                        RecetaCard(receta = receta, navController, usersViewModel)
+                    }
                 }
             }
         }
-
     }
 }
 

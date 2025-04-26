@@ -79,6 +79,7 @@ fun DetailsScreen(
         recetasViewModel.verificarSiEsFavorito(uid.toString(), idReceta)
         roomViewModel.getRecetaById(recetaId = idReceta)
         bitmap = usersViewModel.loadImageFromFile(context, idReceta)
+        receta?.let { roomViewModel.agregarReciente(it, uid.toString()) } //agregar a recientes
     }
 
     LaunchedEffect(isConnected) {

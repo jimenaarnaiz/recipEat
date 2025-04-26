@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
 
         // Inicializar Room Database
         val database = AppDatabase.getDatabase(this)
-        val recetaRoomRepository = RecetaRoomRepository(database.recetaDao(), database.favoritoDao())
+        val recetaRoomRepository = RecetaRoomRepository(database.recetaDao(), database.favoritoDao(), database.recienteDao())
 
         // Crear ViewModel usando un Factory para poder pasar por param el repository en el viewModel
         val roomViewModel = ViewModelProvider(this, RoomViewModelFactory(recetaRoomRepository))
