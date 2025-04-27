@@ -7,11 +7,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.recipeat.data.model.Receta
-import com.example.recipeat.data.model.Reciente
 import com.example.recipeat.data.repository.RecetaRoomRepository
 import kotlinx.coroutines.launch
 import java.sql.SQLException
-import java.sql.Timestamp
 
 class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : ViewModel() {
 
@@ -26,9 +24,6 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
 
     private val _homeRecipesRoom = MutableLiveData<List<Receta>>()
     val homeRecipesRoom: LiveData<List<Receta>> get() = _homeRecipesRoom
-
-    private val _recientes = MutableLiveData<List<Receta>>()
-    val recientes: LiveData<List<Receta>> get() = _recientes
 
     // Obtener todas las recetas
     fun getAllRecetas() {
@@ -140,7 +135,6 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
 
 
 
-    /// NEW
     // Obtener recetas favoritas
     fun getRecetasFavoritas(userId: String) {
         viewModelScope.launch {
@@ -184,7 +178,6 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
         }
     }
 
-    ///NEW
 
     // Obtener recetas para el home
     fun getRecetasHome(context: Context, userId: String) {
@@ -282,28 +275,6 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
         }
     }
 
-
-    // Obtener recetas recientes
-    fun obtenerRecientes(userId: String) {
-        viewModelScope.launch {
-            val recetas = recetaRoomRepository.obtenerRecientes(userId)
-            _recientes.postValue(recetas)
-        }
-    }
-
-    // Eliminar todas las recetas recientes
-    fun eliminarRecientes(userId: String) {
-        viewModelScope.launch {
-            recetaRoomRepository.eliminarRecientes(userId)
-        }
-    }
-
-    // Eliminar una receta específica de las recientes
-    fun eliminarRecientePorId(recetaId: String, userId: String) {
-        viewModelScope.launch {
-            recetaRoomRepository.eliminarRecientePorId(recetaId, userId)
-        }
-    }
 }
 
 

@@ -25,6 +25,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -206,7 +207,7 @@ fun InputFields(
         },
         label = { Text("Username", style = MaterialTheme.typography.bodyMedium) },
         modifier = Modifier.fillMaxWidth(size),
-        colors = TextFieldDefaults.outlinedTextFieldColors(
+        colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Color.DarkGray,
             unfocusedBorderColor = Color.Gray,
             focusedLabelColor = Color.DarkGray,
@@ -224,7 +225,7 @@ fun InputFields(
         },
         label = { Text("Email", style = MaterialTheme.typography.bodyMedium) },
         modifier = Modifier.fillMaxWidth(size),
-        colors = TextFieldDefaults.outlinedTextFieldColors(
+        colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Color.DarkGray,
             unfocusedBorderColor = Color.Gray,
             focusedLabelColor = Color.DarkGray,
@@ -243,7 +244,7 @@ fun InputFields(
         label = { Text("Password", style = MaterialTheme.typography.bodyMedium) },
         modifier = Modifier.fillMaxWidth(size),
         visualTransformation = PasswordVisualTransformation(),
-        colors = TextFieldDefaults.outlinedTextFieldColors(
+        colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Color.DarkGray,
             unfocusedBorderColor = Color.Gray,
             focusedLabelColor = Color.DarkGray,

@@ -307,7 +307,46 @@ class RecetaRoomRepositoryTest {
         coVerify { recienteDao.insertarReciente(any()) }
     }
 
-    //TODO seguir con los que quedan de recientes
+    @Test
+    fun `obtenerRecientes devuelve lista de recetas recientes del usuario`() = runTest {
+        // Simular una lista de recetas recientes
+        val recetasRecientes = listOf(receta1, receta2)
+        coEvery { recienteDao.getRecientes(userId1) } returns recetasRecientes
+
+        // Llamar a la función obtenerRecientes
+        val resultado = repository.obtenerRecientes(userId1)
+
+        // Verificar que recienteDao.getRecientes fue llamado correctamente
+        coVerify { recienteDao.getRecientes(userId1) }
+
+        // Comprobar que el resultado sea el esperado
+        assertEquals(recetasRecientes, resultado)
+    }
+
+    @Test
+    fun `eliminarRecientes elimina todas las recetas recientes del usuario`() = runTest {
+        // Simular que eliminarRecientes no hace nada
+        coEvery { recienteDao.eliminarRecientes(userId1) } just Runs
+
+        // Llamar a la función eliminarRecientes
+        repository.eliminarRecientes(userId1)
+
+        // Verificar que recienteDao.eliminarRecientes fue llamado correctamente
+        coVerify { recienteDao.eliminarRecientes(userId1) }
+    }
+
+    @Test
+    fun `eliminarRecientePorId elimina una receta reciente específica del usuario`() = runTest {
+        // Simular que eliminarRecientePorId no hace nada
+        coEvery { recienteDao.eliminarRecientePorId(receta1.id, userId1) } just Runs
+
+        // Llamar a la función eliminarRecientePorId
+        repository.eliminarRecientePorId(receta1.id, userId1)
+
+        // Verificar que recienteDao.eliminarRecientePorId fue llamado correctamente
+        coVerify { recienteDao.eliminarRecientePorId(receta1.id, userId1) }
+    }
+
 
 
 }
