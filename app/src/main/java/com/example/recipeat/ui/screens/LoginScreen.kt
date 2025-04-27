@@ -1,39 +1,36 @@
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.R
 import com.example.recipeat.ui.theme.Cherry
+import com.example.recipeat.ui.theme.LightGray
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
-import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
-import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.example.recipeat.utils.NetworkConnectivityManager
 
 @Composable
 fun LoginScreen(
     navController: NavHostController,
     usersViewModel: UsersViewModel,
     recetasViewModel: RecetasViewModel,
-    roomViewModel: RoomViewModel,
-    planViewModel: PlanViewModel,
     connectivityViewModel: ConnectivityViewModel
 ) {
     val configuration = LocalConfiguration.current
@@ -44,10 +41,6 @@ fun LoginScreen(
     var errorMessage by rememberSaveable { mutableStateOf("") }
 
     val fieldWidth = if (isLandscape) 0.5f else 0.8f  // Ajusta el ancho según orientación
-
-    // Observamos el estado de conectividad
-    val isConnected by connectivityViewModel.isConnected.observeAsState(false)
-
 
     Box(
         modifier = Modifier
@@ -71,7 +64,15 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.width(35.dp))
 
-                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage, isConnected, roomViewModel, planViewModel) {
+                LoginForm(
+                    navController,
+                    recetasViewModel,
+                    usersViewModel,
+                    fieldWidth,
+                    email,
+                    password,
+                    errorMessage
+                ) {
                     // para que se actualicen los cambios de una orientación a otra
                     email = it.first
                     password = it.second
@@ -98,7 +99,15 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                LoginForm(navController, recetasViewModel, usersViewModel, fieldWidth, email, password, errorMessage, isConnected, roomViewModel, planViewModel) {
+                LoginForm(
+                    navController,
+                    recetasViewModel,
+                    usersViewModel,
+                    fieldWidth,
+                    email,
+                    password,
+                    errorMessage
+                ) {
                     email = it.first
                     password = it.second
                     errorMessage = it.third
@@ -117,9 +126,6 @@ fun LoginForm(
     email: String,
     password: String,
     errorMessage: String,
-    isConnected: Boolean,
-    roomViewModel: RoomViewModel,
-    planViewModel: PlanViewModel,
     onInputChange: (Triple<String, String, String>) -> Unit
 ) {
     var localEmail by rememberSaveable { mutableStateOf(email) }
@@ -191,7 +197,6 @@ fun LoginForm(
                    // recetasViewModel.eliminarRecetasNoExistentesEnBulkRecetas()
                     recetasViewModel.logRecetasCount()
                     //recetasViewModel.extraerDishTypesUnicos()
-                    //planViewModel.borrarPrimeraVez()
                     //recetasViewModel.obtenerYGuardarAisleTypes()
                     // 1759 recetas en recetasIds y 140 ingredientes
 
@@ -230,6 +235,22 @@ fun LoginForm(
         ) {
             Text("Register", style = MaterialTheme.typography.bodyMedium, color = Color.White)
         }
+
+        // Aquí agregamos el texto para "Olvidaste tu contraseña?"
+        Text(
+            text = "Forgot password?",
+            color = Color.DarkGray,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontStyle = FontStyle.Italic,
+                textDecoration = TextDecoration.Underline,
+                color = Cherry // Cambia aquí el color del subrayado
+            ),
+            modifier = Modifier
+                .align(Alignment.Start) // Esto asegura que el texto esté centrado
+                .padding(top = 10.dp)
+                .clickable { navController.navigate("forgotPassword") }
+        )
+
     }
 }
 

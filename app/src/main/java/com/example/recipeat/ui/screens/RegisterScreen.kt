@@ -22,12 +22,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,9 +44,7 @@ import androidx.navigation.NavHostController
 import com.example.recipeat.R
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
-import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
-import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -58,8 +54,6 @@ import com.google.firebase.auth.FirebaseAuth
 fun RegisterScreen(
     navController: NavHostController,
     usersViewModel: UsersViewModel,
-    recetasViewModel: RecetasViewModel,
-    ingredientesViewModel: IngredientesViewModel,
     planViewModel: PlanViewModel
 ) {
     var username by rememberSaveable { mutableStateOf("") }
@@ -116,13 +110,10 @@ fun RegisterScreen(
                 Buttons(
                     navController = navController,
                     usersViewModel = usersViewModel,
-                    recetasViewModel = recetasViewModel,
-                    ingredientesViewModel = ingredientesViewModel,
                     planViewModel,
                     email = email,
                     password = password,
                     username = username,
-                    errorMessage = errorMessage,
                     onErrorMessageChange = { errorMessage = it },
                     size = size
                 )
@@ -167,13 +158,10 @@ fun RegisterScreen(
                     Buttons(
                         navController = navController,
                         usersViewModel = usersViewModel,
-                        recetasViewModel = recetasViewModel,
-                        ingredientesViewModel = ingredientesViewModel,
                         planViewModel,
                         email = email,
                         password = password,
                         username = username,
-                        errorMessage = errorMessage,
                         onErrorMessageChange = { errorMessage = it },
                         size = size
                     )
@@ -186,7 +174,6 @@ fun RegisterScreen(
 }
 
 // Composable para mostrar los campos de entrada
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputFields(
     username: String,
@@ -268,13 +255,10 @@ fun InputFields(
 fun Buttons(
     navController: NavHostController,
     usersViewModel: UsersViewModel,
-    recetasViewModel: RecetasViewModel,
-    ingredientesViewModel: IngredientesViewModel,
     planViewModel: PlanViewModel,
     email: String,
     password: String,
     username: String,
-    errorMessage: String,
     onErrorMessageChange: (String) -> Unit,
     size: Float
 ) {

@@ -9,6 +9,7 @@ import android.util.Log
 import com.example.recipeat.data.model.User
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -46,7 +47,6 @@ class UserRepository(
             sharedPreferences.edit().clear().apply()
         }
     }
-
 
 
     fun getUidValue(): String? {
@@ -135,6 +135,25 @@ class UserRepository(
                 is FirebaseNetworkException -> "Network error. Please check your internet connection."
                 else -> "Registration error: ${e.localizedMessage}"
             }
+        }
+    }
+
+
+    // Función suspendida para enviar el enlace de restablecimiento de contraseña
+    suspend fun sendPasswordResetEmail(email: String): String {
+        return try {
+            // Intentamos enviar el enlace de restablecimiento
+            auth.sendPasswordResetEmail(email).await()
+            "success"
+        } catch (e: FirebaseAuthInvalidUserException) {
+            // Si el correo no está registrado, Firebase lanza esta excepción
+            return "No account found with this email."
+        } catch (e: FirebaseAuthException) {
+            // Para manejar otros errores de autenticación
+            return "Authentication error: ${e.localizedMessage}"
+        } catch (e: Exception) {
+            // Capturamos otros errores generales
+            return "An error occurred: ${e.localizedMessage}"
         }
     }
 

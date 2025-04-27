@@ -16,7 +16,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.recipeat.data.dao.RecienteDao
 import com.example.recipeat.data.repository.IngredienteRepository
 import com.example.recipeat.data.repository.PlanRepository
 import com.example.recipeat.ui.components.BottomNavItem
@@ -26,6 +25,7 @@ import com.example.recipeat.ui.screens.DetailsScreen
 import com.example.recipeat.ui.screens.EditProfileScreen
 import com.example.recipeat.ui.screens.EditRecipeScreen
 import com.example.recipeat.ui.screens.FavoritesScreen
+import com.example.recipeat.ui.screens.ForgotPasswordScreen
 import com.example.recipeat.ui.screens.HistoryScreen
 import com.example.recipeat.ui.screens.HomeScreen
 import com.example.recipeat.ui.screens.MyRecipesScreen
@@ -98,15 +98,18 @@ fun NavigationGraph(
                 startDestination = it// Verifica si la sesión está activa
             ) {
                 composable("login") {
-                    LoginScreen(navController, usersViewModel, recetasViewModel, roomViewModel, planViewModel, connectivityViewModel) // Login
+                    LoginScreen(
+                        navController,
+                        usersViewModel,
+                        recetasViewModel,
+                        connectivityViewModel
+                    ) // Login
                     onBottomBarVisibilityChanged(false)
                 }
                 composable("register") {
                     RegisterScreen(
                         navController,
                         usersViewModel,
-                        recetasViewModel,
-                        ingredientesViewModel,
                         planViewModel
                     ) // Registro
                     onBottomBarVisibilityChanged(false)
@@ -187,6 +190,10 @@ fun NavigationGraph(
                 composable("debug") {
                     DebugScreen()
                     onBottomBarVisibilityChanged(true)
+                }
+                composable("forgotPassword") {
+                    ForgotPasswordScreen(navController, usersViewModel)
+                    onBottomBarVisibilityChanged(false)
                 }
 
             }

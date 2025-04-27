@@ -114,6 +114,14 @@ class UsersViewModel(application: Application, private val userRepository: UserR
     }
 
 
+    // Función para manejar el envío del enlace de restablecimiento de contraseña
+    fun sendPasswordResetEmail(email: String, onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = userRepository.sendPasswordResetEmail(email)
+            onResult(result)
+        }
+    }
+
     // Función para actualizar el perfil del usuario
     fun actualizarUserProfile(
         newUsername: String?,
