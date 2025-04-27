@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -34,13 +35,13 @@ fun IngredientsSearch(
     val ingredientesSugeridos by ingredientesViewModel.ingredientesSugeridos.collectAsState()
     val ingredientesReceta by ingredientesViewModel.ingredientes.collectAsState()
 
-    var ingredienteBusqueda by remember { mutableStateOf("") } // ingrediente a buscar
+    var ingredienteInput by rememberSaveable { mutableStateOf("") } // ingrediente a buscar
 
 
     // Cuando cambia el nombre del ingrediente, busca los ingredientes
-    LaunchedEffect(ingredienteBusqueda) {
-        if (ingredienteBusqueda.isNotBlank()) { // Agregar una verificación para no hacer la búsqueda cuando la cadena esté vacía
-            ingredientesViewModel.buscarIngredientes(ingredienteBusqueda)
+    LaunchedEffect(ingredienteInput) {
+        if (ingredienteInput.isNotBlank()) { // Agregar una verificación para no hacer la búsqueda cuando la cadena esté vacía
+            ingredientesViewModel.buscarIngredientes(ingredienteInput)
         }else{
             ingredientesViewModel.clearIngredientesSugeridos()
         }
@@ -53,8 +54,8 @@ fun IngredientsSearch(
        .padding(16.dp)) {
 
        SearchTextField(
-           value = ingredienteBusqueda,
-           onValueChange = { ingredienteBusqueda = it.lowercase() },
+           value = ingredienteInput,
+           onValueChange = { ingredienteInput = it.lowercase() },
            label = txtSearch,
            isEnabled = isConnected
        )
@@ -125,7 +126,7 @@ fun IngredientsSearch(
                                     if (!ingredientesReceta.contains(ingrediente) && ingredientesReceta.size < 5) {
                                         ingredientesViewModel.addIngredient(ingrediente)
                                         //resetear para no tener q borrar el ing tú mismo
-                                        ingredienteBusqueda = ""
+                                        ingredienteInput = ""
                                     }
                                 }
                             ),

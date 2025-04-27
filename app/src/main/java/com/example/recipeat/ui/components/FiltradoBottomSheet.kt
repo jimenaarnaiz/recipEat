@@ -1,6 +1,8 @@
 package com.example.recipeat.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -47,6 +49,7 @@ fun FiltroBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState()) // Hacer la columna desplazable
         ) {
             Text("Apply filters", style = MaterialTheme.typography.headlineSmall)
 
