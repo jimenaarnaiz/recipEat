@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.ShoppingBasket
@@ -134,6 +136,8 @@ fun WeeklyPlanScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState()) // Hacer la columna desplazable
+            .padding(bottom = 85.dp) //para bottom nav bar
     ) {
         Row(
             modifier = Modifier
@@ -158,7 +162,7 @@ fun WeeklyPlanScreen(
                 Icon(
                     imageVector = Icons.Filled.ShoppingCart,
                     contentDescription = "Shopping Cart",
-                    tint = Cherry //if (isConnected) Cherry else Color.Gray
+                    tint = Cherry
                 )
             }
         }

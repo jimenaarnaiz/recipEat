@@ -134,7 +134,7 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-            .padding(bottom = 65.dp) //para
+            .padding(bottom = 65.dp) //para bottom nav bar
     ) {
         Text(text = "Welcome, $username!", modifier = Modifier.padding(16.dp))
 
