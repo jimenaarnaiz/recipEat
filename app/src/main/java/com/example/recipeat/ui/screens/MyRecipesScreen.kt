@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.snapshotFlow
@@ -46,7 +47,7 @@ fun MyRecipesScreen(
     usersViewModel: UsersViewModel,
     connectivityViewModel: ConnectivityViewModel
 ) {
-    val userId = usersViewModel.getUidValue()
+    val userId = usersViewModel.uid.collectAsState()
     val recetasUser by recetasViewModel.recetasUser.observeAsState(emptyList())
     val recetasRoomUser by roomViewModel.userRecipesRoom.observeAsState(emptyList())
 
@@ -59,18 +60,22 @@ fun MyRecipesScreen(
 
     // Carga inicial de las recetas
     LaunchedEffect(userId) {
-        //if (recetasUser.isEmpty()) {
-            Log.d("MyRecipeScreen", "Carga inicial de recetas del user")
-            recetasViewModel.getRecetasUser(userId.toString(), limpiarLista = true)
-            roomViewModel.getRoomRecetasUser(userId.toString())
-        //}
+        if (recetasUser.isEmpty()) {
+            Log.d("MyRecipeScreen", "Carga inicial de recetas del user ${userId.value}")
+            userId.value?.let {
+                recetasViewModel.getRecetasUser(it, limpiarLista = true)
+                roomViewModel.getRoomRecetasUser(it)
+            }
+        }
     }
 
     // cuando se agreguen nuevas recetas de user se actualizan las recetas a mostar
     LaunchedEffect(recetasUser) {
         Log.d("MyRecipeScreen", "Se han actualizado las recetas del user")
-        recetasViewModel.getRecetasUser(userId.toString(), limpiarLista = true)
-        roomViewModel.getRoomRecetasUser(userId.toString())
+        userId.value?.let {
+            recetasViewModel.getRecetasUser(it, limpiarLista = true)
+            roomViewModel.getRoomRecetasUser(it)
+        }
     }
 
     // Detectar cuando el usuario está cerca del final de la lista solo cuando hay conexión

@@ -76,7 +76,7 @@ fun ProfileScreen(
                 .padding(8.dp), // Más espaciado general
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             bitmap?.let {
                 Log.d("ProfileScreen", "ImageLoading...Bitmap cargado: ${it}")
@@ -105,8 +105,6 @@ fun ProfileScreen(
                         .align(Alignment.CenterHorizontally)
                 )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             // Nombre de usuario
             usernameState?.let {

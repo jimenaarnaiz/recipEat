@@ -130,6 +130,20 @@ class RecetaRoomRepositoryTest {
 
 
     @Test
+    fun `getRecetasUser devuelve lista vacia si el usuario no tiene recetas`() = runTest {
+        // Simulamos que el DAO devuelve lista vacía para un userId sin recetas
+        coEvery { recetaRoomDao.getRecetasUser(userId2) } returns emptyList()
+
+        val resultado = repository.getRecetasUser(userId2)
+
+        assertTrue(resultado.isEmpty())
+        coVerify { recetaRoomDao.getRecetasUser(userId2) }
+    }
+
+
+    // favoritos
+
+    @Test
     fun `getRecetasFavoritas debe devolver las recetas asociadas a favoritos`() = runTest {
         val userId = "user1"
         val favoritos = listOf(
@@ -148,6 +162,7 @@ class RecetaRoomRepositoryTest {
         coVerify { recetaRoomDao.getRecetaById("r1") }
         coVerify { recetaRoomDao.getRecetaById("r2") }
     }
+
 
     @Test
     fun `agregarFavorito debe crear el favorito correctamente si no existe previamente`() = runTest {
@@ -206,18 +221,6 @@ class RecetaRoomRepositoryTest {
 
 
     @Test
-    fun `getRecetasUser devuelve lista vacia si el usuario no tiene recetas`() = runTest {
-        // Simulamos que el DAO devuelve lista vacía para un userId sin recetas
-        coEvery { recetaRoomDao.getRecetasUser(userId2) } returns emptyList()
-
-        val resultado = repository.getRecetasUser(userId2)
-
-        assertTrue(resultado.isEmpty())
-        coVerify { recetaRoomDao.getRecetasUser(userId2) }
-    }
-
-
-    @Test
     fun `agregarFavorito no debe agregar un favorito duplicado`() = runTest {
         val recetaId = "r1"
 
@@ -248,6 +251,8 @@ class RecetaRoomRepositoryTest {
         coVerify { recetaRoomDao.updateReceta(updatedReceta) }
     }
 
+
+    // recientes
 
     @Test
     fun `insertarReciente inserta receta cuando no existe y no se supera el límite`() = runTest {

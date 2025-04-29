@@ -21,15 +21,15 @@ class UsersViewModel(application: Application, private val userRepository: UserR
 
     init {
         isSessionActive { isActive ->
-            Log.d("UserViewModel", "Sesión activa: $isActive")
+            Log.d("UsersViewModel", "Sesión activa: $isActive")
             if (isActive) {
-                obtenerUid() // Solo si hay sesión activa
+                setUid() // Solo si hay sesión activa
             }
         }
     }
 
 
-    private fun obtenerUid() {
+    private fun setUid() {
         val currentUid = userRepository.getUidValue()
         _uid.value = currentUid
     }
@@ -47,6 +47,7 @@ class UsersViewModel(application: Application, private val userRepository: UserR
                 val resultMessage = userRepository.login(email, password)
                 // Llama al callback con el resultado
                 onResult(resultMessage)
+                setUid()
                 Log.d("UserViewModel", "Login result: $resultMessage")
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error durante el login", e)
