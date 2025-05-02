@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Worker que se ejecuta una vez por semana (los lunes a las 00:00)
- * para generar automáticamente un nuevo plan semanal para el usuario.
+ * para generar automáticamente un nuevo plan semanal para el usuario loggeado.
  */
 class PlanSemanalWorker(
     context: Context,
@@ -30,7 +30,6 @@ class PlanSemanalWorker(
         Log.d("PlanSemanalWorker", "Worker ejecutado")
 
         // Verifica si el usuario está autenticado
-        //val applicationContext = applicationContext as Application
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure()
 
         Log.d("PlanSemanalWorker", "Usuario autenticado: $userId")

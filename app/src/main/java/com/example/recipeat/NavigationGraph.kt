@@ -18,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.recipeat.data.repository.IngredienteRepository
 import com.example.recipeat.data.repository.PlanRepository
+import com.example.recipeat.data.repository.RecetaRepository
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.AddRecipe
 import com.example.recipeat.ui.screens.DebugScreen
@@ -62,7 +63,9 @@ fun NavigationGraph(
     val context = LocalContext.current
     val application = context.applicationContext as Application
 
-    val recetasViewModel: RecetasViewModel = viewModel()
+    //val recetasViewModel: RecetasViewModel = viewModel()
+    val recetaRepository = RecetaRepository()
+    val recetasViewModel = RecetasViewModel(recetaRepository)
     val sharedPreferences = remember { navController.context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE) }
 
     // Crear la fábrica para UsersViewModel

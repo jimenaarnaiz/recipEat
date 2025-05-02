@@ -14,6 +14,8 @@ import com.example.recipeat.data.model.IngredienteSimple
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.data.model.SugerenciaReceta
+import com.example.recipeat.data.repository.PlanRepository
+import com.example.recipeat.data.repository.RecetaRepository
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,9 +33,8 @@ import okhttp3.Request
 import retrofit2.HttpException
 import java.time.LocalDate
 import java.time.ZoneId
-import java.util.UUID
 
-class RecetasViewModel : ViewModel() {
+class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
 
@@ -58,8 +59,8 @@ class RecetasViewModel : ViewModel() {
     private val _recetasUser = MutableLiveData<List<Receta>>(emptyList())
     val recetasUser: LiveData<List<Receta>> = _recetasUser
 
-    private val _recetaSeleccionada = MutableLiveData<Receta>()
-    val recetaSeleccionada: LiveData<Receta> = _recetaSeleccionada
+    private val _recetaSeleccionada = MutableLiveData<Receta?>()
+    val recetaSeleccionada: LiveData<Receta?> = _recetaSeleccionada
 
     // para paginacion
     private var lastDocument: DocumentSnapshot? = null
@@ -188,42 +189,13 @@ class RecetasViewModel : ViewModel() {
 
 
 
-    // Genera el ID único alfanumérico de la receta creada por el usuario
     fun generateRecipeId(): String {
-        return UUID.randomUUID().toString().replace("-", "")
+        return recetaRepository.generateRecipeId()
     }
-
 
     fun obtenerRecetaDesdeSnapshot(document: DocumentSnapshot): Receta {
-        return Receta(
-            id = document.getString("id") ?: "",
-            title = document.getString("title") ?: "",
-            image = document.getString("image") ?: "",
-            servings = (document.get("servings") as? Number)?.toInt() ?: 0,
-            ingredients = (document.get("ingredients") as? List<Map<String, Any>>)?.map { ing ->
-                Ingrediente(
-                    name = ing["name"] as? String ?: "",
-                    amount = (ing["amount"] as? Number)?.toDouble() ?: 0.0,
-                    unit = ing["unit"] as? String ?: "",
-                    image = ing["image"] as? String ?: "",
-                    aisle = ing["aisle"] as? String ?: ""
-                )
-            } ?: emptyList(),
-            steps = document.get("steps") as? List<String> ?: emptyList(),
-            time = (document.get("time") as? Number)?.toInt() ?: 0,
-            dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
-            userId = document.getString("userId") ?: "",
-            glutenFree = document.getBoolean("glutenFree") ?: false,
-            vegan = document.getBoolean("vegan") ?: false,
-            vegetarian = document.getBoolean("vegetarian") ?: false,
-            date = (document.get("date") as? Long) ?: System.currentTimeMillis(),
-            unusedIngredients = emptyList(),
-            missingIngredientCount = 0,
-            unusedIngredientCount = 0
-        )
+        return recetaRepository.obtenerRecetaDesdeSnapshot(document)
     }
-
-
 
     // Función para obtener las recetas del usuario con paginación
     fun getRecetasUser(uid: String, limpiarLista: Boolean = true) {
@@ -231,50 +203,19 @@ class RecetasViewModel : ViewModel() {
 
         _isLoadingMore.value = true // Indica que está cargando
 
-        // Crea la consulta inicial con un límite de 15
-        var query = db.collection("my_recipes").document(uid)
-            .collection("recipes")
-            .orderBy("date", Query.Direction.DESCENDING) // Ordena por fecha de manera descendente
-            .limit(15)
-
-        // Si ya hay un documento anterior, usa startAfter para continuar desde ese punto
-        if (lastDocumentUser != null && !limpiarLista) {
-            Log.d("RecetasViewModel", "Recetas User: Paginar desde documento: ${lastDocumentUser?.id}")
-            query = query.startAfter(lastDocumentUser!!)
-        } else {
-            Log.d("RecetasViewModel", "Recetas User: No hay documento previo, iniciando desde el principio")
-        }
-
-        // Ejecutar la consulta en el ViewModelScope para obtener las recetas
+        // Usar el repositorio para obtener las recetas
         viewModelScope.launch {
             try {
-                val documents = query.get().await() // Obtener los documentos
+                val nuevasRecetas = recetaRepository.getRecetasUser(uid, limpiarLista)
 
-                if (!documents.isEmpty) {
-                    // Actualiza el último documento
-                    lastDocumentUser = documents.documents.last()
-
-                    // Mapea los documentos a una lista de recetas
-                    val nuevasRecetas = documents.documents.mapNotNull { document ->
-                        try {
-                            obtenerRecetaDesdeSnapshot(document)
-                        } catch (e: Exception) {
-                            Log.e("RecetasViewModel", "Recetas User: Error al mapear receta: ${e.message}")
-                            null
-                        }
-                    }
-
-                    // Si se debe limpiar la lista, se reemplaza, sino se agrega a la lista existente
-                    if (limpiarLista) {
-                        _recetasUser.value = nuevasRecetas
-                    } else {
-                        _recetasUser.value = _recetasUser.value.orEmpty() + nuevasRecetas
-                    }
-
-                    Log.d("RecetasViewModel", "Total recetas User: ${_recetasUser.value?.size}")
+                // Si se debe limpiar la lista, se reemplaza, sino se agrega a la lista existente
+                if (limpiarLista) {
+                    _recetasUser.value = nuevasRecetas
                 } else {
-                    Log.d("RecetasViewModel", "No hay más recetas User para cargar.")
+                    _recetasUser.value = _recetasUser.value.orEmpty() + nuevasRecetas
                 }
+
+                Log.d("RecetasViewModel", "Total recetas User: ${_recetasUser.value?.size}")
             } catch (e: Exception) {
                 Log.e("RecetasViewModel", "Recetas User: Error al obtener recetas: ${e.message}")
             } finally {
@@ -283,263 +224,45 @@ class RecetasViewModel : ViewModel() {
         }
     }
 
-
-
     /**
      * Añade a Firebase una receta creada por el user.
      */
     fun addMyRecipe(uid: String, receta: Receta, onComplete: (Boolean, String?) -> Unit) {
         Log.d("RecetasViewModel", "recetaId generado: ${receta.id}")
 
-        // Convertir el objeto `Receta` a un HashMap
-        val recipeMap = hashMapOf(
-            "id" to receta.id,
-            "title" to receta.title,
-            "image" to receta.image,
-            "servings" to receta.servings,
-            "ingredients" to receta.ingredients.map {
-                hashMapOf(
-                    "name" to it.name,
-                    "amount" to it.amount,
-                    "unit" to it.unit,
-                    "image" to it.image,
-                    "aisle" to it.aisle
-                )
-            },
-            "steps" to receta.steps,
-            "time" to receta.time,
-            "dishTypes" to receta.dishTypes,
-            "userId" to receta.userId,
-            "glutenFree" to receta.glutenFree,
-            "vegan" to receta.vegan,
-            "vegetarian" to receta.vegetarian,
-            "date" to receta.date
-        )
+        // Llamar al repositorio para guardar la receta
+        recetaRepository.addMyRecipe(uid, receta, onComplete)
+    }
 
-        // Referencia al documento de la receta
-        val recipeRef =
-            db.collection("my_recipes").document(uid).collection("recipes").document(receta.id)
 
-        Log.d("RecetasViewModel", "Referencia del documento de la receta: ${recipeRef.path}")
+    fun editMyRecipe(uid: String, recetaModificada: Receta, onComplete: (Boolean, String?) -> Unit) {
+        // Llamamos al repositorio para editar la receta
+        recetaRepository.editMyRecipe(uid, recetaModificada, onComplete)
+    }
 
-        // Guardar el HashMap en Firestore
-        recipeRef.set(recipeMap)
-            .addOnSuccessListener {
-                Log.d("RecetasViewModel", "Receta ${receta.id} guardada correctamente en Firestore")
-                onComplete(true, null)
-            }
-            .addOnFailureListener { e ->
-                Log.e("RecetasViewModel", "Error al guardar receta ${receta.id} en Firestore: ${e.message}")
-                onComplete(false, e.message)
-            }
+
+    fun mapApiRecetaToReceta(apiReceta: ApiReceta, uid: String, analyzedInstructions: List<Map<String, Any>>): Receta {
+        return recetaRepository.mapApiRecetaToReceta(apiReceta, uid, analyzedInstructions)
     }
 
 
     /**
-     * Edita una receta en Firebase solo con los campos modificados.
+     * Obtener recetas para la pantalla principal (Home)
+     * @param limpiarLista Boolean para saber si se debe limpiar la lista antes de cargar las nuevas recetas
      */
-    fun editMyRecipe(uid: String, recetaModificada: Receta, onComplete: (Boolean, String?) -> Unit) {
-        Log.d("RecetasViewModel", "Editando receta con id: ${recetaModificada.id}")
-
-
-        // Referencia al documento de la receta original
-        val recipeRef =
-            db.collection("my_recipes").document(uid).collection("recipes").document(recetaModificada.id)
-
-        // Obtener la receta original desde Firebase
-        recipeRef.get().addOnSuccessListener { document ->
-            if (document.exists()) {
-
-                // Obtener los datos del documento como un mapa
-                val recetaOriginalData = document.data
-
-                // Si no existe, devolver un error
-                if (recetaOriginalData == null) {
-                    onComplete(false, "Receta no encontrada.")
-                    return@addOnSuccessListener
-                }
-
-                // Convertir manualmente el mapa a un objeto Receta de User
-                val recetaOriginal = Receta(
-                    id = recetaOriginalData["id"] as String,
-                    title = recetaOriginalData["title"] as String,
-                    image = recetaOriginalData["image"] as? String,
-                    servings = (recetaOriginalData["servings"] as Number).toInt(),  // Convierte el valor a Int, o usa 0 si es nulo
-                    ingredients = recetaOriginalData["ingredients"] as List<Ingrediente>,
-                    steps = recetaOriginalData["steps"] as List<String>,
-                    time = (recetaOriginalData["time"] as Number).toInt(),
-                    userId = recetaOriginalData["userId"] as String,
-                    dishTypes = recetaOriginalData["dishTypes"] as List<String>,
-                    //usedIngredientCount = it["usedIngredientCount"] as Int,
-                    glutenFree = recetaOriginalData["glutenFree"] as Boolean,
-                    vegan = recetaOriginalData["vegan"] as Boolean,
-                    vegetarian = recetaOriginalData["vegetarian"] as Boolean,
-                    date = recetaOriginalData["date"] as Long,
-                    unusedIngredients = emptyList(),
-                    missingIngredientCount = 0,
-                    unusedIngredientCount = 0
-                )
-
-                // Crear un mapa vacío para los cambios
-                val updatesMap = mutableMapOf<String, Any>()
-
-                // Comparar y agregar solo los campos modificados
-                if (recetaModificada.title != recetaOriginal.title) {
-                    updatesMap["title"] = recetaModificada.title
-                }
-                if (recetaModificada.image != recetaOriginal.image) {
-                    updatesMap["image"] = recetaModificada.image.toString()
-                }
-                if (recetaModificada.servings != recetaOriginal.servings) {
-                    updatesMap["servings"] = recetaModificada.servings
-                }
-                if (recetaModificada.ingredients != recetaOriginal.ingredients) {
-                    updatesMap["ingredients"] = recetaModificada.ingredients.map {
-                        hashMapOf(
-                            "name" to it.name,
-                            "amount" to it.amount,
-                            "unit" to it.unit,
-                            "image" to it.image,
-                            "aisle" to it.aisle
-                        )
-                    }
-                }
-                if (recetaModificada.steps != recetaOriginal.steps) {
-                    updatesMap["steps"] = recetaModificada.steps
-                }
-                if (recetaModificada.time != recetaOriginal.time) {
-                    updatesMap["time"] = recetaModificada.time
-                }
-                if (recetaModificada.dishTypes != recetaOriginal.dishTypes) {
-                    updatesMap["dishTypes"] = recetaModificada.dishTypes
-                }
-                if (recetaModificada.glutenFree != recetaOriginal.glutenFree) {
-                    updatesMap["glutenFree"] = recetaModificada.glutenFree
-                }
-                if (recetaModificada.vegan != recetaOriginal.vegan) {
-                    updatesMap["vegan"] = recetaModificada.vegan
-                }
-                if (recetaModificada.vegetarian != recetaOriginal.vegetarian) {
-                    updatesMap["vegetarian"] = recetaModificada.vegetarian
-                }
-                if (recetaModificada.date != recetaOriginal.date) {
-                    updatesMap["date"] = recetaModificada.date
-                }
-
-                // Verificar si hay cambios en los campos de la receta
-                if (updatesMap.isNotEmpty()) {
-                    // Actualizar solo los campos modificados en Firestore
-                    recipeRef.update(updatesMap)
-                        .addOnSuccessListener {
-                            // Ahora, actualizar la colección de favoritos (favs_hist/uid)
-                            val favoritoData = hashMapOf(
-                                "idReceta" to recetaModificada.id,
-                                "title" to recetaModificada.title,
-                                "image" to recetaModificada.image.toString(),
-                                "date" to Timestamp.now(),
-                                "user" to uid
-                            )
-
-                            // Actualizamos el favorito en la colección de favoritos
-                            val favHistRef = db.collection("favs_hist").document(uid).collection("favoritos").document(recetaModificada.id)
-                            favHistRef.set(favoritoData)
-                                .addOnSuccessListener {
-                                    onComplete(true, null)
-                                }
-                                .addOnFailureListener { e ->
-                                    onComplete(false, e.message)
-                                }
-                        }
-                        .addOnFailureListener { e ->
-                            onComplete(false, e.message)
-                        }
-                } else {
-                    // Si no hay cambios, devolver éxito sin realizar ninguna actualización
-                    onComplete(true, null)
-                }
-            } else {
-                onComplete(false, "Receta no encontrada.")
-            }
-        }.addOnFailureListener { e ->
-            onComplete(false, e.message)
-        }
-    }
-
-
-
-
-    // Función para mapear ApiReceta a Receta
-    fun mapApiRecetaToReceta(
-        apiReceta: ApiReceta,
-        uid: String,
-        analyzedInstructions: List<Map<String, Any>>
-    ): Receta {
-
-        // Extraer solo los valores de "step" en una lista de Strings
-        val pasos = analyzedInstructions.flatMap { instruction ->
-            Log.d(
-                "mapApiRecetaToReceta",
-                "instruction: ${instruction}, steps: ${instruction["steps"].toString()}"
-            )
-            val steps = instruction["steps"] as? List<Map<String, Any>> ?: emptyList()
-            steps.mapNotNull { step ->
-                step["step"] as? String // Extraemos solo la descripción del paso
-            }
-        }
-
-        return Receta(
-            id = apiReceta.id.toString(),
-            title = apiReceta.title,
-            image = apiReceta.image,
-            servings = apiReceta.servings,
-            ingredients = apiReceta.extendedIngredients,  // Los ingredientes ya coinciden
-            steps = pasos,
-            time = apiReceta.readyInMinutes,
-            dishTypes = apiReceta.dishTypes,
-            userId = uid,  // ID del usuario que crea la receta
-            glutenFree = apiReceta.glutenFree,
-            vegan = apiReceta.vegan,
-            vegetarian = apiReceta.vegetarian,
-            date = System.currentTimeMillis(),
-            //usedIngredientCount = apiReceta.usedIngredientCount,
-            unusedIngredients = emptyList(),
-            missingIngredientCount = 0,
-            unusedIngredientCount = 0
-        )
-    }
-
-
     fun obtenerRecetasHome(limpiarLista: Boolean = true) {
         if (_isLoadingMore.value == true) return // Salir si ya se está cargando
 
         _isLoadingMore.value = true // Indicar que está cargando
 
-        var query = db.collection("bulkRecetas")
-            .orderBy("id") // Ordena por ID
-            .limit(15)
-
-        if (lastDocument != null && !limpiarLista) {
-            Log.d("RecetasViewModel", "Paginar desde documento: ${lastDocument?.id}")
-            query = query.startAfter(lastDocument?.get("id"))
-        } else {
-            Log.d("RecetasViewModel", "No hay documento previo, iniciando desde el principio")
-        }
-
         viewModelScope.launch {
             try {
-                val documents = query.get().await()
+                // Llamada al repositorio
+                val result = recetaRepository.obtenerRecetasHome(limpiarLista)
 
-                if (!documents.isEmpty) {
-                    lastDocument = documents.documents.last() // Actualizar último documento cargado
-
-                    val nuevasRecetas = documents.mapNotNull { document ->
-                        try {
-                          obtenerRecetaDesdeSnapshot(document)
-                        } catch (e: Exception) {
-                            Log.e("RecetasViewModel", "Error al mapear receta: ${e.message}")
-                            null
-                        }
-                    }
+                // Si la consulta es exitosa, se actualiza la lista de recetas
+                if (result.isSuccess) {
+                    val nuevasRecetas = result.getOrNull() ?: emptyList()
 
                     if (limpiarLista) {
                         _recetasHome.value = nuevasRecetas
@@ -548,7 +271,7 @@ class RecetasViewModel : ViewModel() {
                     }
                     Log.d("RecetasViewModel", "Total recetas: ${_recetasHome.value?.size}")
                 } else {
-                    Log.d("RecetasViewModel", "No hay más recetas para cargar.")
+                    Log.e("RecetasViewModel", "Error al obtener recetas: ${result.exceptionOrNull()?.message}")
                 }
             } catch (e: Exception) {
                 Log.e("RecetasViewModel", "Error al obtener recetas: ${e.message}")
@@ -559,36 +282,26 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-
     /**
-     * Obtener receta por id
-     * deUser: Boolean para saber si se tiene que buscar en una coleccion u otra
+     * Obtener receta por ID
+     * @param uid ID del usuario (si es una receta del usuario)
+     * @param recetaId ID de la receta
+     * @param deUser Booleano para saber si se busca en las recetas del usuario o en las recetas generales
      */
     fun obtenerRecetaPorId(uid: String, recetaId: String, deUser: Boolean) {
-        Log.d("RecetasViewModel", "deUser: $deUser Obteniendo receta con ID: $recetaId para el usuario $uid")
+        Log.d("RecetasViewModel", "Obteniendo receta con ID: $recetaId para el usuario $uid")
 
         viewModelScope.launch {
             try {
-                val documentRef = if (deUser) {
-                    db.collection("my_recipes") // Colección de recetas del usuario
-                        .document(uid) // Documento del usuario
-                        .collection("recipes") // Subcolección de recetas
-                        .document(recetaId) // Documento específico de la receta con recetaId
+                // Llamada al repositorio
+                val result = recetaRepository.obtenerRecetaPorId(uid, recetaId, deUser)
+
+                // Si la consulta es exitosa, se actualiza la receta seleccionada
+                if (result.isSuccess) {
+                    _recetaSeleccionada.value = result.getOrNull()
+                    Log.d("RecetasViewModel", "Receta obtenida: ${_recetaSeleccionada.value}")
                 } else {
-                    db.collection("bulkRecetas")    // Colección de recetas de la API
-                        .document(recetaId)
-                }
-
-                val document = documentRef.get().await()
-
-                if (document.exists()) {
-                    val receta = obtenerRecetaDesdeSnapshot(document)
-
-                    // Actualizar el LiveData con la receta obtenida
-                    _recetaSeleccionada.value = receta
-                    Log.d("RecetasViewModel", "receta selecc: ${recetaSeleccionada.value}")
-                } else {
-                    Log.e("RecetasViewModel", "No se encontró la receta con ID: $recetaId")
+                    Log.e("RecetasViewModel", "Error al obtener receta: ${result.exceptionOrNull()?.message}")
                 }
             } catch (e: Exception) {
                 Log.e("RecetasViewModel", "Error al obtener receta: ${e.message}")
@@ -599,58 +312,41 @@ class RecetasViewModel : ViewModel() {
 
     fun eliminarReceta(uid: String, recetaId: String) {
         Log.d("RecetasViewModel", "Eliminando receta con ID: $recetaId para el usuario $uid")
-
         viewModelScope.launch {
             try {
-                val documentRef =
-                    db.collection("my_recipes") // Colección de recetas del usuario
-                        .document(uid) // Documento del usuario
-                        .collection("recipes") // Subcolección de recetas
-                        .document(recetaId) // Documento específico de la receta con recetaId
-
-                // Eliminar el documento
-                documentRef.delete().await()
-
-                Log.d("RecetasViewModel", "Receta con ID: $recetaId eliminada exitosamente")
-
-                // Eliminar de la lista en memoria (LiveData)
+                recetaRepository.eliminarReceta(uid, recetaId)
                 _recetasUser.value = _recetasUser.value?.filterNot { it.id == recetaId }
-
             } catch (e: Exception) {
                 Log.e("RecetasViewModel", "Error al eliminar receta: ${e.message}")
             }
         }
     }
 
-    fun eliminarRecetaDelHistorial(uid: String, recetaId: String) {
+
+    /**
+     * Añade una entrada al historial del usuario con los datos básicos de la receta.
+     */
+    fun añadirHistorial(uid: String, userReceta: String, recetaId: String, title: String, image: String) {
         viewModelScope.launch {
             try {
-                // Eliminar de las recetas del historial
-                val historialRef = db.collection("favs_hist")
-                    .document(uid)
-                    .collection("historial")
-
-                // Buscar si la receta está en el historial
-                val historialSnapshot = historialRef.whereEqualTo("id", recetaId).get().await()
-
-                if (historialSnapshot.isEmpty) {
-                    Log.d("RecetasViewModel", "La receta no se encuentra en el historial.")
-                    return@launch
-                }
-
-                // Eliminar todas las instancias de la receta en el historial
-                for (document in historialSnapshot.documents) {
-                    historialRef.document(document.id).delete().await()
-                    Log.d("RecetasViewModel", "Receta $recetaId eliminada del historial.")
-                }
-
+                recetaRepository.añadirHistorial(uid, userReceta, recetaId, title, image)
+                Log.d("RecetasViewModel", "Receta $recetaId añadida al historial correctamente")
             } catch (e: Exception) {
-                Log.e("RecetasViewModel", "Error al eliminar receta del historial: ${e.message}")
+                Log.e("RecetasViewModel", "Error al añadir receta $recetaId al historial", e)
             }
         }
     }
 
 
+    fun eliminarRecetaDelHistorial(uid: String, recetaId: String) {
+        viewModelScope.launch {
+            try {
+                recetaRepository.eliminarRecetaDelHistorial(uid, recetaId)
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Error al eliminar receta del historial: ${e.message}")
+            }
+        }
+    }
 
     /**
      * Devuelve las recetas (tanto las de Firebase como las creadas por el usuario) que contienen todos o algunos de los ingredientes a buscar
@@ -659,131 +355,27 @@ class RecetasViewModel : ViewModel() {
      **/
     fun buscarRecetasPorIngredientes(ingredientes: List<IngredienteSimple>, userId: String) {
         _isLoading.value = true
-        val recetasCoincidentesTotales = mutableListOf<Receta>()
-        val recetasCoincidentesParciales = mutableListOf<Pair<Receta, Int>>()
-
-        val procesarDocumentos: (List<DocumentSnapshot>) -> Unit = { documentos ->
-            for (document in documentos) {
-                val recetaNombre = document.getString("title")
-                val recetaIngredientes = document.get("ingredients") as? List<Map<String, Any>>
-
-                if (recetaNombre != null && recetaIngredientes != null) {
-                    val ingredientesReceta = recetaIngredientes.map {
-                        Ingrediente(
-                            name = (it["name"] as? String)?.lowercase() ?: "",
-                            image = it["image"] as? String ?: "",
-                            amount = (it["amount"] as? Double) ?: 0.0,
-                            unit = it["unit"] as? String ?: "",
-                            aisle = it["aisle"] as? String ?: "",
-                        )
-                    }
-
-                    val missingIngredients = ingredientesReceta.filterNot { ingrediente ->
-                        ingredientes.any { it.name == ingrediente.name }
-                    }
-
-                    val unusedIngredients = ingredientes.filterNot { ingrediente ->
-                        ingredientesReceta.any { it.name == ingrediente.name }
-                    }
-
-                    val coincidencias = ingredientes.count { ingrediente ->
-                        ingredientesReceta.any { it.name == ingrediente.name }
-                    }
-
-                    val receta = Receta(
-                        id = document.id,
-                        title = recetaNombre,
-                        image = document.getString("image"),
-                        servings = document.getLong("servings")?.toInt() ?: 0,
-                        ingredients = ingredientesReceta,
-                        steps = document.get("steps") as? List<String> ?: emptyList(),
-                        time = document.getLong("time")?.toInt() ?: 0,
-                        dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
-                        userId = document.getString("userId") ?: "",
-                        unusedIngredients = unusedIngredients,
-                        missingIngredientCount = missingIngredients.size,
-                        unusedIngredientCount = unusedIngredients.size,
-                        glutenFree = document.getBoolean("glutenFree") ?: false,
-                        vegan = document.getBoolean("vegan") ?: false,
-                        vegetarian = document.getBoolean("vegetarian") ?: false,
-                        date = document.getLong("date") ?: System.currentTimeMillis()
-                    )
-
-                    if (coincidencias == ingredientes.size) {
-                        recetasCoincidentesTotales.add(receta)
-                    } else if (coincidencias > 0) {
-                        recetasCoincidentesParciales.add(Pair(receta, coincidencias))
-                    }
-                }
-            }
-
-            val recetasOrdenadas = recetasCoincidentesParciales
-                .sortedByDescending { it.second }
-                .map { it.first }
-
-            val recetasFinales = recetasCoincidentesTotales + recetasOrdenadas
-            _recetas.value = recetasFinales
-            _recetasOriginales.value = recetasFinales
-            Log.d("buscarRecetasPorIngredientes()", "$recetasFinales")
-        }
-
-        // Obtener recetas públicas y del usuario
-        db.collection("bulkRecetas").get()
-            .addOnSuccessListener { result1 ->
-                db.collection("my_recipes")
-                    .document(userId)
-                    .collection("recipes")
-                    .get()
-                    .addOnSuccessListener { result2 ->
-                        val todosLosDocumentos = result1.documents + result2.documents
-                        procesarDocumentos(todosLosDocumentos)
-                        _isLoading.value = false
-                    }
-                    .addOnFailureListener {
-                        _isLoading.value = false
-                        Log.e("Firebase", "Error al obtener recetas personales", it)
-                        procesarDocumentos(result1.documents) // Solo públicas si falla
-                    }
-            }
-            .addOnFailureListener {
+        viewModelScope.launch {
+            try {
+                val recetasFinales = recetaRepository.buscarRecetasPorIngredientes(ingredientes, userId)
+                _recetas.value = recetasFinales
+                _recetasOriginales.value = recetasFinales
+                Log.d("buscarRecetasPorIngredientes()", "$recetasFinales")
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Error buscando recetas: ${e.message}")
+            } finally {
                 _isLoading.value = false
-                Log.e("Firebase", "Error al obtener recetas públicas", it)
             }
+        }
     }
+
 
     // Búsqueda estricta en tiempo real (requiere que el título contenga TODAS las palabras)
     fun obtenerSugerenciasPorNombre(name: String) {
-        val palabrasClave = name.lowercase().split(" ")
-            .filter { it.isNotBlank() && it !in listOf("and", "with", "all") }
-
-        if (palabrasClave.isEmpty()) return
-
-        db.collection("bulkRecetas")
-            .get()
-            .addOnSuccessListener { result ->
-                val sugerencias = mutableListOf<SugerenciaReceta>()
-
-                for (document in result) {
-                    val recetaId = document.id
-                    val recetaNombre = document.getString("title")?.lowercase()
-
-                    recetaNombre?.let { nombre ->
-                        // Buscar solo recetas que contengan TODAS las palabras ingresadas
-                        if (palabrasClave.all { palabra -> nombre.contains(palabra) }) {
-                            val coincidencias = palabrasClave.size
-                            sugerencias.add(SugerenciaReceta(recetaId, document.getString("title") ?: "", coincidencias))
-                        }
-                    }
-                }
-
-                // Limitar a 7 sugerencias
-                _recetasSugeridas.value = sugerencias
-                    .sortedByDescending { it.coincidencias }
-                    .take(7)
-            }
-            .addOnFailureListener { exception ->
-                Log.e("Firebase", "Error al obtener sugerencias en tiempo real: ", exception)
-            }
+        viewModelScope.launch {
+            val sugerencias = recetaRepository.obtenerSugerenciasPorNombre(name)
+            _recetasSugeridas.value = sugerencias
+        }
     }
 
 
@@ -792,89 +384,17 @@ class RecetasViewModel : ViewModel() {
      * Ambas listas se combinan (documents + documents) y se procesan con la misma lógica.
      * Si una receta tiene al menos una palabra coincidente, se añade a los resultados.
      *
-     * Las recetas del user vna al final
+     * Las recetas del user van al final
      **/
     fun obtenerRecetasPorNombre(prefix: String, userId: String) {
-        _isLoading.value = true
-
-        val palabrasClave = prefix.lowercase().split(" ")
-            .filter { it.isNotBlank() && it !in listOf("and", "with", "all") }
-
-        if (palabrasClave.isEmpty()) return
-
-        // Obtener recetas de bulkRecetas
-        db.collection("bulkRecetas")
-            .get()
-            .addOnSuccessListener { result1 ->
-                // Obtener recetas personales del usuario
-                db.collection("my_recipes")
-                    .document(userId)
-                    .collection("recipes")
-                    .get()
-                    .addOnSuccessListener { result2 ->
-
-                        val resultados = mutableListOf<Receta>()
-                        val todosLosDocumentos = result1.documents + result2.documents
-
-                        for (document in todosLosDocumentos) {
-                            val recetaId = document.id
-                            val recetaNombre = document.getString("title")?.lowercase()
-
-                            recetaNombre?.let { nombre ->
-                                val coincidencias = palabrasClave.count { palabra -> nombre.contains(palabra) }
-
-                                if (coincidencias > 0) {
-                                    val receta = Receta(
-                                        id = recetaId,
-                                        title = document.getString("title") ?: "",
-                                        image = document.getString("image"),
-                                        servings = document.getLong("servings")?.toInt() ?: 0,
-                                        ingredients = (document.get("ingredients") as? List<Map<String, Any>>)?.map { ingrediente ->
-                                            Ingrediente(
-                                                name = (ingrediente["name"] as? String) ?: "",
-                                                image = ingrediente["image"] as? String ?: "",
-                                                amount = (ingrediente["amount"] as? Double) ?: 0.0,
-                                                unit = ingrediente["unit"] as? String ?: "",
-                                                aisle = ingrediente["aisle"] as? String ?: ""
-                                            )
-                                        } ?: emptyList(),
-                                        steps = document.get("steps") as? List<String> ?: emptyList(),
-                                        time = document.getLong("time")?.toInt() ?: 0,
-                                        dishTypes = document.get("dishTypes") as? List<String> ?: emptyList(),
-                                        userId = document.getString("userId") ?: "",
-                                        glutenFree = document.getBoolean("glutenFree") ?: false,
-                                        vegan = document.getBoolean("vegan") ?: false,
-                                        vegetarian = document.getBoolean("vegetarian") ?: false,
-                                        date = document.getLong("date") ?: System.currentTimeMillis(),
-                                        unusedIngredients = emptyList(),
-                                        missingIngredientCount = 0,
-                                        unusedIngredientCount = 0
-                                    )
-
-                                    resultados.add(receta)
-                                    Log.d("RecetasViewModel", "Receta añadida a sugerencias: ${receta.title}")
-                                }
-                            }
-                        }
-
-                        // Prioriza recetas con más palabras clave coincidentes
-                        _recetas.value = resultados.sortedByDescending { receta ->
-                            palabrasClave.count { palabra -> receta.title.lowercase().contains(palabra) }
-                        }
-                        _recetasOriginales.value = _recetas.value
-                        _isLoading.value = false
-                    }
-                    .addOnFailureListener { exception ->
-                        _isLoading.value = false
-                        Log.e("Firebase", "Error al obtener recetas de my_recipes: ", exception)
-                    }
-            }
-            .addOnFailureListener { exception ->
-                _isLoading.value = false
-                Log.e("Firebase", "Error al obtener recetas de bulkRecetas: ", exception)
-            }
+        viewModelScope.launch {
+            _isLoading.value = true
+            val recetas = recetaRepository.obtenerRecetasPorNombre(prefix, userId)
+            _recetas.value = recetas
+            _recetasOriginales.value = recetas
+            _isLoading.value = false
+        }
     }
-
 
 
     // Definir la función de filtro
@@ -949,118 +469,53 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-
-    //
+    /**
+     * Añade o elimina una receta de favoritos para el usuario.
+     * Si la receta ya está en favoritos, la elimina. Si no, la añade con metadatos.
+     */
     fun toggleFavorito(uid: String?, userReceta: String, recetaId: String, title: String, image: String) {
         if (uid == null) return
-
-        val favoritosRef = db.collection("favs_hist").document(uid).collection("favoritos")
-
-        favoritosRef.document(recetaId).get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    // Si ya está en favoritos, lo eliminamos
-                    favoritosRef.document(recetaId).delete()
-                        .addOnSuccessListener {
-                            _esFavorito.value = false
-                        }
-                } else {
-                    // Si no está en favoritos, lo añadimos con más información
-                    val favoritoData = hashMapOf(
-                        "id" to recetaId,
-                        "title" to title,
-                        "image" to image,
-                        "date" to Timestamp.now(),
-                        "userId" to userReceta
-                    )
-
-                    favoritosRef.document(recetaId).set(favoritoData)
-                        .addOnSuccessListener {
-                            _esFavorito.value = true
-                        }
-                }
-            }
+        viewModelScope.launch {
+            val esFavoritoNuevo = recetaRepository.toggleFavorito(uid, userReceta, recetaId, title, image)
+            _esFavorito.value = esFavoritoNuevo
+        }
     }
 
-
-    //
     fun verificarSiEsFavorito(uid: String?, recetaId: String) {
         if (uid == null) return
-
-        val favoritosRef = db.collection("favs_hist").document(uid).collection("favoritos")
-
-        favoritosRef.document(recetaId).get()
-            .addOnSuccessListener { document ->
-                _esFavorito.value = document.exists()
-            }
-    }
-
-
-    fun añadirHistorial(uid: String, userReceta: String, recetaId: String, title: String, image: String) {
-        val historialRef = db.collection("favs_hist").document(uid).collection("historial")
-        val historialEntry = RecetaSimple(
-            id = recetaId,
-            title = title,
-            image = image,
-            date = Timestamp.now(),
-            userId = userReceta
-        )
-
-        historialRef.add(historialEntry)
-            .addOnSuccessListener {
-                Log.d("RecetasViewModel", "Receta $recetaId añadida al historial correctamente")
-            }
-            .addOnFailureListener { e ->
-                Log.e("RecetasViewModel", "Error al añadir receta $recetaId al historial", e)
-            }
-    }
-
-
-
-    fun obtenerRecetasPorRangoDeFecha(uid: String, rango: Int) {
-        val currentDate = Timestamp.now() // Fecha actual
-        val startDate = when (rango) {
-            30 -> Timestamp(currentDate.seconds - 30L * 24 * 60 * 60, 0) // Restamos 30 días en segundos
-            7 -> Timestamp(currentDate.seconds - 7L * 24 * 60 * 60, 0) // Restamos 7 días en segundos
-            else -> return
+        viewModelScope.launch {
+            _esFavorito.value = recetaRepository.verificarSiEsFavorito(uid, recetaId)
         }
+    }
 
-        // Depuración
-        Log.d("RecetasViewModel", "Fecha actual: ${currentDate.toDate()}, Fecha inicio: ${startDate.toDate()}")
 
-        val recetasRef = db.collection("favs_hist")
-            .document(uid)
-            .collection("historial")
-            .whereGreaterThanOrEqualTo("date", startDate)
-            .orderBy("date", Query.Direction.DESCENDING)
-
-        recetasRef.get()
-            .addOnSuccessListener { snapshot ->
-                if (!snapshot.isEmpty) {
-                    val recetas = snapshot.documents.mapNotNull { document ->
-                        val recetaId = document.getString("id")
-                        val title = document.getString("title")
-                        val image = document.getString("image") ?: ""
-                        val date = document.getTimestamp("date")
-                        val userId = document.getString("userId") ?: ""
-
-                        Log.d("RecetasViewModel", "Receta encontrada: id=$recetaId, title=$title, date=$date, uid=$userId")
-
-                        if (recetaId != null && title != null && date != null) {
-                            RecetaSimple(id = recetaId, title = title, image = image, date = date, userId = userId )
-                        } else null
-                    }
-                    _recetasHistorial.value = recetas
-                    Log.d("RecetasViewModel", "Recetas obtenidas: ${_recetasHistorial.value}")
-                } else {
-                    _recetasHistorial.value = emptyList()
-                    Log.d("RecetasViewModel", "No hay recetas en este rango de fechas")
-                }
+    // Obtiene las recetas favoritas del usuario ordenadas por la fecha de añadido.
+    fun obtenerRecetasFavoritas(uid: String) {
+        viewModelScope.launch {
+            try {
+                val recetas = recetaRepository.obtenerRecetasFavoritas(uid)
+                _recetasFavoritas.value = recetas
+                Log.d("RecetasViewModel", "Recetas favs actualizadas: ${_recetasFavoritas.value}")
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Error al obtener los favoritos del usuario", e)
             }
-            .addOnFailureListener { e ->
+        }
+    }
+
+
+    // Obtiene las recetas en el historial del usuario dentro de un rango de fechas.
+    fun obtenerRecetasPorRangoDeFecha(uid: String, rango: Int) {
+        viewModelScope.launch {
+            try {
+                val recetas = recetaRepository.obtenerRecetasPorRangoDeFecha(uid, rango)
+                _recetasHistorial.value = recetas
+                Log.d("RecetasViewModel", "Recetas obtenidas: ${_recetasHistorial.value}")
+            } catch (e: Exception) {
                 Log.e("RecetasViewModel", "Error al obtener recetas", e)
             }
+        }
     }
+
 
     // Filtrar las recetas según la fecha seleccionada
     @RequiresApi(Build.VERSION_CODES.O)
@@ -1070,50 +525,6 @@ class RecetasViewModel : ViewModel() {
             recetaDate.isEqual(selectedDate) // Comparar solo con el día seleccionado
         } ?: emptyList()
     }
-
-
-    fun obtenerRecetasFavoritas(uid: String) {
-        val favoritosRef = db.collection("favs_hist")
-            .document(uid)
-            .collection("favoritos")
-            .orderBy("date", Query.Direction.DESCENDING) // Ordenamos por fecha de añadido
-
-        favoritosRef.get()
-            .addOnSuccessListener { snapshot ->
-                if (!snapshot.isEmpty) {
-                    val recetas = snapshot.documents.mapNotNull { document ->
-                        val recetaId = document.getString("id")
-                        val title = document.getString("title")
-                        val image = document.getString("image") ?: ""
-                        val date = document.getTimestamp("date")
-                        val userId = document.getString("userId") ?: ""
-
-                        if (recetaId != null && title != null && date != null) {
-                            RecetaSimple(
-                                id = recetaId,
-                                title = title,
-                                image = image,
-                                date = date,
-                                userId = userId
-                            )
-                        } else {
-                            null
-                        }
-                    }
-                        _recetasFavoritas.value = recetas
-                        Log.d("RecetasViewModel", "Recetas favs actualizadas: ${_recetasFavoritas.value}")
-
-                } else {
-                    // Si no hay documentos, se asigna una lista vacía
-                        _recetasFavoritas.value = emptyList()
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("RecetasViewModel", "Error al obtener los favoritos del usuario", e)
-            }
-    }
-
-
 
 
     // Lista de nombres de posibles equipos
@@ -1128,56 +539,32 @@ class RecetasViewModel : ViewModel() {
         "nonstick pan", "cooling rack", "drainer", "mixing bowl", "tongs", "baking sheet", "potato-masher", "fridge","grill"
     )
 
+
+    /**
+     * Llama al repositorio para verificar y guardar la imagen de un equipo.
+     */
     fun checkAndSaveEquipmentImage(equipmentName: String) {
-        // Lanzar la operación en una coroutine para no bloquear el hilo principal
-        CoroutineScope(Dispatchers.IO).launch {
-            val firestore = FirebaseFirestore.getInstance()
-            val client = OkHttpClient()
-
-            // Formatear el nombre del equipo para crear la URL
-            val formattedName = equipmentName.lowercase().replace(" ", "-")
-            val imageUrl = "https://img.spoonacular.com/equipment_100x100/$formattedName.jpg"
-
-            // Crear la petición HTTP para verificar si la imagen está disponible
-            val request = Request.Builder().url(imageUrl).build()
-
+        viewModelScope.launch {
             try {
-                client.newCall(request).execute().use { response ->
-                    if (response.isSuccessful) {
-                        // Si la imagen existe, comprobar si ya está guardada en Firestore
-                        val equipmentQuery = firestore.collection("equipment")
-                            .whereEqualTo("imageUrl", imageUrl) // Comprobamos si ya existe la imagen
-
-                        equipmentQuery.get().addOnSuccessListener { querySnapshot ->
-                            if (querySnapshot.isEmpty) {
-                                // Si no existe, guardar el equipo
-                                val equipmentData = hashMapOf(
-                                    "name" to equipmentName,
-                                    "imageUrl" to imageUrl
-                                )
-
-                                firestore.collection("equipment")
-                                    .add(equipmentData)
-                                    .addOnSuccessListener { documentReference ->
-                                        println("Equipment saved successfully with ID: ${documentReference.id}")
-                                    }
-                                    .addOnFailureListener { e ->
-                                        println("Error saving equipment: $e")
-                                    }
-                            } else {
-                                // Si ya existe, no hacer nada
-                                println("Equipment already exists in Firestore")
-                            }
-                        }.addOnFailureListener { e ->
-                            println("Error checking if equipment exists: $e")
-                        }
-                    } else {
-                        // Si la imagen no está disponible
-                        println("No image found for $equipmentName")
-                    }
-                }
+                recetaRepository.checkAndSaveEquipmentImage(equipmentName)
+                Log.d("RecetasViewModel", "Imagen del equipo guardada si no existía.")
             } catch (e: Exception) {
-                println("Error during network request: $e")
+                Log.e("RecetasViewModel", "Error al verificar y guardar imagen del equipo", e)
+            }
+        }
+    }
+
+    /**
+     * Llama al repositorio para actualizar los pasos con las imágenes de los equipos.
+     */
+    fun updateEquipmentSteps(steps: List<String>) {
+        viewModelScope.launch {
+            try {
+                val stepsWithImages = recetaRepository.updateEquipmentSteps(steps)
+                _equipmentSteps.value = stepsWithImages
+                Log.d("RecetasViewModel", "Pasos con imágenes de equipos actualizados: $stepsWithImages")
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Error al actualizar los pasos con imágenes de equipos", e)
             }
         }
     }
@@ -1189,48 +576,6 @@ class RecetasViewModel : ViewModel() {
             checkAndSaveEquipmentImage(equipmentName)
         }
     }
-
-
-    fun updateEquipmentSteps(steps: List<String>) {
-        db.collection("equipment").get()
-            .addOnSuccessListener { querySnapshot ->
-                val equipos = mutableMapOf<String, String>()
-
-                querySnapshot.documents.forEach { document ->
-                    val nombreEquipo = document.getString("name") ?: ""
-                    val urlImagen = document.getString("imageUrl") ?: ""
-
-                    if (nombreEquipo.isNotEmpty() && urlImagen.isNotEmpty()) {
-                        equipos[nombreEquipo] = urlImagen
-                    }
-                }
-
-                Log.d("RecetasViewModel", "Equipos obtenidos: $equipos")
-
-                val stepsWithImages = mutableListOf<List<String>>()
-
-                steps.forEach { step ->
-                    val equipmentImages = mutableListOf<String>()
-
-                    equipos.forEach { (equipo, imageUrl) ->
-                        if (step.contains(equipo, ignoreCase = true)) {
-                            equipmentImages.add(imageUrl)
-                        }
-                    }
-
-                    Log.d("RecetasViewModel", "Paso: $step, Equipos detectados: $equipmentImages")
-
-                    stepsWithImages.add(equipmentImages)
-                }
-
-                _equipmentSteps.value = stepsWithImages
-                Log.d("RecetasViewModel", "Lista final de imágenes por paso: ${_equipmentSteps.value}")
-            }
-            .addOnFailureListener { exception ->
-                Log.e("RecetasViewModel", "Error obteniendo los equipos: ", exception)
-            }
-    }
-
 
 
 
@@ -1292,7 +637,7 @@ class RecetasViewModel : ViewModel() {
     }
 
 
-    //TODO white beans,green beans,black beans,bread
+    //TODO white beans,green beans,black beans
 
     // crea coleccion bulkIngredients buscando la image y el title en bulkRecetas si coincide el ingrediente con el de la lista
     fun fetchAndStoreIngredients() {
@@ -1361,6 +706,7 @@ class RecetasViewModel : ViewModel() {
             Log.e("Firebase", "Error fetching bulkRecetas: ${exception.message}")
         }
     }
+
 
     // obtiene 11 recetas/ingrediente y las añade a recetasIDs
     fun buscarRecetasPorCadaIngrediente() {
@@ -1574,8 +920,6 @@ class RecetasViewModel : ViewModel() {
             }
         }
     }
-
-
 
 
 

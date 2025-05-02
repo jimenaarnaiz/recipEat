@@ -10,8 +10,7 @@ import retrofit2.http.Query
 
 /**
  * Interfaz para interactuar con la API de Spoonacular.
- * Contiene endpoints para buscar recetas, obtener detalles de recetas,
- * autocompletar ingredientes y recetas...
+ * Contiene endpoints para buscar recetas, obtener detalles de recetas...
  */
 interface SpoonacularApi {
 

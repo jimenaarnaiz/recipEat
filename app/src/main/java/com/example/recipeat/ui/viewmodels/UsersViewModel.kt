@@ -28,7 +28,7 @@ class UsersViewModel(application: Application, private val userRepository: UserR
         }
     }
 
-
+    //se usa para poder acceder directamente a la var observable uid en MyRecipes
     private fun setUid() {
         val currentUid = userRepository.getUidValue()
         _uid.value = currentUid
