@@ -1,4 +1,6 @@
+import android.app.Activity
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -20,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.recipeat.R
 import com.example.recipeat.ui.theme.Cherry
-import com.example.recipeat.ui.theme.LightGray
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
@@ -41,6 +43,13 @@ fun LoginScreen(
     var errorMessage by rememberSaveable { mutableStateOf("") }
 
     val fieldWidth = if (isLandscape) 0.5f else 0.8f  // Ajusta el ancho según orientación
+    val context = LocalContext.current
+
+    // Interceptar el botón de "Atrás" para salir de la aplicación
+    BackHandler {
+        val activity = context as? Activity
+        activity?.finish() // Cerrar la actividad y salir de la app
+    }
 
     Box(
         modifier = Modifier
@@ -209,6 +218,8 @@ fun LoginForm(
                     usersViewModel.login(localEmail, localPassword) { resultMsg ->
                         if (resultMsg == "success") {
                             navController.navigate("home")
+                            localPassword = "" // Aquí vaciar la contraseña
+
                         }else{
                             localError = resultMsg
                         }

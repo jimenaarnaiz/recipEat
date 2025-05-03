@@ -63,7 +63,6 @@ fun NavigationGraph(
     val context = LocalContext.current
     val application = context.applicationContext as Application
 
-    //val recetasViewModel: RecetasViewModel = viewModel()
     val recetaRepository = RecetaRepository()
     val recetasViewModel = RecetasViewModel(recetaRepository)
     val sharedPreferences = remember { navController.context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE) }
@@ -101,20 +100,11 @@ fun NavigationGraph(
                 startDestination = it// Verifica si la sesión está activa
             ) {
                 composable("login") {
-                    LoginScreen(
-                        navController,
-                        usersViewModel,
-                        recetasViewModel,
-                        connectivityViewModel
-                    ) // Login
+                    LoginScreen(navController, usersViewModel, recetasViewModel, connectivityViewModel) // Login
                     onBottomBarVisibilityChanged(false)
                 }
                 composable("register") {
-                    RegisterScreen(
-                        navController,
-                        usersViewModel,
-                        planViewModel
-                    ) // Registro
+                    RegisterScreen(navController, usersViewModel, planViewModel) // Registro
                     onBottomBarVisibilityChanged(false)
                 }
                 composable(BottomNavItem.Home.route) {

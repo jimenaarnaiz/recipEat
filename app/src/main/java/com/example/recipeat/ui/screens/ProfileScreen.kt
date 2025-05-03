@@ -163,7 +163,9 @@ fun ProfileScreen(
                             usersViewModel.logOut()
 
                             navController.navigate("login") {
-                                popUpTo("profile") { inclusive = true } // para eliminar de la pila las anteriores screens
+                                // Borra toda la pila de navegación
+                                popUpTo("login") { inclusive = true } // Elimina todas las pantallas previas a login, incluyendo el profile
+                                launchSingleTop = true // Evitar que se creen múltiples instancias del login
                             }
                         },
                         backgroundColor = Color.Red,
