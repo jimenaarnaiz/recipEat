@@ -584,7 +584,7 @@ class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewMod
             "almond,cherry tomato,chickpea,chicken,chicken breast,chicken broth,chicken " +
             "sausage,chicken thigh,chili pepper,chocolate,baking powder,cilantro,cinnamon,cocoa powder," +
             "coconut,condensed milk,cooking oil,corn,corn oil,cornstarch,couscous,crab,cranberries," +
-            "cream,cream cheese,bacon,cumin,soy sauce,vinegar,double cream,dulce de leche,egg,egg white,egg yolk," +
+            "cream,cream cheese,bacon,cumin,soy sauce,vinegar,double cream,egg,egg white,egg yolk," +
             "eggplant,chocolate chips,evaporated milk,extra virgin olive oil,feta cheese,firm brown sugar,fish sauce," +
             "flour,parsley,ginger,garlic,garlic powder,gelatin,goat cheese,gorgonzola,greek yogurt,green bean,ground beef," +
             "ground cinnamon,ground ginger,ground pepper,ground pork,ham,honey,jalapeño,rice,kidney beans,leek,lime,macaroni," +
@@ -595,7 +595,7 @@ class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewMod
             "tuna,vanilla,vanilla extract,vegetable broth,vegetable oil,vinegar,nuts,water,white wine,bell pepper,yogurt," +
             "lentils,corn,collard greens,zucchini,beef,apple,apples,hake,anchovies,cucumber,mayonnaise,ketchup," +
             "chard,pumpkin,lemon,cabbage,octopus,strawberries,squid,cod,trout,sea bream,sardines,white fish,smoked salmon," +
-            "clams,pork,lamb,turkey,quail,ground meat"
+            "clams,pork,lamb,turkey,quail,ground meat,white beans,green beans,black beans"
 
     fun eliminarRecetasNoExistentesEnBulkRecetas() {
         viewModelScope.launch {
@@ -647,7 +647,7 @@ class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewMod
             "cherry tomato", "chickpea", "chicken", "chicken breast", "chicken broth", "chicken sausage", "chicken thigh",
             "chili pepper", "chocolate", "chocolate chips", "baking powder", "cilantro", "cinnamon", "cocoa powder", "coconut",
             "condensed milk", "cooking oil", "corn", "corn oil", "cornstarch", "couscous", "crab", "cranberries", "cream",
-            "cream cheese", "bacon", "cumin", "soy sauce", "vinegar", "double cream", "dulce de leche", "egg", "egg white", "egg yolk",
+            "cream cheese", "bacon", "cumin", "soy sauce", "vinegar", "double cream", "egg", "egg white", "egg yolk",
             "eggplant", "evaporated milk", "extra virgin olive oil", "feta cheese", "firm brown sugar", "fish sauce", "flour", "parsley",
             "ginger", "garlic", "garlic powder", "gelatin", "goat cheese", "gorgonzola", "greek yogurt", "green bean", "ground beef",
             "ground cinnamon", "ground ginger", "ground pepper", "ground pork", "ham", "honey", "jalapeño", "rice", "kidney beans",
@@ -659,7 +659,7 @@ class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewMod
             "vegetable broth", "vegetable oil", "nuts", "water", "white wine", "bell pepper", "yogurt", "lentils", "corn", "collard greens",
             "olives", "zucchini", "beef", "apple", "apples", "hake", "anchovies", "cucumber", "mayonnaise", "ketchup", "chard", "pumpkin",
             "lemon", "cabbage", "octopus", "strawberries", "squid", "cod", "trout", "sea bream", "sardines", "white fish", "smoked salmon",
-            "clams", "pork", "lamb", "turkey", "quail", "ground meat"
+            "clams", "pork", "lamb", "turkey", "quail", "ground meat","white beans","green beans","black beans","pears","chicken thighs"
         )
 
         db.collection("bulkRecetas").get().addOnSuccessListener { result ->
@@ -884,7 +884,6 @@ class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewMod
     fun procesarIngrediente() {
         val ingredientList = ingredients.split(",") // Dividimos la cadena de ingredientes en una lista
             .distinct() // Elimina los ingredientes repetidos
-
 
         viewModelScope.launch {
             try {
@@ -1128,6 +1127,91 @@ class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewMod
             }
         }
     }
+
+
+//    fun guardarRecetasFaltantesEnBulk() {
+//        viewModelScope.launch {
+//            try {
+//                db.collection("idsRecetas").get()
+//                    .addOnSuccessListener { idsSnapshot ->
+//                        val recetaIds = idsSnapshot.mapNotNull { it.getLong("id")?.toInt() }
+//
+//                        if (recetaIds.isEmpty()) {
+//                            Log.d("RecetasViewModel", "No hay recetas en 'idsRecetas'")
+//                            return@addOnSuccessListener
+//                        }
+//
+//                        db.collection("bulkRecetas").get()
+//                            .addOnSuccessListener { bulkSnapshot ->
+//                                val bulkRecetasIds = bulkSnapshot.documents.mapNotNull { it.id.toIntOrNull() }
+//                                val idsFaltantes = recetaIds.filterNot { it in bulkRecetasIds }
+//
+//                                if (idsFaltantes.isEmpty()) {
+//                                    Log.d("RecetasViewModel", "Todas las recetas ya están en 'bulkRecetas'")
+//                                    return@addOnSuccessListener
+//                                }
+//
+//                                val idsString = idsFaltantes.joinToString(",")
+//
+//                                viewModelScope.launch {
+//                                    try {
+//                                        val response = api.obtenerRecetasBulk(recetas_ids = idsString)
+//
+//                                        for (apiReceta in response) {
+//                                            val recetaId = apiReceta.id.toString()
+//                                            val snapshot = db.collection("bulkRecetas").document(recetaId).get().await()
+//
+//                                            if (!snapshot.exists()) {
+//                                                val receta = mapApiRecetaToReceta(apiReceta, "", api.obtenerInstruccionesReceta(apiReceta.id))
+//
+//                                                val recetaData = hashMapOf(
+//                                                    "id" to receta.id,
+//                                                    "title" to receta.title,
+//                                                    "image" to receta.image,
+//                                                    "servings" to receta.servings,
+//                                                    "ingredients" to receta.ingredients.map {
+//                                                        hashMapOf(
+//                                                            "name" to it.name,
+//                                                            "amount" to it.amount,
+//                                                            "unit" to it.unit,
+//                                                            "image" to it.image,
+//                                                            "aisle" to it.aisle
+//                                                        )
+//                                                    },
+//                                                    "steps" to receta.steps,
+//                                                    "time" to receta.time,
+//                                                    "dishTypes" to receta.dishTypes,
+//                                                    "glutenFree" to receta.glutenFree,
+//                                                    "vegan" to receta.vegan,
+//                                                    "vegetarian" to receta.vegetarian
+//                                                )
+//
+//                                                db.collection("bulkRecetas").document(recetaId).set(recetaData).await()
+//                                                Log.d("RecetasViewModel", "Receta guardada: $recetaId")
+//                                            } else {
+//                                                Log.d("RecetasViewModel", "Ya existe la receta: $recetaId")
+//                                            }
+//                                        }
+//
+//                                    } catch (e: Exception) {
+//                                        Log.e("RecetasViewModel", "Error al obtener o guardar recetas: ${e.message}")
+//                                    }
+//                                }
+//                            }
+//                            .addOnFailureListener { e ->
+//                                Log.e("RecetasViewModel", "Error al obtener 'bulkRecetas': ${e.message}")
+//                            }
+//                    }
+//                    .addOnFailureListener { e ->
+//                        Log.e("RecetasViewModel", "Error al obtener 'idsRecetas': ${e.message}")
+//                    }
+//
+//            } catch (e: Exception) {
+//                Log.e("RecetasViewModel", "Error general en guardarRecetasFaltantesEnBulk: ${e.message}")
+//            }
+//        }
+//    }
+
 
 
     // guardar las rccetas en recetasBulk que faltan de idsRecetas

@@ -71,7 +71,6 @@ class UserRepositoryTest {
 
 
     //tests del login
-
     @Test
     fun `login with valid credentials should return success`() = runTest {
         val validEmail = "test@example.com"
@@ -108,7 +107,6 @@ class UserRepositoryTest {
 
         val email = "test@example.com"
         val emptyPassword = ""
-
         val exception = FirebaseAuthInvalidCredentialsException("ERROR_INVALID_CREDENTIAL", "Password is empty")
 
         every {

@@ -199,21 +199,21 @@ fun LoginForm(
                 if (localEmail.isEmpty() || localPassword.isEmpty()) {
                     localError = "Email and Password cannot be empty."
 
-                    //recetasViewModel.buscarRecetasPorIngredientes1() //TODO
-                    recetasViewModel.guardarRecetasBulk2() //-esta es!
+                    //recetasViewModel.guardarRecetasBulk2() //-esta es!
                     //recetasViewModel.fetchAndStoreIngredients()
-                    //recetasViewModel.buscarRecetasPorCadaIngrediente()
+                   // recetasViewModel.buscarRecetasPorCadaIngrediente()
                    // recetasViewModel.eliminarRecetasNoExistentesEnBulkRecetas()
                     recetasViewModel.logRecetasCount()
                     //recetasViewModel.extraerDishTypesUnicos()
                     //recetasViewModel.obtenerYGuardarAisleTypes()
                     // 1759 recetas en recetasIds y 140 ingredientes
-
                     //recetasViewModel.procesarIngrediente()
                    // roomViewModel.deleteAllRecetas()
 //                    recetasViewModel.obtenerValoresAisleUnicos()
 //                    recetasViewModel.saveAllEquipmentImages()
                     //recetasViewModel.actualizarAisleEnRecetas()
+
+                    //recetasViewModel.guardarRecetasFaltantesEnBulk()
                 } else {
                     usersViewModel.login(localEmail, localPassword) { resultMsg ->
                         if (resultMsg == "success") {

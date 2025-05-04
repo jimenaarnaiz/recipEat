@@ -670,12 +670,11 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
         )
     }
 
+
     private val generativeModel = GenerativeModel(
         modelName = "gemini-1.5-flash",
         apiKey = API_GEMINI_KEY
     )
-
-
     /**
      * Agrupa y filtra ingredientes usando Gemini para eliminar los ingredientes que realmente son instrucciones.
      * Devuelve una lista de ingredientes procesados (IngredienteCompra).

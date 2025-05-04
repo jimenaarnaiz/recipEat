@@ -289,11 +289,7 @@ class RecetaRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
 
 
     // Función para mapear ApiReceta a Receta
-    fun mapApiRecetaToReceta(
-        apiReceta: ApiReceta,
-        uid: String,
-        analyzedInstructions: List<Map<String, Any>>
-    ): Receta {
+    fun mapApiRecetaToReceta(apiReceta: ApiReceta, uid: String, analyzedInstructions: List<Map<String, Any>> ): Receta {
 
         // Extraer solo los valores de "step" en una lista de Strings
         val pasos = analyzedInstructions.flatMap { instruction ->
@@ -312,7 +308,7 @@ class RecetaRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
             title = apiReceta.title,
             image = apiReceta.image,
             servings = apiReceta.servings,
-            ingredients = apiReceta.extendedIngredients,  // Los ingredientes ya coinciden
+            ingredients = apiReceta.extendedIngredients,
             steps = pasos,
             time = apiReceta.readyInMinutes,
             dishTypes = apiReceta.dishTypes,
@@ -321,7 +317,6 @@ class RecetaRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
             vegan = apiReceta.vegan,
             vegetarian = apiReceta.vegetarian,
             date = System.currentTimeMillis(),
-            //usedIngredientCount = apiReceta.usedIngredientCount,
             unusedIngredients = emptyList(),
             missingIngredientCount = 0,
             unusedIngredientCount = 0
