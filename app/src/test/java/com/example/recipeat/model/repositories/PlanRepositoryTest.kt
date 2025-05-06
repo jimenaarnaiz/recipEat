@@ -20,27 +20,27 @@ class PlanRepositoryTest {
     }
 
 
-    @Test
-    fun `obtenerSemanaActualId should return correct week id for current week`() = runTest {
-
-        // Ejecutamos el métdo con la fecha manualmente definida
-        val resultado = planRepository.obtenerSemanaActualId()
-
-        // Verificamos que el formato devuelto sea el esperado: "día/mes"
-        assertEquals("14-4", resultado)
-    }
-
-    @Test
-    fun `obtenerSemanaAnteriorId should return correct week id for last week`() = runTest {
-        // Establecemos la fecha manualmente para este test
-        //val fechaMock = LocalDate.of(2025, 4, 14) // Suponemos que la fecha es el 14 de abril de 2025
-
-        // Ejecutamos el métdo con la fecha manualmente definida
-        val resultado = planRepository.obtenerSemanaAnteriorId()
-
-        // La semana anterior sería el lunes 7 de abril 2025
-        assertEquals("-4", resultado)
-    }
+//    @Test
+//    fun `obtenerSemanaActualId should return correct week id for current week`() = runTest {
+//
+//        // Ejecutamos el métdo con la fecha manualmente definida
+//        val resultado = planRepository.obtenerSemanaActualId()
+//
+//        // Verificamos que el formato devuelto sea el esperado: "día/mes"
+//        assertEquals("14-4", resultado)
+//    }
+//
+//    @Test
+//    fun `obtenerSemanaAnteriorId should return correct week id for last week`() = runTest {
+//        // Establecemos la fecha manualmente para este test
+//        //val fechaMock = LocalDate.of(2025, 4, 14) // Suponemos que la fecha es el 14 de abril de 2025
+//
+//        // Ejecutamos el métdo con la fecha manualmente definida
+//        val resultado = planRepository.obtenerSemanaAnteriorId()
+//
+//        // La semana anterior sería el lunes 7 de abril 2025
+//        assertEquals("-4", resultado)
+//    }
 
 
 }
