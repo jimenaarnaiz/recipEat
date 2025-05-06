@@ -130,31 +130,58 @@ dependencies {
 
 }
 
-tasks.register<JacocoReport>("jacocoTestReport") {
-    dependsOn("testDebugUnitTest") // Asegura que se ejecuten los tests primero
+//tasks.register<JacocoReport>("jacocoTestReport") {
+//    dependsOn("testDebugUnitTest") // Asegura que se ejecuten los tests primero
+//
+//    reports {
+//        xml.required.set(true) //necesario para sonarqube
+//        html.required.set(true)
+//    }
+//
+//    val fileFilter = listOf(
+//        "**/R.class",
+//        "**/R$*.class",
+//        "**/BuildConfig.*",
+//        "**/Manifest*.*",
+//        "**/*Test*.*",
+//        "**/Hilt*.*",
+//        "**/di/**"
+//    )
+//
+//    val buildDirPath = layout.buildDirectory.asFile.get()
+//
+//    val classDirs = fileTree(buildDirPath.resolve("tmp/kotlin-classes/debug")) {
+//        exclude(fileFilter)
+//    }
+//
+//    classDirectories.setFrom(classDirs)
+//    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+//    executionData.setFrom(files(buildDirPath.resolve("jacoco/testDebugUnitTest.exec")))
+//}
 
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest") // Verifica que este sea el nombre correcto de la tarea de pruebas
     reports {
-        xml.required.set(true) //necesario para sonarqube
-        html.required.set(true)
+        xml.required.set(true) // Generar reporte en XML
+        html.required.set(true) // Generar reporte en HTML (opcional)
     }
 
-    val fileFilter = listOf(
-        "**/R.class",
-        "**/R$*.class",
-        "**/BuildConfig.*",
-        "**/Manifest*.*",
-        "**/*Test*.*",
-        "**/Hilt*.*",
-        "**/di/**"
+    // Asegúrate de que la ruta a las clases esté correcta
+    classDirectories.setFrom(
+        fileTree("build/tmp/kotlin-classes/debug") {
+            exclude(
+                "**/R.class",
+                "*/R$.class",
+                "*/BuildConfig.",
+                "*/Manifest.*",
+                "*/*Test.*"
+            )
+        }
     )
 
-    val buildDirPath = layout.buildDirectory.asFile.get()
-
-    val classDirs = fileTree(buildDirPath.resolve("tmp/kotlin-classes/debug")) {
-        exclude(fileFilter)
-    }
-
-    classDirectories.setFrom(classDirs)
+    // Asegúrate de que las fuentes estén configuradas correctamente
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
-    executionData.setFrom(files(buildDirPath.resolve("jacoco/testDebugUnitTest.exec")))
+    executionData.setFrom(fileTree(buildDir).include("jacoco/testDebugUnitTest.exec"))
 }
+
+
