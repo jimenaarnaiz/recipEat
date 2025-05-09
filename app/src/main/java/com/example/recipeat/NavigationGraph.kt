@@ -100,7 +100,7 @@ fun NavigationGraph(
                 startDestination = it// Verifica si la sesión está activa
             ) {
                 composable("login") {
-                    LoginScreen(navController, usersViewModel, recetasViewModel, connectivityViewModel) // Login
+                    LoginScreen(navController, usersViewModel, recetasViewModel, connectivityViewModel, planViewModel) // Login
                     onBottomBarVisibilityChanged(false)
                 }
                 composable("register") {

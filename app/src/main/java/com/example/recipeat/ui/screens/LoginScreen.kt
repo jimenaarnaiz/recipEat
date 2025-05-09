@@ -1,6 +1,8 @@
 import android.app.Activity
 import android.content.res.Configuration
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +27,7 @@ import com.example.recipeat.R
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
+import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 
@@ -33,7 +36,8 @@ fun LoginScreen(
     navController: NavHostController,
     usersViewModel: UsersViewModel,
     recetasViewModel: RecetasViewModel,
-    connectivityViewModel: ConnectivityViewModel
+    connectivityViewModel: ConnectivityViewModel,
+    planViewModel: PlanViewModel
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -77,6 +81,7 @@ fun LoginScreen(
                     navController,
                     recetasViewModel,
                     usersViewModel,
+                    planViewModel,
                     fieldWidth,
                     email,
                     password,
@@ -112,6 +117,7 @@ fun LoginScreen(
                     navController,
                     recetasViewModel,
                     usersViewModel,
+                    planViewModel,
                     fieldWidth,
                     email,
                     password,
@@ -126,11 +132,13 @@ fun LoginScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun LoginForm(
     navController: NavHostController,
     recetasViewModel: RecetasViewModel,
     usersViewModel: UsersViewModel,
+    planViewModel: PlanViewModel,
     fieldWidth: Float,
     email: String,
     password: String,
@@ -217,6 +225,12 @@ fun LoginForm(
                 } else {
                     usersViewModel.login(localEmail, localPassword) { resultMsg ->
                         if (resultMsg == "success") {
+                            // Comprobar si tiene un plan semanal esta semana, y si no, crearlo
+                            planViewModel.obtenerPlanSemanal(userId = usersViewModel.getUidValue().toString())
+                            if (planViewModel.planSemanal.value == null){
+                                planViewModel.iniciarGeneracionPlanSemanalInicial(usersViewModel.getUidValue().toString())
+                            }
+
                             navController.navigate("home")
                             localPassword = "" // Aquí vaciar la contraseña
 
