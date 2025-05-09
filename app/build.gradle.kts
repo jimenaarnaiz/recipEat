@@ -101,15 +101,12 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 
     val fileFilter = listOf(
         "**/R.class",
-        "*/R$.class",
-        "*/BuildConfig.",
-        "*/Manifest.*",
-        "*/*Test.*",
-        "*/$$.*",
-        "*/di/*",
-        "*/Hilt.*",
-        "*/_MembersInjector.class",
-        "*/Dagger*Component.class"
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "**/Hilt*.*",
+        "**/di/**"
     )
 
     // Directorios con clases compiladas (Java + Kotlin)

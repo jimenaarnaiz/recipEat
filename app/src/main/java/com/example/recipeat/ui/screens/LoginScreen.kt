@@ -31,6 +31,7 @@ import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun LoginScreen(
     navController: NavHostController,
