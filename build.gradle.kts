@@ -19,7 +19,7 @@ val sonarToken: String = properties.getProperty("SONARQUBE_TOKEN")
 
 sonarqube {
     properties {
-        property("sonar.host.url", "http://sonarcloud.io") // URL del servidor
+        property("sonar.host.url", "https://sonarcloud.io") // URL del servidor
         property("sonar.projectKey", "jimenaarnaiz_recipEat")
         property("organization", "jimenaarnaiz")
         property("sonar.token", sonarToken)

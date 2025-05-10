@@ -50,7 +50,7 @@ jobs:
         run: cat local.properties
 
       - name: Generar reporte de cobertura
-        run: ./gradlew jacocoTestReport --info
+        run: ./gradlew jacocoTestReport
 
       - name: Ejecutar SonarCloud
         env:
