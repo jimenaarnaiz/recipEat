@@ -91,7 +91,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     doNotTrackState("State tracking disabled for Jacoco report task")
 
     //val reportsDir = file("app/build/reports/jacoco/jacocoTestReport")
-    val reportsDir = file("${rootProject.projectDir}/coverage")
+    val reportsDir =  "build/reports/jacoco/test/"
 
     reports {
         xml.required.set(true)

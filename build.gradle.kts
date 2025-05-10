@@ -14,7 +14,7 @@ val localProperties = rootProject.file("local.properties")
 val properties = java.util.Properties()
 properties.load(localProperties.inputStream())
 
-// Obtén el token
+//  token
 val sonarToken: String = properties.getProperty("SONARQUBE_TOKEN")
 
 sonarqube {
@@ -24,7 +24,7 @@ sonarqube {
         property("sonar.organization", "recipeat")
         property("sonar.token", sonarToken)
         property("sonar.sources", "src/main/kotlin")  // ruta correspondiente a mi código
-        property("sonar.coverage.jacoco.xmlReportPaths", "coverage/jacocoTestReport.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
     }
 }
 
