@@ -21,7 +21,7 @@ sonarqube {
     properties {
         property("sonar.host.url", "https://sonarcloud.io") // URL del servidor
         property("sonar.projectKey", "jimenaarnaiz_recipEat")
-        property("sonar.organization", "jimenaarnaiz")
+        property("sonar.organization", "recipeat")
         property("sonar.token", sonarToken)
         property("sonar.sources", "src/main/kotlin")  // ruta correspondiente a mi código
         property("sonar.coverage.jacoco.xmlReportPaths", "app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
