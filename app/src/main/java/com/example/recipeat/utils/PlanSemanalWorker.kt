@@ -67,11 +67,9 @@ class PlanSemanalWorker(
         // Configura el WorkManager para que se ejecute cada lunes
         @RequiresApi(Build.VERSION_CODES.O)
         fun configurarWorker(context: Context) {
-            val currentUser = FirebaseAuth.getInstance().currentUser
-            val currentUid = currentUser?.uid ?: return
 
-            // Nombre único por usuario para evitar conflictos entre sesiones
-            val uniqueWorkName = "PlanSemanalWorker_$currentUid"
+            // Nombre fijo para el Worker, ya que solo hay un usuario activo a la vez
+            val uniqueWorkName = "PlanSemanalWorker"
 
             // Calcula cuánto falta para el próximo lunes a las 00:00
             val delay = calcularDelayHastaProximoLunes()
