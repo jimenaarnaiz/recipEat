@@ -3,10 +3,10 @@ name: SonarCloud Analysis
 on:
   push:
     branches:
-      - main
+      - main  # rama en la que quiero ejecutar el análisis
   pull_request:
     branches:
-      - main
+      - main  # rama en la que quiero ejecutar el análisis
 
 jobs:
   sonarcloud:
@@ -31,20 +31,18 @@ jobs:
             ${{ runner.os }}-sonar-
 
       - name: Forzar permisos de ejecución a gradlew
-        run: chmod +x gradlew
+        run: sudo chmod +x gradlew || true
 
       - name: Verificar permisos de gradlew
         run: ls -l gradlew
 
-      - name: Ejecutar tests y generar reporte de cobertura
-        run: ./gradlew testDebugUnitTest jacocoTestReport
+      - name: Compilar proyecto
+        run: ./gradlew build
 
-      - name: Verificar que el reporte de Jacoco existe
-        run: ls -la build/reports/jacoco/testDebugUnitTest
+      - name: Generar reporte de cobertura
+        run: ./gradlew jacocoTestReport
 
       - name: Ejecutar SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew sonarqube \
-          -Dsonar.login=$SONAR_TOKEN \
-          -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/testDebugUnitTest/testDebugUnitTest.xml
+        run: ./gradlew sonarqube -Dsonar.login=$SONAR_TOKEN

@@ -90,7 +90,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 
     doNotTrackState("State tracking disabled for Jacoco report task")
 
-    val reportsDir = file("${buildDir}/reports/jacoco/jacocoTestReport")
+    val reportsDir = file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoTestReport")
 
     reports {
         xml.required.set(true)
@@ -110,7 +110,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     )
 
     // Directorios con clases compiladas (Java + Kotlin)
-    val debugTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+    val debugTree = fileTree("${layout.buildDirectory.get().asFile}/tmp/kotlin-classes/debug") {
         exclude(fileFilter)
     }
 
@@ -123,7 +123,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     classDirectories.setFrom(files(debugTree))
 
     // Ruta para executionData
-    executionData.setFrom(fileTree(buildDir).include(
+    executionData.setFrom(fileTree(layout.buildDirectory.get().asFile).include(
         "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
     ))
 }

@@ -25,7 +25,7 @@ sonarqube {
         property("sonar.projectVersion", "1.0")
         property("sonar.token", sonarToken)
         property("sonar.sources", listOf("src/main/java"))  // O la ruta correspondiente a mi código
-        property("sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
         property("sonar.java.binaries", "build/intermediates/classes/debug")  // Compilados del código
     }
 }
