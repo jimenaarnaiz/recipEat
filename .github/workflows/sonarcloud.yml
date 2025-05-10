@@ -41,7 +41,7 @@ jobs:
       # Crear archivo local.properties para indicar el SDK
       - name: Crear archivo local.properties
         run: echo "sdk.dir=/usr/lib/android-sdk" > local.properties
-              echo "sonar.token=${{ secrets.SONAR_TOKEN }}" >> local.properties
+              echo "SONARQUBE_TOKEN=${{ secrets.SONAR_TOKEN }}" >> local.properties
               echo "API_SPOONACULAR_KEY=${{ secrets.API_SPOONACULAR_KEY }}" >> local.properties
               echo "API_GEMINI_KEY=${{ secrets.API_GEMINI_KEY }}" >> local.properties
 
