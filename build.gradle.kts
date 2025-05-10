@@ -24,7 +24,7 @@ sonarqube {
         property("sonar.organization", "recipeat")
         property("sonar.token", sonarToken)
         property("sonar.sources", "src/main/kotlin")  // ruta correspondiente a mi código
-        property("sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "$${layout.buildDirectory.asFile}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
     }
 }
 
