@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main  # rama en la que quiero ejecutar el análisis
+      - master
   pull_request:
     branches:
       - main  # rama en la que quiero ejecutar el análisis
+      - master
 
 jobs:
   sonarcloud:
