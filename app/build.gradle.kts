@@ -122,7 +122,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 
     classDirectories.setFrom(files(debugTree))
 
-    // Ruta corregida para executionData
+    // Ruta para executionData
     executionData.setFrom(fileTree(buildDir).include(
         "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
     ))
@@ -175,7 +175,6 @@ dependencies {
     // Si usas coroutines con Room
     implementation(libs.androidx.room.ktx)
     testImplementation(libs.mockk) //para mockear test
-    //org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3
     testImplementation(libs.kotlinx.coroutines.test) //para corrutinas en tests
 
 
