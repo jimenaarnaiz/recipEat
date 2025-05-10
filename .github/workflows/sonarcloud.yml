@@ -45,6 +45,9 @@ jobs:
             echo "API_SPOONACULAR_KEY=${{ secrets.API_SPOONACULAR_KEY }}" >> local.properties
             echo "API_GEMINI_KEY=${{ secrets.API_GEMINI_KEY }}" >> local.properties
 
+      - name: Verificar contenido de local.properties
+        run: cat local.properties
+
       - name: Generar reporte de cobertura
         run: ./gradlew jacocoTestReport
 
