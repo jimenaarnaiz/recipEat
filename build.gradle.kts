@@ -23,7 +23,7 @@ sonarqube {
         property("sonar.projectKey", "jimenaarnaiz_recipEat")
         property("organization", "jimenaarnaiz")
         property("sonar.token", sonarToken)
-        property("sonar.sources", "src/main/java")  // ruta correspondiente a mi código
+        property("sonar.sources", "src/main/kotlin")  // ruta correspondiente a mi código
         property("sonar.coverage.jacoco.xmlReportPaths", "app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
         //property("sonar.java.binaries", "build/intermediates/classes/debug")  // Compilados del código
     }
