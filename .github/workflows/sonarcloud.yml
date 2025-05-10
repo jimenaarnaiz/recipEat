@@ -41,6 +41,9 @@ jobs:
       # Crear archivo local.properties para indicar el SDK
       - name: Crear archivo local.properties
         run: echo "sdk.dir=/usr/lib/android-sdk" > local.properties
+              echo "sonar.token=${{ secrets.SONAR_TOKEN }}" >> local.properties
+              echo "api.key1=${{ secrets.API_KEY_1 }}" >> local.properties
+              echo "api.key2=${{ secrets.API_KEY_2 }}" >> local.properties
 
       - name: Compilar proyecto
         run: ./gradlew build
