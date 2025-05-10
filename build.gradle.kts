@@ -19,14 +19,13 @@ val sonarToken: String = properties.getProperty("SONARQUBE_TOKEN")
 
 sonarqube {
     properties {
-        property("sonar.host.url", "http://localhost:9000") // Actualiza con la URL correcta de tu servidor
-        property("sonar.projectKey", "com.example.recipeat")  // Mi proyecto
-        property("sonar.projectName", "recipEat")
-        property("sonar.projectVersion", "1.0")
+        property("sonar.host.url", "http://sonarcloud.io") // URL del servidor
+        property("sonar.projectKey", "jimenaarnaiz_recipEat")
+        property("organization", "jimenaarnaiz")
         property("sonar.token", sonarToken)
-        property("sonar.sources", listOf("src/main/java"))  // O la ruta correspondiente a mi código
-        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
-        property("sonar.java.binaries", "build/intermediates/classes/debug")  // Compilados del código
+        property("sonar.sources", "src/main/java")  // ruta correspondiente a mi código
+        property("sonar.coverage.jacoco.xmlReportPaths", "app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        //property("sonar.java.binaries", "build/intermediates/classes/debug")  // Compilados del código
     }
 }
 
