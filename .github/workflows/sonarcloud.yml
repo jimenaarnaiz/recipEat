@@ -38,16 +38,6 @@ jobs:
       - name: Verificar permisos de gradlew
         run: ls -l gradlew
 
-      # Crear archivo local.properties para indicar el SDK y las API KEYS
-      - name: Crear archivo local.properties
-        run: echo "sdk.dir=/usr/lib/android-sdk" > local.properties
-          echo "SONARQUBE_TOKEN=\"${{ secrets.SONARQUBE_TOKEN }}\"" >> local.properties
-          echo "API_SPOONACULAR_KEY=\"${{ secrets.API_SPOONACULAR_KEY }}\"" >> local.properties
-          echo "API_GEMINI_KEY=\"${{ secrets.API_GEMINI_KEY }}\"" >> local.properties
-
-      - name: Compilar proyecto
-        run: ./gradlew build
-
       - name: Generar reporte de cobertura
         run: ./gradlew jacocoTestReport
 
