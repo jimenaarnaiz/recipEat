@@ -58,6 +58,10 @@ jobs:
       - name: Generar reporte de cobertura
         run: ./gradlew jacocoTestReport
 
+      - name: Check if report file exists
+        run: ls -l app/build/reports/jacoco/jacocoTestReport/
+
+
       - name: Ejecutar SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
