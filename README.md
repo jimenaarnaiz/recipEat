@@ -25,7 +25,7 @@ desperdicio de alimentos.
 - `Historial de cocina`: La aplicación registra las recetas cocinadas por el usuario, mostrando las recetas cocinadas en los últimos 7 o 30 días, y facilitando el acceso rápido a las más recientes.
 - `Búsqueda por ingredientes`: Incluye una funcionalidad de búsqueda de ingredientes con autocompletado, que permite a los usuarios seleccionar varios ingredientes y obtener recetas que contengan esos ingredientes (todos o algunos de ellos).
 - `Creación y gestión de recetas personalizadas`: Los usuarios pueden crear sus propias recetas, agregando imagen, tiempo de preparación, raciones, ingredientes, pasos y ocasión. Además, pueden editar o eliminar estas recetas.
-- `Modo offline`: La aplicación permite a los usuarios acceder a sus recetas y recetas favoritas sin conexión a Internet. Los datos se almacenan localmente utilizando Room y se sincronizan automáticamente cuando hay conexión disponible.
+- `Modo offline`: La aplicación permite a los usuarios acceder sin conexión a Internet a: las 15 primeras recetas que se muestran en el Home, las últimas 15 recetas visitadas, las recetas creadas y las recetas favoritas. Los datos se almacenan localmente utilizando Room y se sincronizan automáticamente cuando hay conexión disponible.
 - `Plan semanal`: La aplicación genera un plan semanal de comidas, asignando recetas de desayuno, almuerzo y cena a cada día de la semana. Este plan se actualiza automáticamente cada lunes mediante un worker, garantizando que no se repitan recetas de la semana anterior ni de la actual. También limita el consumo de carne y pasta a no más de 3 días y registra qué "aisle" se usa en cada comida para evitar repetir el mismo tipo de ingrediente en un día.
  
 ## 💻Tecnologías utilizadas
