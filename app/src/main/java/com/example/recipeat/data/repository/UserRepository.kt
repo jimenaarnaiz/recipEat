@@ -287,8 +287,15 @@ class UserRepository(
     fun deleteImage(context: Context, recetaId: String) {
         val file = File(context.filesDir, "$recetaId.jpg")
         if (file.exists()) {
-            file.delete()
-            Log.d("UserRepository", "Imagen de receta eliminada: ${file.absolutePath}")
+            val isDeleted = file.delete() // Guarda el valor booleano de si la eliminación fue exitosa
+
+            if (isDeleted) {
+                Log.d("UserRepository", "Imagen de receta eliminada correctamente: ${file.absolutePath}")
+            } else {
+                Log.e("UserRepository", "Error al eliminar la imagen de receta: ${file.absolutePath}")
+            }
+        } else {
+            Log.w("UserRepository", "La imagen de receta no existe: ${file.absolutePath}")
         }
     }
 

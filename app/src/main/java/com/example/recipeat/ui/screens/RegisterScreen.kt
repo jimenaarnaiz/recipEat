@@ -38,6 +38,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -237,6 +239,10 @@ fun InputFields(
             focusedLabelColor = Color.DarkGray,
             unfocusedLabelColor = Color.Gray
         ),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            capitalization = KeyboardCapitalization.None, // No capitalizar automáticamente
+            keyboardType = KeyboardType.Password // Asegúrate de que sea para contraseñas
+        ),
         textStyle = MaterialTheme.typography.bodyMedium
     )
 
@@ -274,8 +280,6 @@ fun Buttons(
                         if (result == "success") {
                             val uid = FirebaseAuth.getInstance().currentUser?.uid
                             if (uid != null) {
-                                //recetasViewModel.verificarRecetasGuardadasApi()
-                                //ingredientesViewModel.extraerIngredientesYGuardar()
                                 planViewModel.iniciarGeneracionPlanSemanalInicial(uid.toString())
                             }
                             onErrorMessageChange("")
