@@ -29,4 +29,10 @@ desperdicio de alimentos.
 - `Plan semanal`: La aplicación genera un plan semanal de comidas, asignando recetas de desayuno, almuerzo y cena a cada día de la semana. Este plan se actualiza automáticamente cada lunes mediante un worker, garantizando que no se repitan recetas de la semana anterior ni de la actual. También limita el consumo de carne y pasta a no más de 3 días y registra qué "aisle" se usa en cada comida para evitar repetir el mismo tipo de ingrediente en un día.
  
 ## 💻Tecnologías utilizadas
+<p align="left">
+  <img src="https://developer.android.com/images/logos/android-studio.svg" alt="Android Studio" height="50"/>
+  <img src="https://firebase.google.com/downloads/brand-guidelines/PNG/logo-vertical.png" alt="Firebase" height="50"/>
+</p>
+
+
 
