@@ -28,7 +28,6 @@ class UserRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
 
-
     private val sessionIniciadaKey = "sesionIniciada_"
 
     private val _uid = MutableStateFlow<String?>(null)
@@ -266,12 +265,13 @@ class UserRepository(
      * Si el archivo no existe o hay un error, se devuelve null.
      */
     fun loadImageFromFile(context: Context, recetaId: String?): Bitmap? {
+        Log.d("UserRepository", "cargando para receta con id: ${recetaId.toString()}")
         try {
             val imagen =
                 if (recetaId.isNullOrBlank()) "profile_image${_uid.value}.jpg" else "$recetaId.jpg"
             val file = File(context.filesDir, imagen)
             if (file.exists()) {
-                Log.d("UserRepository", "Cargando Imagen de receta : ${file.absolutePath}")
+                Log.d("UserRepository", "Cargando Imagen : ${file.absolutePath}")
                 return BitmapFactory.decodeFile(file.absolutePath)
             }else{
                 Log.d("UserRepository", "Archivo no encontrado: ${file.absolutePath}")

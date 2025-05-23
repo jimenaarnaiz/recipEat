@@ -65,7 +65,7 @@ class PlanRepository(private val firestore: FirebaseFirestore = FirebaseFirestor
     // Si es la primera vez que el user entra (register), se genera un plan inicial
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun iniciarGeneracionPlanSemanalInicial(userId: String) {
-        Log.d("PlanSemanal", "Primera vez que el usuario entra, generando el plan semanal.")
+        Log.d("PlanSemanal", "Primera vez que el usuario entra o login, generando el plan semanal.")
         val recetas = obtenerRecetasFirebase()
 
         if (recetas.isNotEmpty()) {

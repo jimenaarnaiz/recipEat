@@ -58,6 +58,9 @@ class PlanViewModel(application: Application, private val planRepository: PlanRe
         viewModelScope.launch {
             val plan = planRepository.obtenerPlanSemanal(userId)
             _planSemanal.value = plan
+            if (plan != null) {
+                Log.d("PlanViewModel", "Plan no null: ${plan.weekMeals.values}")
+            }
         }
     }
 
