@@ -21,7 +21,6 @@ import com.example.recipeat.data.repository.PlanRepository
 import com.example.recipeat.data.repository.RecetaRepository
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.AddRecipe
-import com.example.recipeat.ui.screens.DebugScreen
 import com.example.recipeat.ui.screens.DetailsScreen
 import com.example.recipeat.ui.screens.EditProfileScreen
 import com.example.recipeat.ui.screens.EditRecipeScreen
