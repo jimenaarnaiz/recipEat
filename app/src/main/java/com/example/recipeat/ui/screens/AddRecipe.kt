@@ -64,6 +64,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.recipeat.R
 import com.example.recipeat.data.model.IngredienteSimple
@@ -193,7 +194,7 @@ fun AddRecipe(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item {
-                    ImageSection(imageUri2, pickMedia, hasStoragePermission)
+                    ImageSection(imageUri2, pickMedia, hasStoragePermission, null)
                 }
                 item {
                     SectionHeader("Recipe Details")
@@ -348,7 +349,8 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>, hasStoragePermission: Boolean) {
+fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>, hasStoragePermission: Boolean,
+                  bitmap: Bitmap?) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
@@ -356,13 +358,21 @@ fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<Pick
         verticalAlignment = Alignment.CenterVertically
     ) {
 
+        val painter = when {
+            bitmap != null -> rememberAsyncImagePainter(model = bitmap)
+            imageUri2 != null && imageUri2.toString().isNotBlank() -> rememberAsyncImagePainter(model = imageUri2)
+            else -> painterResource(id = R.drawable.food_placeholder)
+        }
+
         Image(
+            painter = painter,
+        /*Image(
             painter =
                 if (imageUri2 == null || imageUri2.toString().isBlank()) {
                     painterResource(id = R.drawable.food_placeholder)
                 }else{
-                    rememberAsyncImagePainter(imageUri2)
-                },
+                    rememberAsyncImagePainter(imageUri2.toString())
+                },*/
             contentDescription = "Recipe picture",
             modifier = Modifier
                 .fillMaxWidth(0.5f) // 50% del ancho
@@ -372,6 +382,8 @@ fun ImageSection( imageUri2: Uri?, pickMedia: ManagedActivityResultLauncher<Pick
                 .shadow(4.dp),
             contentScale = ContentScale.Crop
         )
+        Log.d("AddRecipe Section Image", "imageUri2 ${imageUri2.toString()}")
+
         Button(
             enabled = hasStoragePermission,
             onClick = {

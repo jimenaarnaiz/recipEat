@@ -81,8 +81,8 @@ fun EditProfileScreen(
         if (uri != null) {
             Log.d("PhotoPicker", "Selected URI: $uri")
             imageUri = uri
-            usersViewModel.saveImageLocally(context, uri, null)
-            bitmap = usersViewModel.loadImageFromFile(context, null)
+            usersViewModel.saveImageLocally(context, uri, "tmp_image")
+            bitmap = usersViewModel.loadImageFromFile(context, "tmp_image")
             //newImage = uri.toString()
         } else {
             Log.d("PhotoPicker", "No media selected")
@@ -194,6 +194,7 @@ fun EditProfileScreen(
                 enabled = isConnected,
                 onClick = {
                     if (uid != null) {
+                        imageUri?.let { usersViewModel.saveImageLocally(context, it, null) }
                         usersViewModel.actualizarUserProfile(
                             newUsername = newUsername,
                             newProfileImage = newImage,

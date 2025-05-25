@@ -106,8 +106,8 @@ fun EditRecipeScreen(
             Log.d("PhotoPicker", "Selected URI: $uri")
             imageUri2 = uri
             imageUri = imageUri2.toString()
-            usersViewModel.saveImageLocally(context, uri, recetaId = idReceta )
-            bitmap = usersViewModel.loadImageFromFile(context, idReceta)
+            usersViewModel.saveImageLocally(context, uri, "tmp_image" )
+            bitmap = usersViewModel.loadImageFromFile(context, "tmp_image")
         } else {
             Log.d("PhotoPicker", "No media selected")
         }
@@ -120,15 +120,19 @@ fun EditRecipeScreen(
             )
             ingredientesViewModel.loadIngredientsFromFirebase()
 
+
             // Llenar los campos con la información de la receta cargada
             recetaEditarState?.let { receta ->
                     title = receta.title
+                    imageUri2 = receta.image.let { Uri.parse(it) }
                     imageUri = receta.image.toString()
                     servings = receta.servings.toString()
                     ingredients = receta.ingredients
                     instructions = receta.steps
                     time = receta.time.toString()
                     selectedOccasion = receta.dishTypes
+
+                    bitmap = usersViewModel.loadImageFromFile(context, receta.id)
 
                     // Marcar opciones de dieta
                     isVegan = receta.vegan
@@ -182,8 +186,9 @@ fun EditRecipeScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
 
+                Log.d("EditRecipe", "Uri ${imageUri} Uri2 ${imageUri2.toString()} Bitmap ${bitmap.toString()}")
                 item {
-                    ImageSection(imageUri.toUri(), pickMedia, hasStoragePermission)
+                    ImageSection(imageUri.toUri(), pickMedia, hasStoragePermission, bitmap)
                 }
                 item {
                     SectionHeader("Recipe Details")
