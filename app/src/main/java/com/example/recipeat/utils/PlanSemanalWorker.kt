@@ -68,19 +68,17 @@ class PlanSemanalWorker(
         @RequiresApi(Build.VERSION_CODES.O)
         fun configurarWorker(context: Context) {
 
-            // Nombre fijo para el Worker, ya que solo hay un usuario activo a la vez
-            val uniqueWorkName = "PlanSemanalWorker"
 
-            /*
             val currentUser = FirebaseAuth.getInstance().currentUser
             val currentUid = currentUser?.uid ?: return
 
             // Nombre único por usuario para evitar conflictos entre sesiones
             val uniqueWorkName = "PlanSemanalWorker_$currentUid"
-             */
+
 
             // Calcula cuánto falta para el próximo lunes a las 00:00
             val delay = calcularDelayHastaProximoLunes()
+
 
             // Crea la solicitud periódica con un intervalo de 7 días y el delay inicial
             val workRequest = PeriodicWorkRequestBuilder<PlanSemanalWorker>(7, TimeUnit.DAYS)
