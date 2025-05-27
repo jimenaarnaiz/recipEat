@@ -5,11 +5,16 @@ import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.data.repository.RecetaRepository
 import com.google.android.gms.tasks.OnSuccessListener
+import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import io.mockk.*
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -22,6 +27,16 @@ class RecetaRepositoryTest {
     private lateinit var db: FirebaseFirestore
     private lateinit var recetaRepository: RecetaRepository
     private lateinit var documentSnapshot: DocumentSnapshot
+
+
+    private val userDoc: DocumentReference = mockk()
+    private val recetaDoc: DocumentReference = mockk()
+    private val recetasCollection: CollectionReference = mockk()
+    private val userCollection: CollectionReference = mockk()
+
+    private val uid = "testUid"
+    private val recetaId = "receta123"
+
 
     val receta = Receta(
         id = "receta_test_001",
@@ -75,14 +90,17 @@ class RecetaRepositoryTest {
         documentSnapshot = mockk()
         recetaRepository = RecetaRepository(db)
 
+        every { db.collection("my_recipes") } returns userCollection
+        every { userCollection.document(uid) } returns userDoc
+        every { userDoc.collection("recipes") } returns recetasCollection
+        every { recetasCollection.document(recetaId) } returns recetaDoc
+
         // Mockear Log() para que no lance excepciones en las pruebas
         mockkStatic(Log::class)
         every { Log.d(any(), any()) } returns 0
         every { Log.w(any<String>(), any<String>()) } returns 0
         every { Log.e(any(), any()) } returns 0
         every { Log.e(any(), any(), any()) } returns 0
-
-
     }
 
     @After
@@ -167,8 +185,36 @@ class RecetaRepositoryTest {
     }
 
 
+    @Test
+    fun `eliminarReceta elimina la receta exitosamente`() = runTest {
+        val mockTask: Task<Void> = mockk(relaxed = true)
+
+        every { mockTask.isComplete } returns true
+        every { mockTask.isSuccessful } returns true
+        every { mockTask.isCanceled } returns false
+        every { mockTask.exception } returns null
+
+        every { recetaDoc.delete() } returns mockTask
+
+        recetaRepository.eliminarReceta(uid, recetaId)
+
+        verify(exactly = 1) { recetaDoc.delete() }
+    }
 
 
+    @Test
+    fun `eliminarReceta lanza excepción si falla la eliminación`() = runTest {
+        coEvery { recetaDoc.delete() } throws RuntimeException("Error de eliminación")
+
+        try {
+            recetaRepository.eliminarReceta(uid, recetaId)
+            assertTrue("Se esperaba una excepción pero no se lanzó", false)
+        } catch (e: RuntimeException) {
+            assertEquals("Error de eliminación", e.message)
+        }
+
+        coVerify(exactly = 1) { recetaDoc.delete() }
+    }
 
 
 
