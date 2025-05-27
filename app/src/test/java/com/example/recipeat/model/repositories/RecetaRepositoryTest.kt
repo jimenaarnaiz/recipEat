@@ -10,10 +10,7 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.QuerySnapshot
 import io.mockk.*
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -28,18 +25,17 @@ class RecetaRepositoryTest {
     private lateinit var recetaRepository: RecetaRepository
     private lateinit var documentSnapshot: DocumentSnapshot
 
-
     private val userDoc: DocumentReference = mockk()
     private val recetaDoc: DocumentReference = mockk()
     private val recetasCollection: CollectionReference = mockk()
     private val userCollection: CollectionReference = mockk()
 
     private val uid = "testUid"
-    private val recetaId = "receta123"
+    private val recetaId = "receta_test_001"
 
 
     val receta = Receta(
-        id = "receta_test_001",
+        id = recetaId,
         title = "Tortilla de patatas",
         image = "https://ejemplo.com/tortilla.jpg",
         servings = 4,
@@ -73,7 +69,7 @@ class RecetaRepositoryTest {
             "Cocinar la mezcla en una sartén hasta que cuaje por ambos lados."
         ),
         time = 30,
-        userId = "user_test_123",
+        userId =  uid,
         dishTypes = listOf("Main course", "Spanish"),
         glutenFree = true,
         vegan = false,
@@ -83,6 +79,7 @@ class RecetaRepositoryTest {
         missingIngredientCount = 0,
         unusedIngredientCount = 0
     )
+
 
     @Before
     fun setUp() {
@@ -111,7 +108,7 @@ class RecetaRepositoryTest {
 
     @Test
     fun `obtenerRecetaDesdeSnapshot mapea correctamente el snapshot a una receta`() {
-        every { documentSnapshot.getString("id") } returns "123"
+        every { documentSnapshot.getString("id") } returns recetaId
         every { documentSnapshot.getString("title") } returns "Tortilla"
         every { documentSnapshot.getString("image") } returns "img.jpg"
         every { documentSnapshot.get("servings") } returns 2
@@ -121,7 +118,7 @@ class RecetaRepositoryTest {
         every { documentSnapshot.get("steps") } returns listOf("Batir", "Freír")
         every { documentSnapshot.get("time") } returns 15
         every { documentSnapshot.get("dishTypes") } returns listOf("Desayuno")
-        every { documentSnapshot.getString("userId") } returns "user123"
+        every { documentSnapshot.getString("userId") } returns uid
         every { documentSnapshot.getBoolean("glutenFree") } returns true
         every { documentSnapshot.getBoolean("vegan") } returns false
         every { documentSnapshot.getBoolean("vegetarian") } returns true
@@ -129,7 +126,7 @@ class RecetaRepositoryTest {
 
         val receta = recetaRepository.obtenerRecetaDesdeSnapshot(documentSnapshot)
 
-        assertEquals("123", receta.id)
+        assertEquals(recetaId, receta.id)
         assertEquals("Tortilla", receta.title)
         assertEquals("img.jpg", receta.image)
         assertEquals(2, receta.servings)
@@ -142,7 +139,7 @@ class RecetaRepositoryTest {
         assertEquals(listOf("Batir", "Freír"), receta.steps)
         assertEquals(15, receta.time)
         assertEquals(listOf("Desayuno"), receta.dishTypes)
-        assertEquals("user123", receta.userId)
+        assertEquals(uid, receta.userId)
         assertTrue(receta.glutenFree)
         assertTrue(!receta.vegan)
         assertTrue(receta.vegetarian)
@@ -215,8 +212,6 @@ class RecetaRepositoryTest {
 
         coVerify(exactly = 1) { recetaDoc.delete() }
     }
-
-
 
 
 
