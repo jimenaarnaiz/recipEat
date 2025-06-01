@@ -74,6 +74,9 @@ android {
         buildConfig = true  // Habilita BuildConfig para lo de las key
     }
 
+    ksp { //genera el esquema de Room
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
 
 }
 

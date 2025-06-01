@@ -3,17 +3,23 @@ package com.example.recipeat.model.repositories
 import android.util.Log
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.Receta
+import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.data.repository.RecetaRepository
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import io.mockk.*
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -32,7 +38,6 @@ class RecetaRepositoryTest {
 
     private val uid = "testUid"
     private val recetaId = "receta_test_001"
-
 
     val receta = Receta(
         id = recetaId,
@@ -212,6 +217,31 @@ class RecetaRepositoryTest {
 
         coVerify(exactly = 1) { recetaDoc.delete() }
     }
+
+
+    @Test
+    fun `toggleFavorito elimina receta si ya existe`() = runTest {
+        val favoritosCollection: CollectionReference = mockk()
+        val recetaFavoritaDoc: DocumentReference = mockk()
+        val documentSnapshot: DocumentSnapshot = mockk()
+        val task: Task<DocumentSnapshot> = mockk()
+
+        every { db.collection("favs_hist") } returns userCollection
+        every { userCollection.document(uid) } returns userDoc
+        every { userDoc.collection("favoritos") } returns favoritosCollection
+        every { favoritosCollection.document(recetaId) } returns recetaFavoritaDoc
+
+        coEvery { recetaFavoritaDoc.get() } returns task
+        coEvery { task.await() } returns documentSnapshot
+        every { documentSnapshot.exists() } returns true
+        coEvery { recetaFavoritaDoc.delete() } returns mockk()
+
+        val resultado = recetaRepository.toggleFavorito(uid, uid, recetaId, receta.title, receta.image?: "")
+
+        assertFalse(resultado)
+        coVerify { recetaFavoritaDoc.delete() }
+    }
+
 
 
 
