@@ -26,17 +26,6 @@ sonarqube {
         property("sonar.sources", "src/main/kotlin")  // ruta correspondiente a mi código
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
 
-        property("sonar.coverage.exclusions",
-            "**/data/model/**," +
-                    "**/data/api/**," +
-                    "**/ui/components**," +
-                    "**/data/model/**," +
-                    //"**/viewmodel/**," +
-                    "**/ui/screens/**," +
-                    "**/ui/theme/**," +
-                    "**/utils/**,"
-        )
-
     }
 }
 
