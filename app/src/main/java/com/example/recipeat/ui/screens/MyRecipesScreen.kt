@@ -96,15 +96,11 @@ fun MyRecipesScreen(
         }
     }
 
-    val context = LocalContext.current
-    val prefs = context.getSharedPreferences("prefs_recetas", Context.MODE_PRIVATE)
-
     Scaffold(
         floatingActionButton = {
             if (isConnected) { //solo se muestra si hay conexión
                 FloatingActionButton(
                     onClick = { navController.navigate("add_recipe")
-                        //prefs.edit().remove("recetas_home_guardadas_${userId.toString()}").apply()
                     },
                     containerColor = Cherry,
                     modifier = Modifier

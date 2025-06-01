@@ -34,7 +34,6 @@ import androidx.navigation.NavHostController
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.Receta
 import com.example.recipeat.ui.components.AppBar
-import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.IngredientesViewModel
 import com.example.recipeat.ui.viewmodels.PermissionsViewModel
@@ -321,7 +320,6 @@ fun EditRecipeScreen(
                                         Log.d("EditRecipe", "Recipe was edited successfully!")
                                         roomViewModel.updateReceta(newReceta)
                                         navController.popBackStack()
-                                        //navController.navigate(BottomNavItem.MyRecipes.route)
                                     } else {
                                         Log.e("EditRecipe", "Error editing recipe: $error")
                                     }

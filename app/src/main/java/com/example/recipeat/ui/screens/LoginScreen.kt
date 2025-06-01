@@ -26,7 +26,6 @@ import androidx.navigation.NavHostController
 import com.example.recipeat.R
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
-import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
@@ -37,7 +36,6 @@ fun LoginScreen(
     navController: NavHostController,
     usersViewModel: UsersViewModel,
     recetasViewModel: RecetasViewModel,
-    connectivityViewModel: ConnectivityViewModel,
     planViewModel: PlanViewModel
 ) {
     val configuration = LocalConfiguration.current
@@ -130,6 +128,27 @@ fun LoginScreen(
                 }
             }
         }
+        // Texto con créditos fijo abajo centrado
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp, start = 16.dp, end = 16.dp)
+                .align(Alignment.BottomCenter),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "© 2025 Jimena Arnaiz González",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+
+            Text(
+                text = "v1.0.0",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+        }
     }
 }
 
@@ -207,22 +226,7 @@ fun LoginForm(
             onClick = {
                 if (localEmail.isEmpty() || localPassword.isEmpty()) {
                     localError = "Email and Password cannot be empty."
-
-                    //recetasViewModel.guardarRecetasBulk2() //-esta es!
-                    //recetasViewModel.fetchAndStoreIngredients()
-                   // recetasViewModel.buscarRecetasPorCadaIngrediente()
-                   // recetasViewModel.eliminarRecetasNoExistentesEnBulkRecetas()
                     recetasViewModel.logRecetasCount()
-                    //recetasViewModel.extraerDishTypesUnicos()
-                    //recetasViewModel.obtenerYGuardarAisleTypes()
-                    // 1759 recetas en recetasIds y 140 ingredientes
-                    //recetasViewModel.procesarIngrediente()
-                   // roomViewModel.deleteAllRecetas()
-//                    recetasViewModel.obtenerValoresAisleUnicos()
-//                    recetasViewModel.saveAllEquipmentImages()
-                    //recetasViewModel.actualizarAisleEnRecetas()
-
-                    //recetasViewModel.guardarRecetasFaltantesEnBulk()
                 } else {
                     usersViewModel.login(localEmail, localPassword) { resultMsg ->
                         if (resultMsg == "success") {

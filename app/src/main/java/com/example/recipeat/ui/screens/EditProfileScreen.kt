@@ -30,7 +30,6 @@ import androidx.navigation.NavController
 import com.example.recipeat.R
 import com.example.recipeat.data.model.User
 import com.example.recipeat.ui.components.AppBar
-import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
@@ -206,7 +205,6 @@ fun EditProfileScreen(
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     navController.popBackStack()
-                                    //navController.navigate(BottomNavItem.Profile.route)
                                 } else {
                                     Toast.makeText(
                                         context,

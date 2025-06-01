@@ -119,7 +119,6 @@ fun WeeklyPlanScreen(
         }
     }
 
-    // TODO hacer q si se cmbia de user si q se vuelva a ctualziar el plan!!
     // Solo intentar cargar el plan si hay conexión y no se ha cargado aún
     LaunchedEffect(uid) {
         planViewModel.obtenerPlanSemanal(uid.toString())
