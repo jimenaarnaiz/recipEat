@@ -79,7 +79,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             bitmap?.let {
-                Log.d("ProfileScreen", "ImageLoading...Bitmap cargado: ${it}")
+                Log.d("ProfileScreen", "ImageLoading...Bitmap cargado: $it")
                 Image(
                     bitmap = it.asImageBitmap(),
                     contentDescription = "Profile picture",
