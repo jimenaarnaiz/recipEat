@@ -115,6 +115,8 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     // Directorios con clases compiladas (Java + Kotlin)
     val debugTree = fileTree("${layout.buildDirectory.get().asFile}/tmp/kotlin-classes/debug") {
         exclude(fileFilter)
+        include("**/data/repository/**")
+        include("**/ui/viewmodels/**")
     }
 
     // Fuentes
@@ -130,7 +132,6 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
     ))
 }
-
 
 dependencies {
 
