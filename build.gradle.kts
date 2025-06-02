@@ -24,9 +24,6 @@ sonarqube {
         property("sonar.organization", "recipeat")
         property("sonar.token", sonarToken)
         property("sonar.sources", "src/main/kotlin")  // ruta correspondiente a mi código
-        // Indicar solo las carpetas que quieres analizar para cobertura
-        property("sonar.inclusions", "src/main/kotlin/com/example/recipeat/data/repository/**,src/main/kotlin/com/example/recipeat/ui/viewmodels/**")
-
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
 
     }
