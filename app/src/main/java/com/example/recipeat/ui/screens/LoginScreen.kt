@@ -236,7 +236,11 @@ fun LoginForm(
                                 planViewModel.iniciarGeneracionPlanSemanalInicial(usersViewModel.getUidValue().toString())
                             }
 
-                            navController.navigate("home")
+                            navController.navigate("home") {
+                                popUpTo("login") { inclusive = true }
+                                launchSingleTop = true
+                            }
+
                             localPassword = "" // Aquí vaciar la contraseña
 
                         }else{

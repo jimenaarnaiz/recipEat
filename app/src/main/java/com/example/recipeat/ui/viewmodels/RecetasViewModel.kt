@@ -122,7 +122,7 @@ class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewMod
         return recetaRepository.mapApiRecetaToReceta(apiReceta, uid, analyzedInstructions)
     }
 
-
+/* viejo
     /**
      * Obtener recetas para la pantalla principal (Home)
      * @param limpiarLista Boolean para saber si se debe limpiar la lista antes de cargar las nuevas recetas
@@ -157,6 +157,47 @@ class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewMod
             }
         }
     }
+*/
+
+    fun obtenerRecetasHome(limpiarLista: Boolean = true, userId: String) {
+        if (_isLoadingMore.value == true) return // Salir si ya se está cargando
+
+        _isLoadingMore.value = true // Indicar que está cargando
+
+        viewModelScope.launch {
+            try {
+                // Obtener el UID del usuario autenticado
+                if (userId.isBlank()) {
+                    Log.e("RecetasViewModel", "Usuario no autenticado")
+                    _isLoadingMore.value = false
+                    return@launch
+                }
+
+                // Llamada al repositorio con userId
+                val result = recetaRepository.obtenerRecetasHome(userId, limpiarLista)
+
+                // Si la consulta es exitosa, se actualiza la lista de recetas
+                if (result.isSuccess) {
+                    val nuevasRecetas = result.getOrNull() ?: emptyList()
+
+                    if (limpiarLista) {
+                        _recetasHome.value = nuevasRecetas
+                    } else {
+                        _recetasHome.value = _recetasHome.value.orEmpty() + nuevasRecetas
+                    }
+                    Log.d("RecetasViewModel", "Total recetas: ${_recetasHome.value?.size}")
+                } else {
+                    Log.e("RecetasViewModel", "Error al obtener recetas: ${result.exceptionOrNull()?.message}")
+                }
+            } catch (e: Exception) {
+                Log.e("RecetasViewModel", "Error al obtener recetas: ${e.message}")
+            } finally {
+                _isLoadingMore.value = false
+            }
+        }
+    }
+
+
 
 
     /**

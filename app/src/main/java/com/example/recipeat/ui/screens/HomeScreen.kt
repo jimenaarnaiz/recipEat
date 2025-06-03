@@ -93,9 +93,9 @@ fun HomeScreen(
             usersViewModel.obtenerUsername { nombre -> username = nombre }
         }
 
-        if (recetasState.isEmpty()) {
-            recetasViewModel.obtenerRecetasHome(limpiarLista = true)
-        }
+        //if (recetasState.isEmpty()) {
+            recetasViewModel.obtenerRecetasHome(limpiarLista = true, uid.toString())
+        //}
     }
 
 
@@ -117,7 +117,7 @@ fun HomeScreen(
                     val umbral = totalItemsCount - 5 // Cargar más cuando queden 5 recetas visibles
                     if (lastVisibleItemIndex >= umbral && !isLoadingMore) {
                         Log.d("HomeScreen", "Cargando más recetas...")
-                        recetasViewModel.obtenerRecetasHome(limpiarLista = false)
+                        recetasViewModel.obtenerRecetasHome(limpiarLista = false, uid.toString())
                     }
                 }
             }

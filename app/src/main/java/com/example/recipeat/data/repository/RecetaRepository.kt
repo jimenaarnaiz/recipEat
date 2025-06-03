@@ -324,7 +324,7 @@ class RecetaRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
     }
 
 
-
+/* viejo
     /**
      * Obtener recetas para la pantalla principal (Home)
      * @param limpiarLista Boolean para saber si se debe limpiar la lista antes de cargar las nuevas recetas
@@ -364,7 +364,94 @@ class RecetaRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
             // En caso de error, se captura y devuelve el error en un Result.failure.
             Result.failure(e)
         }
+    }*/
+
+
+    suspend fun obtenerRecetasFavoritasCompletas(userId: String): List<Receta> {
+        val recetasSimples = obtenerRecetasFavoritas(userId).take(10)
+
+        val recetasCompletas = recetasSimples.mapNotNull { recetaSimple ->
+            val deUser = recetaSimple.userId.isNotBlank()
+            val result = obtenerRecetaPorId(userId, recetaSimple.id, deUser)
+            result.getOrNull() // Devuelve la receta si tuvo éxito
+        }
+
+        return recetasCompletas
     }
+
+
+    /**
+     * Obtener recetas para la pantalla principal (Home)
+     * @param limpiarLista Boolean para saber si se debe limpiar la lista antes de cargar las nuevas recetas
+     */
+    suspend fun obtenerRecetasHome(userId: String, limpiarLista: Boolean = true): Result<List<Receta>> {
+        return try {
+            // Obtener las 10 recetas favoritas más recientes del usuario
+            val recetasFavoritas = obtenerRecetasFavoritasCompletas(userId).take(10)
+
+            var query: Query = db.collection("bulkRecetas")
+
+            if (recetasFavoritas.isEmpty()) {
+                Log.d("RecetaRepository", "favs vacía")
+                // No hay favoritos → sin filtros
+                query = query.orderBy("id").limit(15)
+                if (lastDocument != null && !limpiarLista) {
+                    query = query.startAfter(lastDocument!!.get("id"))
+                }
+            } else {
+                // Hay favoritos → aplicar filtros
+                val dishTypeMasFrecuente = recetasFavoritas
+                    .flatMap { it.dishTypes }
+                    .groupingBy { it }
+                    .eachCount()
+                    .maxByOrNull { it.value }
+                    ?.key
+
+                val total = recetasFavoritas.size.toDouble()
+                val porcentajeVeganas = recetasFavoritas.count { it.vegan } / total
+                val porcentajeVegetarianas = recetasFavoritas.count { it.vegetarian } / total
+                val porcentajeSinGluten = recetasFavoritas.count { it.glutenFree } / total
+
+                val prefiereVeganas = porcentajeVeganas >= 0.6
+                val prefiereVegetarianas = porcentajeVegetarianas >= 0.6
+                val prefiereSinGluten = porcentajeSinGluten >= 0.6
+
+                if (dishTypeMasFrecuente != null) {
+                    query = query.whereArrayContains("dishTypes", dishTypeMasFrecuente)
+                }
+
+                when {
+                    prefiereVeganas -> query = query.whereEqualTo("vegan", true)
+                    prefiereVegetarianas -> query = query.whereEqualTo("vegetarian", true)
+                    prefiereSinGluten -> query = query.whereEqualTo("glutenFree", true)
+                }
+
+                query = query.orderBy("id").limit(15)
+                if (lastDocument != null && !limpiarLista) {
+                    query = query.startAfter(lastDocument!!.get("id"))
+                }
+            }
+
+            val snapshot = query.get().await()
+            lastDocument = snapshot.documents.lastOrNull()
+
+            val recetas = snapshot.mapNotNull { doc ->
+                try {
+                    obtenerRecetaDesdeSnapshot(doc)
+                } catch (e: Exception) {
+                    Log.e("RecetaRepository", "Error al mapear receta: ${e.message}")
+                    null
+                }
+            }
+
+            Result.success(recetas)
+        } catch (e: Exception) {
+            Log.e("RecetaRepository", "Error al obtener recetas home", e)
+            Result.failure(e)
+        }
+    }
+
+
 
     /**
      * Obtener receta por ID
