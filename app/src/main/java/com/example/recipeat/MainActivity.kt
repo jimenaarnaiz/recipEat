@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
 import com.example.recipeat.data.database.AppDatabase
+import com.example.recipeat.data.repository.RecetaRepository
 import com.example.recipeat.utils.PlanSemanalWorker
 import com.example.recipeat.data.repository.RecetaRoomRepository
 import com.example.recipeat.ui.components.BottomNavBar
@@ -25,6 +26,7 @@ import com.example.recipeat.ui.viewmodels.PermissionsViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.factories.RoomViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : ComponentActivity() {
 
@@ -34,9 +36,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Inicializar Repositorio de Firebase
+        val recetaRepository = RecetaRepository(
+            FirebaseFirestore.getInstance()
+        )
+
         // Inicializar Room Database
         val database = AppDatabase.getDatabase(this)
-        val recetaRoomRepository = RecetaRoomRepository(database.recetaDao(), database.favoritoDao(), database.recienteDao())
+        val recetaRoomRepository = RecetaRoomRepository(database.recetaDao(), database.favoritoDao(), database.recienteDao(), recetaRepository = recetaRepository)
 
         // Crear ViewModel usando un Factory para poder pasar por param el repository en el viewModel
         val roomViewModel = ViewModelProvider(this, RoomViewModelFactory(recetaRoomRepository))

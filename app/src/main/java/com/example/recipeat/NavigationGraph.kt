@@ -16,9 +16,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.recipeat.data.dao.RecetaRoomDao
 import com.example.recipeat.data.repository.IngredienteRepository
 import com.example.recipeat.data.repository.PlanRepository
 import com.example.recipeat.data.repository.RecetaRepository
+import com.example.recipeat.data.repository.RecetaRoomRepository
 import com.example.recipeat.ui.components.BottomNavItem
 import com.example.recipeat.ui.screens.AddRecipe
 import com.example.recipeat.ui.screens.DetailsScreen
@@ -115,7 +117,7 @@ fun NavigationGraph(
                     onBottomBarVisibilityChanged(true)
                 }
                 composable(BottomNavItem.Profile.route) {
-                    ProfileScreen(navController, usersViewModel, connectivityViewModel) // Perfil
+                    ProfileScreen(navController, usersViewModel, connectivityViewModel, roomViewModel) // Perfil
                     onBottomBarVisibilityChanged(true)
                 }
                 composable("resultados/{query}") { backStackEntry ->

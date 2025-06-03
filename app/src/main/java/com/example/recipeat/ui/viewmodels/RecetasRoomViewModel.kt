@@ -26,7 +26,7 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
     val homeRecipesRoom: LiveData<List<Receta>> get() = _homeRecipesRoom
 
     // Obtener todas las recetas
-    fun getAllRecetas() {
+    /*fun getAllRecetas() {
         viewModelScope.launch {
             try {
                 Log.d("RoomViewModel", "Iniciando obtención de todas las recetas.")
@@ -37,10 +37,10 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
                 Log.e("RoomViewModel", "Error al obtener las recetas: ${e.message}", e)
             }
         }
-    }
+    }*/
 
     // Eliminar todas las recetas
-    fun deleteAllRecetas() {
+    /*fun deleteAllRecetas() {
         viewModelScope.launch {
             try {
                 Log.d("RoomViewModel", "Iniciando la eliminación de todas las recetas")
@@ -50,9 +50,9 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
                 Log.e("RoomViewModel", "Error al eliminar todas las recetas: ${e.message}", e)
             }
         }
-    }
+    }*/
 
-    fun eliminarTodosLosFavoritos(userId: String) {
+    /*fun eliminarTodosLosFavoritos(userId: String) {
         viewModelScope.launch {
             try {
                 recetaRoomRepository.eliminarTodosLosFavoritos(userId)
@@ -61,7 +61,7 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
                 Log.e("RoomViewModel", "Error al eliminar todos los favoritos: ${e.message}", e)
             }
         }
-    }
+    }*/
 
 
     // Obtener recetas de un usuario
@@ -85,6 +85,19 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
                 Log.d("RoomViewModel", "Iniciando inserción de receta: ${receta.title}")
                 recetaRoomRepository.insertReceta(receta)
                 Log.d("RoomViewModel", "Receta insertada correctamente: ${receta.title}")
+            } catch (e: Exception) {
+                Log.e("RoomViewModel", "Error al insertar receta: ${e.message}", e)
+            }
+        }
+    }
+
+    // Insertar receta
+    fun insertRecetas(recetas: List<Receta>) {
+        viewModelScope.launch {
+            try {
+                Log.d("RoomViewModel", "Iniciando inserción de recetas: ${recetas.size}")
+                recetaRoomRepository.insertRecetas(recetas)
+                Log.d("RoomViewModel", "Recetas insertadas correctamente: ${recetas.size}")
             } catch (e: Exception) {
                 Log.e("RoomViewModel", "Error al insertar receta: ${e.message}", e)
             }
@@ -163,6 +176,24 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
             }
         }
     }
+
+    // Sincroniza los favoritos del usuario desde Firebase y los guarda en Room
+    fun sincronizarFavoritosDesdeFirebase(userId: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("RoomViewModel", "Iniciando sincronización de favoritos desde Firebase...")
+                recetaRoomRepository.sincronizarFavoritosRoomDesdeFirebase(userId)
+                Log.d("RoomViewModel", "Sincronización completada. Actualizando LiveData...")
+
+                // Actualizar el LiveData con las recetas favoritas después de sincronizar
+                val recetasActualizadas = recetaRoomRepository.getRecetasFavoritas(userId)
+                _favoriteRecipesRoom.postValue(recetasActualizadas)
+            } catch (e: Exception) {
+                Log.e("RoomViewModel", "Error al sincronizar favoritos desde Firebase: ${e.message}", e)
+            }
+        }
+    }
+
 
 
     // Eliminar receta de favoritos

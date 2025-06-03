@@ -12,7 +12,8 @@ import java.sql.Timestamp
 class RecetaRoomRepository(
     private val recetaRoomDao: RecetaRoomDao,
     private val favoritoDao: FavoritoDao,
-    private val recienteDao: RecienteDao
+    private val recienteDao: RecienteDao,
+    private  val recetaRepository: RecetaRepository
 ) {
     private val _limiteRecientes = 15
 
@@ -94,6 +95,42 @@ class RecetaRoomRepository(
         favoritoDao.agregarFavorito(favorito)
     }
 
+    /**
+     * Sincroniza las recetas favoritas del usuario desde Firebase y las guarda en Room.
+     */
+    suspend fun sincronizarFavoritosRoomDesdeFirebase(userId: String) {
+        try {
+            Log.d("RecetaRoomRepository", "Iniciando sincronización de favoritos desde Firebase")
+
+            // 1. Obtener favoritos de Firebase
+            val recetasFavsSimples = recetaRepository.obtenerRecetasFavoritas(userId)
+
+            for (recetaSimple in recetasFavsSimples) {
+                val deUser = recetaSimple.userId.isNotBlank()
+                val resultado = recetaRepository.obtenerRecetaPorId(userId, recetaSimple.id, deUser)
+
+                resultado.onSuccess { receta ->
+                    // 2. Insertar la receta en Room (si no existe ya)
+                    val yaExiste = getRecetaById(receta.id) != null
+                    if (!yaExiste) {
+                        insertReceta(receta)
+                        Log.d("RecetaRoomRepository", "Receta insertada en Room: ${receta.title}")
+                    }
+
+                    // 3. Agregar a favoritos en Room
+                    agregarFavorito(userId, receta.id)
+                    Log.d("RecetaRoomRepository", "Favorito sincronizado en Room: ${receta.title}")
+
+                }.onFailure {
+                    Log.e("RecetaRoomRepository", "Error al obtener receta completa desde Firebase: ${it.message}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("RecetaRoomRepository", "Error al sincronizar favoritos desde Firebase: ${e.message}")
+        }
+    }
+
+
 
     // Eliminar una receta de los favoritos
     suspend fun eliminarFavorito(userId: String, recetaId: String) {
@@ -103,6 +140,7 @@ class RecetaRoomRepository(
 
     suspend fun getRecetasFavoritas(userId: String): List<Receta> {
         val favoritos = favoritoDao.obtenerFavoritosPorUsuario(userId)
+            .sortedBy { it.date } // Ordenar por fecha descendente
         val recetasFavoritas = mutableListOf<Receta>()
 
         for (favorito in favoritos) {
@@ -119,6 +157,7 @@ class RecetaRoomRepository(
     suspend fun esFavorita(userId: String, recetaId: String): Boolean {
         return favoritoDao.esFavorita(userId, recetaId) != null
     }
+
 
 
     // Métdo para eliminar todos los favoritos de un usuario

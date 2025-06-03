@@ -735,6 +735,8 @@ class RecetaRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
         }
     }
 
+
+
     /**
      * Obtiene las recetas en el historial del usuario dentro de un rango de fechas.
      */

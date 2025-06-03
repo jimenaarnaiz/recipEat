@@ -33,8 +33,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.recipeat.R
+import com.example.recipeat.data.repository.RecetaRepository
+import com.example.recipeat.data.repository.RecetaRoomRepository
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
+import com.example.recipeat.ui.viewmodels.RecetasViewModel
+import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -43,7 +47,8 @@ import com.google.firebase.auth.FirebaseAuth
 fun ProfileScreen(
     navController: NavController,
     usersViewModel: UsersViewModel,
-    connectivityViewModel: ConnectivityViewModel
+    connectivityViewModel: ConnectivityViewModel,
+    recetaRoomViewModel: RoomViewModel
 ) {
     val uid = usersViewModel.getUidValue()
     var usernameState by rememberSaveable { mutableStateOf<String?>(null) }
@@ -149,7 +154,10 @@ fun ProfileScreen(
                     ProfileCard(
                         title = "Favorites",
                         icon = Icons.Outlined.Favorite,
-                        onClick = { navController.navigate("favoritos") },
+                        onClick = {
+                            recetaRoomViewModel.sincronizarFavoritosDesdeFirebase(uid.toString())
+                            navController.navigate("favoritos");
+                                  },
                         backgroundColor = LightYellow,
                         textColor = Color.Black,
                         true
