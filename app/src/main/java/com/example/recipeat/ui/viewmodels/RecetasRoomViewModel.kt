@@ -52,16 +52,6 @@ class RoomViewModel(private val recetaRoomRepository: RecetaRoomRepository) : Vi
         }
     }*/
 
-    /*fun eliminarTodosLosFavoritos(userId: String) {
-        viewModelScope.launch {
-            try {
-                recetaRoomRepository.eliminarTodosLosFavoritos(userId)
-                Log.d("RoomViewModel", "Todos los favoritos del usuario $userId han sido eliminados.")
-            } catch (e: Exception) {
-                Log.e("RoomViewModel", "Error al eliminar todos los favoritos: ${e.message}", e)
-            }
-        }
-    }*/
 
 
     // Obtener recetas de un usuario

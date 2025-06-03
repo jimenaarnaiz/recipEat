@@ -160,10 +160,10 @@ class RecetaRoomRepository(
 
 
 
-    // Métdo para eliminar todos los favoritos de un usuario
+    /*// Métdo para eliminar todos los favoritos de un usuario
     suspend fun eliminarTodosLosFavoritos(userId: String) {
         favoritoDao.eliminarTodosLosFavoritos(userId)
-    }
+    }*/
 
 
     // recientes

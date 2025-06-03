@@ -33,11 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.recipeat.R
-import com.example.recipeat.data.repository.RecetaRepository
-import com.example.recipeat.data.repository.RecetaRoomRepository
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.ConnectivityViewModel
-import com.example.recipeat.ui.viewmodels.RecetasViewModel
 import com.example.recipeat.ui.viewmodels.RoomViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
