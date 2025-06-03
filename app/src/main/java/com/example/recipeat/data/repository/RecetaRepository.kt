@@ -382,6 +382,7 @@ class RecetaRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
 
     /**
      * Obtener recetas para la pantalla principal (Home)
+     * Si no hay favs, muestra todas las recetas, si no, filtra por dishType y tiempo o si es vegan/vegetarian/glutenFree y dishType
      * @param limpiarLista Boolean para saber si se debe limpiar la lista antes de cargar las nuevas recetas
      */
     suspend fun obtenerRecetasHome(userId: String, limpiarLista: Boolean = true): Result<List<Receta>> {
@@ -424,6 +425,13 @@ class RecetaRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
                     prefiereVeganas -> query = query.whereEqualTo("vegan", true)
                     prefiereVegetarianas -> query = query.whereEqualTo("vegetarian", true)
                     prefiereSinGluten -> query = query.whereEqualTo("glutenFree", true)
+                    else -> {
+                        // Si no hay preferencia dietética, filtrar por tiempo según promedio de favoritas
+                        val tiempoMedio = if (recetasFavoritas.isNotEmpty()) {
+                            recetasFavoritas.map { it.time }.average()
+                        } else 30.0 // valor por defecto si no hay favoritas
+                        query = query.whereLessThanOrEqualTo("time", tiempoMedio)
+                    }
                 }
 
                 query = query.orderBy("id").limit(15)

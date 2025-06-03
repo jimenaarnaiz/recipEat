@@ -98,6 +98,14 @@ fun HomeScreen(
         //}
     }
 
+    // Observar si hay que volver al principio de la lista
+    val volverPrincipio by recetasViewModel.volverPrincipio.observeAsState(false)
+    LaunchedEffect(volverPrincipio) {
+        if (volverPrincipio) {
+            listState.animateScrollToItem(0)
+            recetasViewModel.resetVolverPrincipio()
+        }
+    }
 
     LaunchedEffect(recetasState) {
         //el segundo isEmpty hace que solo cargue al abrir la app las recetas favs,

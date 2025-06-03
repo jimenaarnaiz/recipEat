@@ -67,6 +67,9 @@ class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewMod
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> get() = _isLoading
 
+    // Nueva variable para indicar si hay que volver al principio de la lista
+    private val _volverPrincipio = MutableLiveData(false)
+    val volverPrincipio: LiveData<Boolean> get() = _volverPrincipio
 
 
     fun generateRecipeId(): String {
@@ -158,6 +161,15 @@ class RecetasViewModel(private val recetaRepository: RecetaRepository) : ViewMod
         }
     }
 */
+
+    fun resetVolverPrincipio() {
+        _volverPrincipio.value = false
+    }
+
+    fun ponerVolverPrincipioTrue() {
+        _volverPrincipio.value = true
+    }
+
 
     fun obtenerRecetasHome(limpiarLista: Boolean = true, userId: String) {
         if (_isLoadingMore.value == true) return // Salir si ya se está cargando

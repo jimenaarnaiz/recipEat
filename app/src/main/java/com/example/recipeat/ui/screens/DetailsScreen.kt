@@ -178,6 +178,7 @@ fun DetailsScreen(
                                         }
                                     }
                                 }
+                                recetasViewModel.ponerVolverPrincipioTrue()
                                 recetasViewModel.obtenerRecetasHome(userId = uid.toString()) //actualizar home con nuevas prefs
 
                             }) {
