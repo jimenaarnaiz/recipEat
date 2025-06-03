@@ -6,6 +6,7 @@ import com.example.recipeat.data.dao.RecetaRoomDao
 import com.example.recipeat.data.dao.RecienteDao
 import com.example.recipeat.data.model.Favorito
 import com.example.recipeat.data.model.Receta
+import com.example.recipeat.data.repository.RecetaRepository
 import com.example.recipeat.data.repository.RecetaRoomRepository
 import io.mockk.*
 import junit.framework.TestCase.assertEquals
@@ -28,6 +29,7 @@ class RecetaRoomRepositoryTest {
     private lateinit var favoritoDao: FavoritoDao
     private lateinit var recienteDao: RecienteDao
     private lateinit var repository: RecetaRoomRepository
+    private lateinit var recetaRepository: RecetaRepository
 
     private val userId1 = "user1"
     private val userId2 = "user2"
@@ -76,7 +78,8 @@ class RecetaRoomRepositoryTest {
         recetaRoomDao = mockk()
         favoritoDao = mockk()
         recienteDao = mockk()
-        repository = RecetaRoomRepository(recetaRoomDao, favoritoDao, recienteDao)
+        recetaRepository = mockk()
+        repository = RecetaRoomRepository(recetaRoomDao, favoritoDao, recienteDao, recetaRepository)
 
         // Mockear Log() para que no lance excepciones en las pruebas
         mockkStatic(Log::class)
