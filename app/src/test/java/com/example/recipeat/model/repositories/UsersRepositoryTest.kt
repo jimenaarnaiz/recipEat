@@ -1,11 +1,14 @@
 package com.example.recipeat.model.repositories
 
+import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
 import android.text.TextUtils
 import android.util.Log
+import com.example.recipeat.data.model.User
 import com.example.recipeat.data.repository.UserRepository
+import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.AuthResult
@@ -20,8 +23,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import io.mockk.*
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
+import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -37,12 +45,15 @@ class UserRepositoryTest {
     private lateinit var context: Context
     private lateinit var contentResolver: android.content.ContentResolver
 
+
     @Before
     fun setUp() {
+
         // Mock de las dependencias
         sharedPreferences = mockk(relaxed = true)
         auth = mockk()
         db = mockk()
+
 
         // Mock de FirebaseAuth.getCurrentUser() para devolver un usuario simulado
         val mockUser = mockk<FirebaseUser>()
@@ -144,7 +155,6 @@ class UserRepositoryTest {
 
     @Test
     fun `login with empty email and password should return error message`() = runTest {
-        // Arrange
         val emptyEmail = ""
         val emptyPassword = ""
 
@@ -325,7 +335,6 @@ class UserRepositoryTest {
         // Verifica que no se lanzaron excepciones y que el log de error fue llamado.
         verify { Log.e(any(), "Error al guardar la imagen: File error") }
     }
-
 
 
 

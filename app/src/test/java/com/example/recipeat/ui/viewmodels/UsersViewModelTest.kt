@@ -2,14 +2,19 @@ package com.example.recipeat.ui.viewmodels
 
 import android.app.Application
 import android.util.Log
+import com.example.recipeat.data.model.User
 import com.example.recipeat.data.repository.UserRepository
 import io.mockk.MockKAnnotations
+import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,6 +40,7 @@ class UsersViewModelTest {
     private var emailInvalidFormat = "prueba@prueba"
     private var username = "prueba"
 
+    private lateinit var application: Application
 
     @Before
     fun setup() {
@@ -42,6 +48,7 @@ class UsersViewModelTest {
 
         // Mockear Log() para que no lance excepciones en las pruebas
         mockkStatic(Log::class)
+        every { Log.e(any(), any(), any()) } returns 0
         every { Log.d(any(), any()) } returns 0
         every { Log.w(any<String>(), any<String>()) } returns 0
         every { Log.e(any(), any()) } returns 0
@@ -51,6 +58,7 @@ class UsersViewModelTest {
 
         val context = mockk<Application>(relaxed = true)
         usersViewModel = UsersViewModel(context, userRepository)
+        application = mockk(relaxed = true)
     }
 
     // login
@@ -187,6 +195,178 @@ class UsersViewModelTest {
     }
 
 
+
+
+    @Test
+    fun `logOut should call repository method and not crash`() = runTest {
+        coEvery { userRepository.logOut() } just Runs
+
+        usersViewModel.logOut()
+
+        advanceUntilIdle()
+        coVerify { userRepository.logOut() }
+    }
+
+    @Test
+    fun `obtenerUsername should return username`() = runTest {
+        val expectedUsername = "testUser"
+        coEvery { userRepository.obtenerUsername() } returns expectedUsername
+
+        var result: String? = null
+        usersViewModel.obtenerUsername {
+            result = it
+        }
+
+        advanceUntilIdle()
+        assertEquals(expectedUsername, result)
+    }
+
+    @Test
+    fun `obtenerUsername should handle exception and return null`() = runTest {
+        coEvery { userRepository.obtenerUsername() } throws Exception("Failed")
+
+        var result: String? = "notNull"
+        usersViewModel.obtenerUsername {
+            result = it
+        }
+
+        advanceUntilIdle()
+        assertNull(result)
+    }
+
+    @Test
+    fun `sendPasswordResetEmail should call repository method`() = runTest {
+        val email = "reset@example.com"
+        coEvery { userRepository.sendPasswordResetEmail(email) } returns "Email sent"
+
+        var result: String? = null
+        usersViewModel.sendPasswordResetEmail(email) {
+            result = it
+        }
+
+        advanceUntilIdle()
+        assertEquals("Email sent", result)
+    }
+
+    @Test
+    fun `actualizarUserProfile should return success`() = runTest {
+        coEvery { userRepository.actualizarUserProfile("newName", "imgUrl") } returns true
+
+        var result = false
+        usersViewModel.actualizarUserProfile("newName", "imgUrl") {
+            result = it
+        }
+
+        advanceUntilIdle()
+        assertTrue(result)
+    }
+
+    @Test
+    fun `obtenerUsuarioCompletoPorCampos should return expected values`() = runTest {
+        coEvery { userRepository.obtenerUsuarioCompletoPorCampos("uid123") } returns Triple("name", "img", "email")
+
+        var result: Triple<String, String?, String?>? = null
+        usersViewModel.obtenerUsuarioCompletoPorCampos("uid123") { name, img, email ->
+            result = Triple(name, img, email)
+        }
+
+        advanceUntilIdle()
+        assertEquals(Triple("name", "img", "email"), result)
+    }
+
+    @Test
+    fun `obtenerUsuarioCompletoPorCampos should handle exception and return empty`() = runTest {
+        coEvery { userRepository.obtenerUsuarioCompletoPorCampos("uid123") } throws Exception("Fail")
+
+        var result: Triple<String, String?, String?>? = Triple("default", "img", "email")
+        usersViewModel.obtenerUsuarioCompletoPorCampos("uid123") { name, img, email ->
+            result = Triple(name, img, email)
+        }
+
+        advanceUntilIdle()
+        assertEquals(Triple("", null, null), result)
+    }
+
+    @Test
+    fun `obtenerUsuarioCompleto should return user`() = runTest {
+        val user = User( "name", "email")
+        coEvery { userRepository.obtenerUsuarioCompleto("uid") } returns user
+
+        var result: User? = null
+        usersViewModel.obtenerUsuarioCompleto("uid") {
+            result = it
+        }
+
+        advanceUntilIdle()
+        assertEquals(user, result)
+    }
+
+
+    @Test
+    fun `getUidValue should return current uid`() {
+        every { userRepository.getUidValue() } returns "1234"
+        val result = usersViewModel.getUidValue()
+        assertEquals("1234", result)
+    }
+
+    @Test
+    fun `uid state flow should update after init`() = runTest {
+        coEvery { userRepository.isSessionActive() } returns true
+        every { userRepository.getUidValue() } returns "abc123"
+
+        val vm = UsersViewModel(application, userRepository)
+
+        assertEquals("abc123", vm.uid.value)
+    }
+
+
+    @Test
+    fun `obtenerUsuarioCompleto should handle exception and return null`() = runTest {
+        coEvery { userRepository.obtenerUsuarioCompleto("uid") } throws Exception("Failure")
+
+        var result: User? = User("b",  "d")
+        usersViewModel.obtenerUsuarioCompleto("uid") {
+            result = it
+        }
+
+        advanceUntilIdle()
+        assertNull(result)
+    }
+
+    @Test
+    fun `login should handle exception and return error message`() = runTest {
+        val email = "test@example.com"
+        val password = "pass"
+        val exception = Exception("Unknown error")
+
+        coEvery { userRepository.login(email, password) } throws exception
+
+        var result: String? = null
+        usersViewModel.login(email, password) {
+            result = it
+        }
+
+        advanceUntilIdle()
+        assertEquals("Unknown error during registration: Unknown error", result)
+    }
+
+    @Test
+    fun `register should handle exception and return error message`() = runTest {
+        val username = "user"
+        val email = "user@example.com"
+        val password = "123456"
+        val exception = Exception("Something failed")
+
+        coEvery { userRepository.register(username, email, password) } throws exception
+
+        var result: String? = null
+        usersViewModel.register(username, email, password) {
+            result = it
+        }
+
+        advanceUntilIdle()
+        assertEquals("Unknown error during registration: Something failed", result)
+    }
 
 
 }
