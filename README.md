@@ -26,6 +26,7 @@ desperdicio de alimentos.
 - `Creación y gestión de recetas personalizadas`: Los usuarios pueden crear sus propias recetas, agregando imagen, tiempo de preparación, raciones, ingredientes, pasos y ocasión. Además, pueden editar o eliminar estas recetas.
 - `Modo offline`: La aplicación permite a los usuarios acceder sin conexión a Internet a: las 15 primeras recetas que se muestran en el Home, las últimas 15 recetas visitadas, las recetas creadas y las recetas favoritas. Los datos se almacenan localmente utilizando Room y se sincronizan automáticamente cuando hay conexión disponible.
 - `Plan semanal`: La aplicación genera un plan semanal de comidas, asignando recetas de desayuno, almuerzo y cena a cada día de la semana. Este plan se actualiza automáticamente cada lunes mediante un worker, garantizando que no se repitan recetas de la semana anterior ni de la actual. También limita el consumo de carne y pasta a no más de 3 días y registra qué "aisle" se usa en cada comida para evitar repetir el mismo tipo de ingrediente en un día.
+- `Recetas personalizadas en el Home`: La pantalla de inicio muestra un conjunto de recetas recomendadas de forma personalizada en base a las recetas favoritas, teniendo en cuenta el tipo de receta, el tiempo o el tipo de dieta.
  
 ## 💻Tecnologías utilizadas
 <p align="left">
