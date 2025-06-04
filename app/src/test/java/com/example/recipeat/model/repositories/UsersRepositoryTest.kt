@@ -1,14 +1,11 @@
 package com.example.recipeat.model.repositories
 
-import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
 import android.text.TextUtils
 import android.util.Log
-import com.example.recipeat.data.model.User
 import com.example.recipeat.data.repository.UserRepository
-import com.example.recipeat.ui.viewmodels.UsersViewModel
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.AuthResult
@@ -22,14 +19,11 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import io.mockk.*
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -338,6 +332,33 @@ class UserRepositoryTest {
 
 
 
+    @Test
+    fun `isSessionActive returns false when user is null`() = runTest {
+        every { auth.currentUser } returns null
+
+        val result = mockUserRepository.isSessionActive()
+        assertFalse(result)
+    }
+
+    @Test
+    fun `isSessionActive returns false when session flag is false`() = runTest {
+        val mockUser = mockk<FirebaseUser>()
+        every { auth.currentUser } returns mockUser
+        every { mockUser.uid } returns "mockUid"
+        every { sharedPreferences.getBoolean("sessionIniciadaKeymockUid", false) } returns false
+
+        val result = mockUserRepository.isSessionActive()
+        assertFalse(result)
+    }
+
+
+    @Test
+    fun `sendPasswordResetEmail handles generic exception`() = runTest {
+        coEvery { auth.sendPasswordResetEmail(any()) } throws Exception("Unexpected")
+
+        val result = mockUserRepository.sendPasswordResetEmail("email@test.com")
+        assertTrue(result.contains("An error occurred"))
+    }
 
 
 
