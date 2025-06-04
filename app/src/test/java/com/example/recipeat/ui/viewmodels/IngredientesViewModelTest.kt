@@ -119,27 +119,6 @@ class IngredientesViewModelTest {
     }
 
 
-
-
-   /* @Test
-    fun `loadIngredientsFromFirebase should handle exception and set empty list on error`() = runTest {
-        // Mockear Log() para que no lance excepciones en las pruebas
-        mockkStatic(Log::class)
-        every { Log.d(any(), any()) } returns 0
-        every { Log.w(any<String>(), any<String>()) } returns 0
-        every { Log.e(any(), any()) } returns 0
-        every { Log.e(any(), any(), any()) } returns 0
-
-        // Simular que el repositorio lanza una excepción
-        coEvery { mockIngredientesRepository.loadIngredientsFromFirebase() } throws Exception("Error al cargar ingredientes")
-
-        mockIngredientesViewModel.loadIngredientsFromFirebase()
-
-        // Verificar que el estado de _ingredientesValidos se haya actualizado a una lista vacía
-        assertTrue(mockIngredientesViewModel.ingredientesValidos.value.isEmpty())
-    }*/
-
-
     @Test
     fun `loadIngredientsFromFirebase should handle exception and not crash`() = runTest {
         mockkStatic(Log::class)

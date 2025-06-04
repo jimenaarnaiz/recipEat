@@ -218,31 +218,24 @@ class RecetaRepositoryTest {
         coVerify(exactly = 1) { recetaDoc.delete() }
     }
 
-
-/*
     @Test
-        fun `toggleFavorito elimina receta si ya existe`() = runTest {
+    fun `obtenerRecetasFavoritas devuelve lista vacía en caso de excepción`() = runTest {
         val favoritosCollection: CollectionReference = mockk()
-        val recetaFavoritaDoc: DocumentReference = mockk()
-        val documentSnapshot: DocumentSnapshot = mockk()
-        val task: Task<DocumentSnapshot> = mockk()
+        val favoritosDoc: DocumentReference = mockk()
+        val favoritosSubCollection: CollectionReference = mockk()
+        val query: Query = mockk()
 
-        every { db.collection("favs_hist") } returns userCollection
-        every { userCollection.document(uid) } returns userDoc
-        every { userDoc.collection("favoritos") } returns favoritosCollection
-        every { favoritosCollection.document(recetaId) } returns recetaFavoritaDoc
+        every { db.collection("favs_hist") } returns favoritosCollection
+        every { favoritosCollection.document(uid) } returns favoritosDoc
+        every { favoritosDoc.collection("favoritos") } returns favoritosSubCollection
+        every { favoritosSubCollection.orderBy("date", Query.Direction.DESCENDING) } returns query
 
-        coEvery { recetaFavoritaDoc.get() } returns task
-        coEvery { task.await() } returns documentSnapshot
-        every { documentSnapshot.exists() } returns true
-        coEvery { recetaFavoritaDoc.delete() } returns mockk()
+        coEvery { query.get().await() } throws Exception("Error de prueba")
 
-        val resultado = recetaRepository.toggleFavorito(uid, uid, recetaId, receta.title, receta.image?: "")
+        val favoritas = recetaRepository.obtenerRecetasFavoritas(uid)
 
-        assertFalse(resultado)
-        coVerify { recetaFavoritaDoc.delete() }
+        assertTrue(favoritas.isEmpty())
     }
-*/
 
 
 
