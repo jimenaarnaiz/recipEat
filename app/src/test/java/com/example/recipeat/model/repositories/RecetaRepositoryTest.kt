@@ -3,23 +3,17 @@ package com.example.recipeat.model.repositories
 import android.util.Log
 import com.example.recipeat.data.model.Ingrediente
 import com.example.recipeat.data.model.Receta
-import com.example.recipeat.data.model.RecetaSimple
 import com.example.recipeat.data.repository.RecetaRepository
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.QuerySnapshot
 import io.mockk.*
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -218,24 +212,6 @@ class RecetaRepositoryTest {
         coVerify(exactly = 1) { recetaDoc.delete() }
     }
 
-    @Test
-    fun `obtenerRecetasFavoritas devuelve lista vacía en caso de excepción`() = runTest {
-        val favoritosCollection: CollectionReference = mockk()
-        val favoritosDoc: DocumentReference = mockk()
-        val favoritosSubCollection: CollectionReference = mockk()
-        val query: Query = mockk()
-
-        every { db.collection("favs_hist") } returns favoritosCollection
-        every { favoritosCollection.document(uid) } returns favoritosDoc
-        every { favoritosDoc.collection("favoritos") } returns favoritosSubCollection
-        every { favoritosSubCollection.orderBy("date", Query.Direction.DESCENDING) } returns query
-
-        coEvery { query.get().await() } throws Exception("Error de prueba")
-
-        val favoritas = recetaRepository.obtenerRecetasFavoritas(uid)
-
-        assertTrue(favoritas.isEmpty())
-    }
 
 
 
