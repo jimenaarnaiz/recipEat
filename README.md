@@ -36,5 +36,10 @@ desperdicio de alimentos.
   <img src="https://firebase.google.com/downloads/brand-guidelines/PNG/logo-vertical.png" title="Firebase" alt="Firebase" height="50"/>
 </p>
 
+## 📄 Licencia
+
+Este proyecto está licenciado bajo los términos de la [Licencia MIT](./LICENSE).  
+Para más información, puedes consultar el texto completo de la licencia en el sitio oficial de [Open Source Initiative](https://opensource.org/licenses/MIT).
+
 
 
