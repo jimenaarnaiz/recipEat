@@ -30,6 +30,7 @@ desperdicio de alimentos.
  
 ## 💻Tecnologías utilizadas
 <p align="left">
+  <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" />
   <img src="https://developer.android.com/images/logos/android-studio.svg" alt="Android Studio" height="50"/>
   <img src="https://firebase.google.com/downloads/brand-guidelines/PNG/logo-vertical.png" alt="Firebase" height="50"/>
 </p>
