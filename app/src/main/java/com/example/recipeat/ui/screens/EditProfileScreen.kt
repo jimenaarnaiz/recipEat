@@ -8,10 +8,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -53,11 +56,13 @@ fun EditProfileScreen(
 
     var newUsername by remember { mutableStateOf("") }
     var newEmail by rememberSaveable { mutableStateOf("") }
-    val newImage by rememberSaveable { mutableStateOf("") }
+    //val newImage by rememberSaveable { mutableStateOf("") }
 
     var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
+
+    var eliminarFotoPerfil by remember { mutableStateOf(false) }
 
     // Observamos el estado de conectividad
     val isConnected by connectivityViewModel.isConnected.observeAsState(false)
@@ -72,6 +77,7 @@ fun EditProfileScreen(
                 newEmail = user?.email ?: ""
                 bitmap = usersViewModel.loadImageFromFile(context, null)
             }
+
         }
     }
 
@@ -108,41 +114,69 @@ fun EditProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
 
-            bitmap?.let {
-                Log.d("EditProfileScreen", "ImageLoading...Bitmap cargado: ${it}")
-                Image(
-                    bitmap = it.asImageBitmap(),
-                    contentDescription = "Imagen de perfil",
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .shadow(4.dp, CircleShape)
-                        .align(Alignment.CenterHorizontally),
-                    contentScale = ContentScale.Crop
-                )
-            } ?: run {
-                Log.d("EditProfileScreen", "Usando imagen por defecto")
-                // Muestra una imagen por defecto si no hay imagen seleccionada
-                Image(
-                    painter = painterResource(id = R.drawable.profile_avatar_placeholder),
-                    contentDescription = "Imagen de perfil",
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .shadow(4.dp, CircleShape)
-                        .align(Alignment.CenterHorizontally)
-                )
+            Box(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .size(120.dp)
+                    .align(Alignment.CenterHorizontally)
+            ) {
+                bitmap?.let {
+                    Log.d("EditProfileScreen", "ImageLoading...Bitmap cargado: ${it}")
+                    Image(
+                        bitmap = it.asImageBitmap(),
+                        contentDescription = "Imagen de perfil",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .shadow(4.dp, CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } ?: run {
+                    Log.d("EditProfileScreen", "Usando imagen por defecto")
+                    Image(
+                        painter = painterResource(id = R.drawable.profile_avatar_placeholder),
+                        contentDescription = "Imagen de perfil",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .shadow(4.dp, CircleShape)
+                    )
+                }
+
+                if (bitmap != null && isConnected && hasStoragePermission) {
+                    IconButton(
+                        onClick = {
+                            bitmap = null
+                            imageUri = null
+                            eliminarFotoPerfil = true
+                        },
+                        modifier = Modifier
+                            .size(28.dp)
+                            .align(Alignment.TopEnd)
+                            .offset(x = 4.dp, y = (-4).dp) // Superposición ligera, fuera del borde de la imagen
+                            .shadow(2.dp, CircleShape)
+                            .background(Color.White, CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Remove Profile Picture",
+                            tint = Color.Red,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
+
 
             // Botón para elegir una nueva imagen de perfil
             Button(
                 enabled = isConnected && hasStoragePermission, //si tiene conexion y permisos
                 onClick = {
-                pickMedia.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                ) },
+                    pickMedia.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                    eliminarFotoPerfil = false
+                          },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = LightYellow,
                     contentColor = Color.Black
@@ -185,7 +219,6 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
             //Botón para guardar los cambios
@@ -193,10 +226,15 @@ fun EditProfileScreen(
                 enabled = isConnected,
                 onClick = {
                     if (uid != null) {
+                        if (eliminarFotoPerfil) {
+                            // Eliminar imagen local y resetear bitmap e imageUri
+                            usersViewModel.deleteImage(context, null) // borrar img perfil
+                        }
+
                         imageUri?.let { usersViewModel.saveImageLocally(context, it, null) }
                         usersViewModel.actualizarUserProfile(
                             newUsername = newUsername,
-                            newProfileImage = newImage,
+                            newProfileImage = bitmap.toString(),
                             onResult = { success ->
                                 if (success) {
                                     Toast.makeText(

@@ -175,7 +175,7 @@ class UsersViewModel(application: Application, private val userRepository: UserR
         return userRepository.loadImageFromFile(context, recetaId)
     }
 
-    fun deleteImage(context: Context, recetaId: String) {
+    fun deleteImage(context: Context, recetaId: String?) {
         userRepository.deleteImage(context, recetaId)
     }
 

@@ -274,6 +274,7 @@ class UserRepository(
                 Log.d("UserRepository", "Cargando Imagen : ${file.absolutePath}")
                 return BitmapFactory.decodeFile(file.absolutePath)
             }else{
+
                 Log.d("UserRepository", "Archivo no encontrado: ${file.absolutePath}")
             }
         } catch (e: Exception) {
@@ -284,20 +285,26 @@ class UserRepository(
 
 
     // Eliminar la imagen de la receta si borra la receta
-    fun deleteImage(context: Context, recetaId: String) {
-        val file = File(context.filesDir, "$recetaId.jpg")
-        if (file.exists()) {
-            val isDeleted = file.delete() // Guarda el valor booleano de si la eliminación fue exitosa
+    fun deleteImage(context: Context, recetaId: String?) {
+        val fileName = if (recetaId.isNullOrBlank()) {
+            "profile_image${_uid.value}.jpg"
+        } else {
+            "$recetaId.jpg"
+        }
 
+        val file = File(context.filesDir, fileName)
+        if (file.exists()) {
+            val isDeleted = file.delete() // Guarda si la eliminación fue exitosa
             if (isDeleted) {
-                Log.d("UserRepository", "Imagen de receta eliminada correctamente: ${file.absolutePath}")
+                Log.d("UserRepository", "Imagen eliminada correctamente: ${file.absolutePath}")
             } else {
-                Log.e("UserRepository", "Error al eliminar la imagen de receta: ${file.absolutePath}")
+                Log.e("UserRepository", "Error al eliminar la imagen: ${file.absolutePath}")
             }
         } else {
-            Log.w("UserRepository", "La imagen de receta no existe: ${file.absolutePath}")
+            Log.w("UserRepository", "La imagen no existe: ${file.absolutePath}")
         }
     }
+
 
 
 

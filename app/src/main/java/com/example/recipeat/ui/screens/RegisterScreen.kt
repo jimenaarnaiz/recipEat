@@ -48,7 +48,6 @@ import com.example.recipeat.ui.theme.Cherry
 import com.example.recipeat.ui.theme.LightYellow
 import com.example.recipeat.ui.viewmodels.PlanViewModel
 import com.example.recipeat.ui.viewmodels.UsersViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -112,7 +111,6 @@ fun RegisterScreen(
                 Buttons(
                     navController = navController,
                     usersViewModel = usersViewModel,
-                    planViewModel,
                     email = email,
                     password = password,
                     username = username,
@@ -160,7 +158,6 @@ fun RegisterScreen(
                     Buttons(
                         navController = navController,
                         usersViewModel = usersViewModel,
-                        planViewModel,
                         email = email,
                         password = password,
                         username = username,
@@ -261,7 +258,6 @@ fun InputFields(
 fun Buttons(
     navController: NavHostController,
     usersViewModel: UsersViewModel,
-    planViewModel: PlanViewModel,
     email: String,
     password: String,
     username: String,
@@ -278,10 +274,10 @@ fun Buttons(
                 usersViewModel.register(username, email, password,
                     onResult = { result ->
                         if (result == "success") {
-                            val uid = FirebaseAuth.getInstance().currentUser?.uid
+                            /*val uid = FirebaseAuth.getInstance().currentUser?.uid
                             if (uid != null) {
                                 planViewModel.iniciarGeneracionPlanSemanalInicial(uid.toString())
-                            }
+                            }*/ //ya se hace en login
                             onErrorMessageChange("")
                             Toast.makeText(
                                 context,

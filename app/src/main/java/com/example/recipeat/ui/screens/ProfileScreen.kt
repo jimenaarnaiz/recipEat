@@ -60,14 +60,13 @@ fun ProfileScreen(
     // Obtener los datos desde Firestore
     LaunchedEffect(Unit) {
         Log.d("ProfileScreen", "uid = $uid")
-        //if (usernameState.isNullOrBlank()) {
+
             usersViewModel.obtenerUsuarioCompletoPorCampos(uid.toString()) { username, profileImageUrl, email ->
                 usernameState = username
                 profileImageState = profileImageUrl
             }
 
             bitmap = usersViewModel.loadImageFromFile(context, null)
-        //}
     }
 
         Column(
