@@ -32,8 +32,8 @@ desperdicio de alimentos.
 <p align="left">
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kotlin/kotlin-original.svg" title="Kotlin" alt="Kotlin" height="50"/>
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/jetpackcompose/jetpackcompose-original.svg" title="Jetpack Compose" alt="Jetpack Compose" height="50"/>
-  <img src="https://developer.android.com/images/logos/android-studio.svg" alt="Android Studio" height="50"/>
-  <img src="https://firebase.google.com/downloads/brand-guidelines/PNG/logo-vertical.png" alt="Firebase" height="50"/>
+  <img src="https://developer.android.com/images/logos/android-studio.svg" title="Android Studio" alt="Android Studio" height="50"/>
+  <img src="https://firebase.google.com/downloads/brand-guidelines/PNG/logo-vertical.png" title="Firebase" alt="Firebase" height="50"/>
 </p>
 
 
