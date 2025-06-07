@@ -157,7 +157,6 @@ class RecetaRepositoryTest {
         every { documentRef.collection("recipes") } returns collectionRef
         every { collectionRef.document(receta.id) } returns documentRef
 
-        // Mock getPath() para evitar el error
         every { documentRef.path } returns "my_recipes/$uid/recipes/${receta.id}"
 
         every { documentRef.set(any()) } returns mockk {

@@ -77,7 +77,7 @@ class UserRepositoryTest {
 
     //tests del login
     @Test
-    fun `login with valid credentials should return success`() = runTest {
+    fun `login con credenciales válidas debería devolver éxito`() = runTest {
         val validEmail = "test@example.com"
         val validPassword = "password123"
 
@@ -108,7 +108,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `login with empty password should return error message`() = runTest {
+    fun `login con contraseña vacía debería devolver mensaje de error`() = runTest {
 
         val email = "test@example.com"
         val emptyPassword = ""
@@ -128,7 +128,7 @@ class UserRepositoryTest {
 
 
     @Test
-    fun `login with empty email should return error message`() = runTest {
+    fun `login con email vacío debería devolver mensaje de error`() = runTest {
 
         val email = ""
         val emptyPassword = "12837hj"
@@ -148,7 +148,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `login with empty email and password should return error message`() = runTest {
+    fun `login con email y contraseña vacíos debería devolver mensaje de error`() = runTest {
         val emptyEmail = ""
         val emptyPassword = ""
 
@@ -169,7 +169,7 @@ class UserRepositoryTest {
 
 
     @Test
-    fun `test login firebase auth exception`() = runTest {
+    fun `login lanza FirebaseAuthInvalidUserException`() = runTest {
         // Mock de la excepción
         val email = "test@example.com"
         val password = "password123"
@@ -185,7 +185,7 @@ class UserRepositoryTest {
 
 
     @Test
-    fun `test login invalid credentials exception`() = runTest {
+    fun `login lanza FirebaseAuthInvalidCredentialsException`() = runTest {
         // Mock de la excepción FirebaseAuthInvalidCredentialsException
         val email = "test@example.com"
         val password = "password123"
@@ -201,7 +201,7 @@ class UserRepositoryTest {
 
 
     @Test
-    fun `test login network exception`() = runTest {
+    fun `login lanza FirebaseNetworkException`() = runTest {
         // Mock de la excepción FirebaseNetworkException
         val email = "test@example.com"
         val password = "password123"
@@ -216,7 +216,7 @@ class UserRepositoryTest {
 
 
     @Test
-    fun `test login general exception`() = runTest {
+    fun `login lanza excepción genérica`() = runTest {
         // Simulamos una excepción desconocida
         val email = "test@example.com"
         val password = "password123"
@@ -236,7 +236,7 @@ class UserRepositoryTest {
      * limpiando tanto la sesión en SharedPreferences como el valor de uid.
      */
     @Test
-    fun `test logOut debería limpiar el flag de sesión y reiniciar el uid cuando el usuario esté logueado`() = runTest {
+    fun `logout debería limpiar el flag de sesión y reiniciar el uid cuando el usuario esté logueado`() = runTest {
 
         // Mock del SharedPreferences.Editor
         val editor = mockk<SharedPreferences.Editor>(relaxed = true)
@@ -262,7 +262,7 @@ class UserRepositoryTest {
 
     //register
     @Test
-    fun `test register user collision exception`() = runTest {
+    fun `register lanza FirebaseAuthUserCollisionException`() = runTest {
         // Datos de entrada para el registro
         val username = "testuser"
         val email = "test@example.com"
@@ -279,7 +279,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `test register network exception`() = runTest {
+    fun `register lanza FirebaseNetworkException`() = runTest {
         // Datos de entrada para el registro
         val username = "testuser"
         val email = "test@example.com"
@@ -296,7 +296,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `test register general exception`() = runTest {
+    fun `register lanza excepción genérica`() = runTest {
         // Datos de entrada para el registro
         val username = "testuser"
         val email = "test@example.com"
@@ -314,52 +314,58 @@ class UserRepositoryTest {
 
 
     @Test
-    fun `test saveImageLocally should handle exception gracefully`() {
-        //datos de entrada
+    fun `saveImageLocally maneja excepciones correctamente`() {
+        // Datos de entrada simulados
         val imageUri = mockk<Uri>()
         val recetaId = "receta123"
 
+        // Simular error al abrir el archivo
         every { context.filesDir } returns File("/mock/directory")
         every { contentResolver.openInputStream(imageUri) } throws Exception("File error")
 
-        // Act
+        // Actuar: ejecutar la función que guarda la imagen
         mockUserRepository.saveImageLocally(context, imageUri, recetaId)
 
-        // Assert
-        // Verifica que no se lanzaron excepciones y que el log de error fue llamado.
+        // Verificar: la excepción fue capturada y registrada correctamente
         verify { Log.e(any(), "Error al guardar la imagen: File error") }
     }
 
-
-
     @Test
-    fun `isSessionActive returns false when user is null`() = runTest {
+    fun `isSessionActive devuelve false cuando el usuario es null`() = runTest {
+        // Simular que no hay usuario autenticado
         every { auth.currentUser } returns null
 
+        // Ejecutar la función y verificar que retorna false
         val result = mockUserRepository.isSessionActive()
         assertFalse(result)
     }
 
     @Test
-    fun `isSessionActive returns false when session flag is false`() = runTest {
+    fun `isSessionActive devuelve false cuando el flag de sesión es false`() = runTest {
+        // Simular usuario autenticado
         val mockUser = mockk<FirebaseUser>()
         every { auth.currentUser } returns mockUser
         every { mockUser.uid } returns "mockUid"
+
+        // Simular que el flag de sesión está desactivado en SharedPreferences
         every { sharedPreferences.getBoolean("sessionIniciadaKeymockUid", false) } returns false
 
+        // Ejecutar la función y verificar que retorna false
         val result = mockUserRepository.isSessionActive()
         assertFalse(result)
     }
 
-
     @Test
-    fun `sendPasswordResetEmail handles generic exception`() = runTest {
+    fun `sendPasswordResetEmail maneja excepción genérica`() = runTest {
+        // Simular que ocurre una excepción al enviar el correo de restablecimiento
         coEvery { auth.sendPasswordResetEmail(any()) } throws Exception("Unexpected")
 
+        // Ejecutar la función
         val result = mockUserRepository.sendPasswordResetEmail("email@test.com")
+
+        // Verificar que se retorna un mensaje de error genérico
         assertTrue(result.contains("An error occurred"))
     }
-
 
 
 

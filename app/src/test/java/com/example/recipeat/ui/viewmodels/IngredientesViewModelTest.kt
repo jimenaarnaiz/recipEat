@@ -76,10 +76,9 @@ class IngredientesViewModelTest {
     }
 
 
-
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `buscarIngredientes should update _ingredientesSugeridos with the result`() = runTest {
+    fun `buscarIngredientes actualiza ingredientesSugeridos con el resultado esperado`() = runTest {
         // Datos simulados de ingredientes
         val ingredientesSimulados = listOf(
             IngredienteSimple("tomato", "tomato_image"),
@@ -92,16 +91,15 @@ class IngredientesViewModelTest {
         // Llamar al métdo
         mockIngredientesViewModel.buscarIngredientes("to")
 
-        advanceUntilIdle() // Esto avanza todas las tareas pendientes
+        advanceUntilIdle() // Avanzar las tareas pendientes
 
         // Verificar que el estado de ingredientesSugeridos se haya actualizado correctamente
         assertEquals(ingredientesSimulados, mockIngredientesViewModel.ingredientesSugeridos.value)
     }
 
-
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `buscarIngredientes should handle exception and set empty list`() = runTest {
+    fun `buscarIngredientes maneja excepciones y establece una lista vacía`() = runTest {
         // Mockear Log para evitar errores por llamadas estáticas
         mockkStatic(Log::class)
         every { Log.e(any(), any(), any()) } returns 0
@@ -109,7 +107,7 @@ class IngredientesViewModelTest {
         // Simular excepción en el repositorio
         coEvery { mockIngredientesRepository.buscarIngredientes("fallo") } throws Exception("Error de búsqueda")
 
-        // Ejecutar el método
+        // Ejecutar el métdo
         mockIngredientesViewModel.buscarIngredientes("fallo")
 
         advanceUntilIdle() // Esperar a que se complete la corrutina
@@ -118,21 +116,19 @@ class IngredientesViewModelTest {
         assertTrue(mockIngredientesViewModel.ingredientesSugeridos.value.isEmpty())
     }
 
-
     @Test
-    fun `loadIngredientsFromFirebase should handle exception and not crash`() = runTest {
+    fun `loadIngredientsFromFirebase maneja excepciones sin lanzar errores`() = runTest {
+        // Mockear Log para evitar errores por llamadas estáticas
         mockkStatic(Log::class)
         every { Log.e(any(), any(), any()) } returns 0
 
-        // Lanzar excepción
+        // Simular excepción al cargar ingredientes
         coEvery { mockIngredientesRepository.loadIngredientsFromFirebase() } throws Exception("Error de red")
 
+        // Ejecutar el métdo
         mockIngredientesViewModel.loadIngredientsFromFirebase()
 
-        // Solo confirmar que no explota (no hay aserción clara posible si no se modifica el catch)
-        // Podrías comprobar el valor actual si decides ponerlo como lista vacía en el ViewModel
+        // Confirmar que no lanza excepción y mantiene un valor no nulo
         assertNotNull(mockIngredientesViewModel.ingredientesValidos.value)
     }
-
-
 }

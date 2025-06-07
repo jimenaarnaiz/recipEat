@@ -195,10 +195,8 @@ class UsersViewModelTest {
     }
 
 
-
-
     @Test
-    fun `logOut should call repository method and not crash`() = runTest {
+    fun `logOut llama al método del repositorio y no falla`() = runTest {
         coEvery { userRepository.logOut() } just Runs
 
         usersViewModel.logOut()
@@ -208,7 +206,7 @@ class UsersViewModelTest {
     }
 
     @Test
-    fun `obtenerUsername should return username`() = runTest {
+    fun `obtenerUsername devuelve el username esperado`() = runTest {
         val expectedUsername = "testUser"
         coEvery { userRepository.obtenerUsername() } returns expectedUsername
 
@@ -222,7 +220,7 @@ class UsersViewModelTest {
     }
 
     @Test
-    fun `obtenerUsername should handle exception and return null`() = runTest {
+    fun `obtenerUsername  maneja excepción y devuelve null`() = runTest {
         coEvery { userRepository.obtenerUsername() } throws Exception("Failed")
 
         var result: String? = "notNull"
@@ -235,12 +233,11 @@ class UsersViewModelTest {
     }
 
     @Test
-    fun `sendPasswordResetEmail should call repository method`() = runTest {
-        val email = "reset@example.com"
-        coEvery { userRepository.sendPasswordResetEmail(email) } returns "Email sent"
+    fun `sendPasswordResetEmail llama al método del repositorio`() = runTest {
+        coEvery { userRepository.sendPasswordResetEmail(emailValid) } returns "Email sent"
 
         var result: String? = null
-        usersViewModel.sendPasswordResetEmail(email) {
+        usersViewModel.sendPasswordResetEmail(emailValid) {
             result = it
         }
 
@@ -249,7 +246,7 @@ class UsersViewModelTest {
     }
 
     @Test
-    fun `actualizarUserProfile should return success`() = runTest {
+    fun `actualizarUserProfile devuelve éxito`() = runTest {
         coEvery { userRepository.actualizarUserProfile("newName", "imgUrl") } returns true
 
         var result = false
@@ -261,56 +258,66 @@ class UsersViewModelTest {
         assertTrue(result)
     }
 
+
     @Test
-    fun `obtenerUsuarioCompletoPorCampos should return expected values`() = runTest {
+    fun `obtenerUsuarioCompletoPorCampos devuelve valores esperados`() = runTest {
+        // Simular retorno de un Triple con los datos
         coEvery { userRepository.obtenerUsuarioCompletoPorCampos("uid123") } returns Triple("name", "img", "email")
 
         var result: Triple<String, String?, String?>? = null
+        // Ejecutar el métdo y capturar resultado
         usersViewModel.obtenerUsuarioCompletoPorCampos("uid123") { name, img, email ->
             result = Triple(name, img, email)
         }
 
         advanceUntilIdle()
+        // Verificar que el resultado coincide con lo esperado
         assertEquals(Triple("name", "img", "email"), result)
     }
 
     @Test
-    fun `obtenerUsuarioCompletoPorCampos should handle exception and return empty`() = runTest {
+    fun `obtenerUsuarioCompletoPorCampos maneja excepción y devuelve valores vacíos`() = runTest {
+        // Simular excepción al llamar al repositorio
         coEvery { userRepository.obtenerUsuarioCompletoPorCampos("uid123") } throws Exception("Fail")
 
         var result: Triple<String, String?, String?>? = Triple("default", "img", "email")
+        // Llamar al métdo y capturar resultado
         usersViewModel.obtenerUsuarioCompletoPorCampos("uid123") { name, img, email ->
             result = Triple(name, img, email)
         }
 
         advanceUntilIdle()
+        // Comprobar que en caso de fallo devuelve valores vacíos o null
         assertEquals(Triple("", null, null), result)
     }
 
     @Test
-    fun `obtenerUsuarioCompleto should return user`() = runTest {
-        val user = User( "name", "email")
+    fun `obtenerUsuarioCompleto devuelve el usuario esperado`() = runTest {
+        val user = User("name", "email")
+        // Simular retorno del usuario
         coEvery { userRepository.obtenerUsuarioCompleto("uid") } returns user
 
         var result: User? = null
+        // Llamar al métdo y guardar resultado
         usersViewModel.obtenerUsuarioCompleto("uid") {
             result = it
         }
 
         advanceUntilIdle()
+        // Verificar que el usuario devuelto es el esperado
         assertEquals(user, result)
     }
 
 
     @Test
-    fun `getUidValue should return current uid`() {
+    fun `getUidValue devuelve el uid actual`() {
         every { userRepository.getUidValue() } returns "1234"
         val result = usersViewModel.getUidValue()
         assertEquals("1234", result)
     }
 
     @Test
-    fun `uid state flow should update after init`() = runTest {
+    fun `uid se actualiza tras init si hay sesión activa`() = runTest {
         coEvery { userRepository.isSessionActive() } returns true
         every { userRepository.getUidValue() } returns "abc123"
 
@@ -321,10 +328,11 @@ class UsersViewModelTest {
 
 
     @Test
-    fun `obtenerUsuarioCompleto should handle exception and return null`() = runTest {
+    fun `obtenerUsuarioCompleto con excepción devuelve null`() = runTest {
+        var result: User? = User("d", "d@gmail.com")
+
         coEvery { userRepository.obtenerUsuarioCompleto("uid") } throws Exception("Failure")
 
-        var result: User? = User("b",  "d")
         usersViewModel.obtenerUsuarioCompleto("uid") {
             result = it
         }
@@ -334,14 +342,14 @@ class UsersViewModelTest {
     }
 
     @Test
-    fun `login should handle exception and return error message`() = runTest {
-        val email = "test@example.com"
-        val password = "pass"
+    fun `login con excepción devuelve mensaje de error adecuado`() = runTest {
+        val email = emailValid
+        val password = passwordValid
         val exception = Exception("Unknown error")
+        var result: String? = null
 
         coEvery { userRepository.login(email, password) } throws exception
 
-        var result: String? = null
         usersViewModel.login(email, password) {
             result = it
         }
@@ -351,15 +359,15 @@ class UsersViewModelTest {
     }
 
     @Test
-    fun `register should handle exception and return error message`() = runTest {
+    fun `register con excepción devuelve mensaje de error adecuado`() = runTest {
         val username = "user"
-        val email = "user@example.com"
-        val password = "123456"
+        val email = emailValid
+        val password = passwordValid
         val exception = Exception("Something failed")
+        var result: String? = null
 
         coEvery { userRepository.register(username, email, password) } throws exception
 
-        var result: String? = null
         usersViewModel.register(username, email, password) {
             result = it
         }
@@ -367,6 +375,4 @@ class UsersViewModelTest {
         advanceUntilIdle()
         assertEquals("Unknown error during registration: Something failed", result)
     }
-
-
 }

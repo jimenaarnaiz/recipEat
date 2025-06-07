@@ -119,6 +119,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         include("**/ui/viewmodels/**")
     }
 
+
     // Fuentes
     sourceDirectories.setFrom(files(
         "${project.projectDir}/src/main/java",

@@ -56,7 +56,6 @@ fun EditProfileScreen(
 
     var newUsername by remember { mutableStateOf("") }
     var newEmail by rememberSaveable { mutableStateOf("") }
-    //val newImage by rememberSaveable { mutableStateOf("") }
 
     var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
