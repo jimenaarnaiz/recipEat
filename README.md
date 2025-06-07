@@ -13,7 +13,7 @@
 </p>
 
 <h1 align="center"> :fork_and_knife:recipEat:fork_and_knife: </h1>
-Decidir qué cocinar cada día puede ser una tarea complicada. recipEat es una aplicación móvil para Android que nace con el objetivo de facilitar esta tarea
+Decidir qué cocinar cada día puede ser una tarea complicada. recipEat es una aplicación móvil Android nativa que nace con el objetivo de facilitar esta tarea
 al proporcionar una manera rápida y eficiente de encontrar recetas basadas
 en ingredientes, simplificando la planificación de comidas y reduciendo el
 desperdicio de alimentos.
