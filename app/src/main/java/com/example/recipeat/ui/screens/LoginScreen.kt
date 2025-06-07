@@ -45,7 +45,7 @@ fun LoginScreen(
     var password by rememberSaveable { mutableStateOf("") }
     var errorMessage by rememberSaveable { mutableStateOf("") }
 
-    val fieldWidth = if (isLandscape) 0.5f else 0.8f  // Ajusta el ancho según orientación
+    val fieldWidth = if (isLandscape) 0.5f else 0.8f  //Ajusta el ancho según orientación
     val context = LocalContext.current
 
     // Interceptar el botón de "Atrás" para salir de la aplicación
