@@ -401,6 +401,7 @@ class RecetaRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
                 }
             } else {
                 // Hay favoritos → aplicar filtros
+                //detecta el dish type más frecuente en las favoritas
                 val dishTypeMasFrecuente = recetasFavoritas
                     .flatMap { it.dishTypes }
                     .groupingBy { it }
@@ -421,7 +422,7 @@ class RecetaRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
                     query = query.whereArrayContains("dishTypes", dishTypeMasFrecuente)
                 }
 
-                when {
+                when { //Si al menos el 60% de sus favoritas son veganas, vegetarianas o sin gluten, se considera una preferencia.
                     prefiereVeganas -> query = query.whereEqualTo("vegan", true)
                     prefiereVegetarianas -> query = query.whereEqualTo("vegetarian", true)
                     prefiereSinGluten -> query = query.whereEqualTo("glutenFree", true)
