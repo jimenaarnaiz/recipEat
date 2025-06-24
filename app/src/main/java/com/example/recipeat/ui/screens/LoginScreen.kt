@@ -144,7 +144,7 @@ fun LoginScreen(
             )
 
             Text(
-                text = "v1.0.2",
+                text = "v1.0.3",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
             )
