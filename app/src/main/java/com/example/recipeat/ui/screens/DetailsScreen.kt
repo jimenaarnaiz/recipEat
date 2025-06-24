@@ -68,18 +68,22 @@ fun DetailsScreen(
     // Observamos el estado de conectividad
     val isConnected by connectivityViewModel.isConnected.observeAsState(false)
 
-    LaunchedEffect(receta?.id) {
+    LaunchedEffect(isConnected, receta?.id) {
         Log.d("DetailsScreen","Llamando a obtenerRecetaPorId con recetaId: $idReceta deUser: $esDeUser")
-        recetasViewModel.obtenerRecetaPorId(
-            uid = uid.toString(),
-            recetaId = idReceta,
-            deUser = esDeUser
-        )
 
-        recetasViewModel.verificarSiEsFavorito(uid.toString(), idReceta)
+        if (isConnected) {
+            recetasViewModel.obtenerRecetaPorId(
+                uid = uid.toString(),
+                recetaId = idReceta,
+                deUser = esDeUser
+            )
+            recetasViewModel.verificarSiEsFavorito(uid.toString(), idReceta)
+            bitmap = usersViewModel.loadImageFromFile(context, idReceta)
+
+            if (!esDeUser) receta?.let { roomViewModel.agregarReciente(it, uid.toString()) } //agregar a recientes
+        }
+
         roomViewModel.getRecetaById(recetaId = idReceta)
-        bitmap = usersViewModel.loadImageFromFile(context, idReceta)
-        if (!esDeUser) receta?.let { roomViewModel.agregarReciente(it, uid.toString()) } //agregar a recientes
     }
 
     LaunchedEffect(isConnected) {
@@ -229,7 +233,7 @@ fun DetailsScreen(
 
                 Text(
                     text = "Ingredients:",
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
 

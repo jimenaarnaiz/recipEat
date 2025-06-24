@@ -111,8 +111,8 @@ fun HomeScreen(
         //el segundo isEmpty hace que solo cargue al abrir la app las recetas favs,
         if (recetasState.isNotEmpty() && recetasHomeRoom.isEmpty()) {
             roomViewModel.guardarPrimeras15RecetasSiNoEstan(context, recetasState, uid.toString())
-            roomViewModel.getRecetasHome(context, uid.toString())
         }
+        roomViewModel.getRecetasHome(context, uid.toString())
     }
 
 
