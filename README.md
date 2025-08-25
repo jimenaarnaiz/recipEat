@@ -1,4 +1,10 @@
 <p align="center">
+
+  <img src="https://img.shields.io/badge/Matr%C3%ADcula%20de%20Honor-%F0%9F%8F%85-blueviolet"/>
+<br>
+<br>
+    
+  
   <a href="https://sonarcloud.io/dashboard?id=jimenaarnaiz_recipEat">
     <img src="https://sonarcloud.io/api/project_badges/measure?project=jimenaarnaiz_recipEat&metric=sqale_rating" alt="Maintainability"/>
     <img src="https://sonarcloud.io/api/project_badges/measure?project=jimenaarnaiz_recipEat&metric=bugs" alt="Bugs"/>
@@ -11,6 +17,7 @@
     <img src="https://sonarcloud.io/api/project_badges/measure?project=jimenaarnaiz_recipEat&metric=reliability_rating" alt="Code Lines"/>
   </a>
 </p>
+
 
 <h1 align="center"> :fork_and_knife:recipEat:fork_and_knife: </h1>
 Decidir qué cocinar cada día puede ser una tarea complicada. recipEat es una aplicación móvil Android nativa que nace con el objetivo de facilitar esta tarea
